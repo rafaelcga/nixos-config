@@ -5,7 +5,7 @@
     ./configs/nixos
   ];
 
-  nixosModules = {
+  modules.nixos = {
     boot = {
       enable = true;
       loader = "limine";

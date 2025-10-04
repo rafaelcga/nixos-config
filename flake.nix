@@ -8,7 +8,7 @@
     {
       nixosConfigurations.fractal = nixpkgs.lib.nixosSystem {
         modules = [
-          ./hosts/fractal/nixos.nix
+          ./hosts/fractal/config.nix
           ./hosts/fractal/configuration.nix
         ];
       };
