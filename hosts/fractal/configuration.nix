@@ -106,7 +106,7 @@
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
-    zed-editor-fhs
+    zed-editor-fhs # fix libssl.so.3
     git
     wget
     gh

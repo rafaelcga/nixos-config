@@ -5,11 +5,11 @@
   ...
 }:
 let
-  cfg = config.base.boot;
+  cfg = config.nixosModules.boot;
 in
 {
-  options.base.boot = {
-    enable = lib.mkEnableOption "base boot configuration";
+  options.nixosModules.boot = {
+    enable = lib.mkEnableOption "boot configuration";
 
     loader = lib.mkOption {
       type = lib.types.enum [
