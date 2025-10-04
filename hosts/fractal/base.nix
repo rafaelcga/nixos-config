@@ -1,7 +1,8 @@
-{...}:
+{ ... }:
 {
   imports = [
     ../../modules/base
+    ./configs/base
   ];
 
   base = {
