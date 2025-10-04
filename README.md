@@ -1,2 +1,5 @@
 # nixos-config
-My NixOS configuration
+
+```bash
+sudo nixos-rebuild switch --flake github:rafaelcga/nixos-config#<hostname>
+```
