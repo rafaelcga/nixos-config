@@ -1,11 +1,11 @@
 { ... }:
 {
   imports = [
-    ../../modules/base
-    ./configs/base
+    ../../modules/nixos
+    ./configs/nixos
   ];
 
-  base = {
+  nixosModules = {
     boot = {
       enable = true;
       loader = "limine";
