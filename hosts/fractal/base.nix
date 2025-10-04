@@ -9,7 +9,6 @@
     boot = {
       enable = true;
       loader = "limine";
-      kernel = "latest";
     };
   };
 }
