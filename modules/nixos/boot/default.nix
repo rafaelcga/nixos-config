@@ -10,7 +10,6 @@ in
 {
   options.modules.nixos.boot = {
     enable = lib.mkEnableOption "boot configuration";
-
     loader = lib.mkOption {
       type = lib.types.enum [
         "systemd-boot"

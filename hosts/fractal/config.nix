@@ -10,5 +10,6 @@
       enable = true;
       loader = "limine";
     };
+    i18n.enable = true;
   };
 }
