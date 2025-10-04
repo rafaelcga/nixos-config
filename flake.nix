@@ -6,7 +6,8 @@
   outputs = { self, nixpkgs, ... }@inputs: {
     nixosConfigurations.fractal = nixpkgs.lib.nixosSystem {
       modules = [
-        ./configuration.nix
+        ./hosts/fractal/base.nix
+        ./hosts/fractal/configuration.nix
       ];
     };
   };
