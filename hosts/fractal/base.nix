@@ -2,7 +2,7 @@
 {
   imports = [
     ../../modules/base
-  ]
+  ];
 
   base = {
     boot = {

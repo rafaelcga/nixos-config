@@ -104,6 +104,7 @@
     git
     wget
     gh
+    nil
   ];
 
   # Enable OpenGL
