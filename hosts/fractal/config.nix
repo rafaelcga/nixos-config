@@ -23,5 +23,6 @@
     time.enable = true;
     networking.enable = true;
     nix.enable = true;
+    zram.enable = true;
   };
 }

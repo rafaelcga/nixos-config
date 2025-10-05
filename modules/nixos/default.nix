@@ -7,5 +7,6 @@
     ./time
     ./networking
     ./nix
+    ./zram
   ];
 }
