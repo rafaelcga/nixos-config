@@ -1,12 +1,18 @@
 {
   config,
   lib,
+  utils,
   pkgs,
   catppuccinTheme,
   ...
 }:
 let
   cfg = config.modules.home-manager.catppuccin;
+  themeName =
+    "Catppuccin-GTK-"
+    + utils.capitalizeFirst catppuccinTheme.accent
+    + "-Dark-"
+    + utils.capitalizeFirst catppuccinTheme.flavor;
 in
 {
   options.modules.home-manager.catppuccin = {
@@ -22,7 +28,7 @@ in
     gtk = {
       enable = true;
       theme = {
-        name = "Catppuccin";
+        name = themeName;
         package = pkgs.magnetic-catppuccin-gtk.override {
           accent = [ catppuccinTheme.accent ];
           tweaks = [ catppuccinTheme.flavor ];

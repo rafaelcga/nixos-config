@@ -17,6 +17,7 @@
       ...
     }@inputs:
     let
+      utils = import ./utils { lib = nixpkgs.lib; };
       system = "x86_64-linux";
       stateVersion = "25.11";
       hostName = "fractal";
@@ -29,6 +30,7 @@
       specialArgs = {
         inherit
           inputs
+          utils
           stateVersion
           hostName
           userName
