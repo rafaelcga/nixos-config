@@ -20,8 +20,8 @@
   "buffer_font_size": 16,
   "theme": {
     "mode": "system",
-    "dark": "Catppuccin Frappé",
-    "light": "Catppuccin Latte"
+    "dark": "Catppuccin Frappé (teal)",
+    "light": "Catppuccin Latte (teal)"
   },
   "icon_theme": "Catppuccin Frappé",
 

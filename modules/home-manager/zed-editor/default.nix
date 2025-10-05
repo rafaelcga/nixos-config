@@ -22,10 +22,12 @@ in
         basedpyright
         nil
         nixfmt-rfc-style
-        nerd-fonts.jetbrains-mono
       ];
     };
+    home.packages = [ pkgs.nerd-fonts.jetbrains-mono ];
     xdg.configFile."zed/settings.json".source =
       config.lib.file.mkOutOfStoreSymlink "${moduleDir}/settings.json";
+    xdg.configFile."zed/themes/catppuccin-teal.json".source =
+      config.lib.file.mkOutOfStoreSymlink "${moduleDir}/catppuccin-teal.json";
   };
 }
