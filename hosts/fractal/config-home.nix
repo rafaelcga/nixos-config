@@ -2,12 +2,11 @@
 {
   imports = [
     ../../modules/home-manager
-    ../../modules/nixos/catppuccin
     ./configs/home-manager
   ];
 
   modules.home-manager = {
     zed-editor.enable = true;
+    catppuccin.enable = true;
   };
-  modules.nixos.catppuccin.enable = true;
 }
