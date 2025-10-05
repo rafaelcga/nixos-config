@@ -2,12 +2,10 @@
   config,
   lib,
   pkgs,
-  inputs,
   ...
 }:
 let
   cfg = config.modules.home-manager.zed-editor;
-  moduleDir = "${inputs.self}/modules/home-manager/zed-editor";
 in
 {
   options.modules.home-manager.zed-editor = {
@@ -23,11 +21,107 @@ in
         nil
         nixfmt-rfc-style
       ];
+      extensions = [
+        "ini"
+        "ruff"
+        "toml"
+        "fish"
+        "latex"
+        "caddyfile"
+        "git-firefly"
+        "basedpyright"
+      ];
+      userSettings = {
+        disable_ai = true;
+        # UI settings
+        ui_font_family = "JetBrainsMono Nerd Font";
+        ui_font_size = 18;
+        buffer_font_family = "JetBrainsMono Nerd Font";
+        buffer_font_size = 16;
+        preferred_line_length = 80;
+        wrap_guides = [ 80 ];
+        terminal.dock = "right";
+        # Languages
+        languages = {
+          Python = {
+            language_servers = [
+              "ruff"
+              "basedpyright"
+              "!pyright"
+            ];
+            format_on_save = "on";
+            formatter = [
+              {
+                code_actions = {
+                  "source.organizeImports.ruff" = true;
+                  "source.fixAll.ruff" = true;
+                };
+              }
+              {
+                language_server.name = "ruff";
+              }
+            ];
+          };
+          Nix = {
+            language_servers = [
+              "nil"
+              "!nixd"
+            ];
+            format_on_save = "on";
+          };
+        };
+        # Language-servers
+        lsp = {
+          basedpyright = {
+            settings = {
+              "basedpyright.analysis" = {
+                diagnosticSeverityOverrides = {
+                  reportAny = false;
+                  reportExplicitAny = false;
+                };
+              };
+            };
+          };
+          texlab = {
+            settings = {
+              texlab = {
+                build = {
+                  onSave = true;
+                  forwardSearchAfter = true;
+                };
+              };
+            };
+          };
+          nil = {
+            settings = {
+              formatting = {
+                command = [ "nixfmt" ];
+              };
+              diagnostics = {
+                ignored = [ ];
+                excludedFiles = [ ];
+              };
+              nix = {
+                binary = "nix";
+                maxMemoryMB = 2560;
+              };
+            };
+          };
+        };
+        # Other settings
+        file_types = {
+          ini = [
+            "container"
+            "pod"
+            "build"
+            "volume"
+            "service"
+            "timer"
+            "network"
+          ];
+        };
+      };
     };
     home.packages = [ pkgs.nerd-fonts.jetbrains-mono ];
-    xdg.configFile."zed/settings.json".source =
-      config.lib.file.mkOutOfStoreSymlink "${moduleDir}/settings.json";
-    xdg.configFile."zed/themes/catppuccin-teal.json".source =
-      config.lib.file.mkOutOfStoreSymlink "${moduleDir}/catppuccin-teal.json";
   };
 }

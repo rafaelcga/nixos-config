@@ -5,6 +5,7 @@
       url = "github:nix-community/home-manager/master";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    catppuccin.url = "github:catppuccin/nix";
   };
 
   outputs =
@@ -12,6 +13,7 @@
       self,
       nixpkgs,
       home-manager,
+      catppuccin,
       ...
     }@inputs:
     let
@@ -38,13 +40,17 @@
           ./hosts/${hostName}/config.nix
           ./hosts/${hostName}/configuration.nix
           home-manager.nixosModules.home-manager
+          catppuccin.nixosModules.catppuccin
           {
             system = { inherit stateVersion; };
             home-manager = {
               backupFileExtension = "bak";
               extraSpecialArgs = specialArgs;
               users.${userName} = {
-                imports = [ ./hosts/${hostName}/config-home.nix ];
+                imports = [
+                  catppuccin.homeModules.catppuccin
+                  ./hosts/${hostName}/config-home.nix
+                ];
                 home = { inherit stateVersion; };
               };
               useGlobalPkgs = true;

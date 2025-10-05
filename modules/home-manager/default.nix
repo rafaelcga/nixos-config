@@ -2,5 +2,6 @@
 {
   imports = [
     ./zed-editor
+    ./catppuccin
   ];
 }
