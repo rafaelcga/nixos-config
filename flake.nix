@@ -25,12 +25,13 @@
         modules = [
           ./hosts/fractal/config.nix
           ./hosts/fractal/configuration.nix
+          home-manager.nixosModules.home-manager
           {
-            home-manager.nixosModules.home-manager = {
+            home-manager = {
               backupFileExtension = "bak";
               users.rafael = {
                 imports = [ ];
-                home.stateVersion = 25.11;
+                home.stateVersion = "25.11";
               };
               useGlobalPkgs = true;
               useUserPackages = true;

@@ -14,6 +14,12 @@ let
       vpl-gpu-rt
     ];
   };
+  extraPackages = lib.concatLists (
+    builtins.map (
+      vendor: if builtins.hasAttr vendor vendorPackages then vendorPackages.${vendor} else [ ]
+    ) cfg.vendors
+  );
+  usesNvidia = builtins.elem "nvidia" cfg.vendors;
 in
 {
   options.modules.nixos.graphics = {
@@ -41,14 +47,14 @@ in
       graphics = {
         enable = true;
         enable32Bit = true;
-        extraPackages = lib.concatLists (builtins.map (vendor: vendorPackages.${vendor}) cfg.vendors);
+        inherit extraPackages;
       };
-      nvidia = lib.mkIf (builtins.elem "nvidia" cfg.vendors) {
+      nvidia = lib.mkIf usesNvidia {
         open = true; # Open-source kernel module
         package = config.boot.kernelPackages.nvidiaPackages.latest;
       };
     };
-    services.xserver = lib.mkIf (builtins.elem "nvidia" cfg.vendors) {
+    services.xserver = lib.mkIf usesNvidia {
       videoDrivers = [ "nvidia" ];
     };
   };
