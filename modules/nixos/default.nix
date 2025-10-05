@@ -8,5 +8,6 @@
     ./networking
     ./nix
     ./zram
+    ./catppuccin
   ];
 }

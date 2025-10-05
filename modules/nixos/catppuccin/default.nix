@@ -1,9 +1,9 @@
 { config, lib, ... }:
 let
-  cfg = config.modules.home-manager.catppuccin;
+  cfg = config.modules.nixos.catppuccin;
 in
 {
-  options.modules.home-manager.catppuccin = {
+  options.modules.nixos.catppuccin = {
     enable = lib.mkEnableOption "Catppuccin color theme flake";
   };
 
@@ -12,6 +12,7 @@ in
       enable = true;
       flavor = "frappe";
       accent = "teal";
+      cache.enable = true;
     };
   };
 }
