@@ -1,4 +1,9 @@
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  catppuccinTheme,
+  ...
+}:
 let
   cfg = config.modules.nixos.catppuccin;
 in
@@ -10,8 +15,7 @@ in
   config = lib.mkIf cfg.enable {
     catppuccin = {
       enable = true;
-      flavor = "frappe";
-      accent = "teal";
+      inherit (catppuccinTheme) flavor accent;
       cache.enable = true;
     };
   };

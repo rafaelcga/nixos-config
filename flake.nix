@@ -21,6 +21,10 @@
       stateVersion = "25.11";
       hostName = "fractal";
       userName = "rafael";
+      catppuccinTheme = {
+        flavor = "frappe";
+        accent = "teal";
+      };
       pkgs = import nixpkgs { inherit system; };
       specialArgs = {
         inherit
@@ -28,6 +32,7 @@
           stateVersion
           hostName
           userName
+          catppuccinTheme
           ;
       };
     in

@@ -1,4 +1,10 @@
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  catppuccinTheme,
+  ...
+}:
 let
   cfg = config.modules.home-manager.catppuccin;
 in
@@ -10,9 +16,15 @@ in
   config = lib.mkIf cfg.enable {
     catppuccin = {
       enable = true;
-      flavor = "frappe";
-      accent = "teal";
+      inherit (catppuccinTheme) flavor accent;
       cache.enable = true;
+    };
+    gtk.theme = {
+      name = "Catppuccin";
+      package = pkgs.magnetic-catppuccin-gtk.override {
+        accent = [ catppuccinTheme.accent ];
+        tweaks = [ catppuccinTheme.flavor ];
+      };
     };
   };
 }
