@@ -42,6 +42,7 @@
             system = { inherit stateVersion; };
             home-manager = {
               backupFileExtension = "bak";
+              extraSpecialArgs = specialArgs;
               users.${userName} = {
                 imports = [ ./hosts/${hostName}/config-home.nix ];
                 home = { inherit stateVersion; };

@@ -7,6 +7,7 @@
 }:
 let
   cfg = config.modules.home-manager.zed-editor;
+  moduleDir = "${inputs.self}/modules/home-manager/zed-editor";
 in
 {
   options.modules.home-manager.zed-editor = {
@@ -25,6 +26,6 @@ in
       ];
     };
     xdg.configFile."zed/settings.json".source =
-      lib.file.mkOutOfStoreSymlink "${inputs.self}/modules/home-manager/zed-editor/settings.json";
+      config.lib.file.mkOutOfStoreSymlink "${moduleDir}/settings.json";
   };
 }
