@@ -9,3 +9,5 @@ Regenerate `hardware-configuration.nix`:
 ```bash
 nixos-generate-config --show-hardware-config > ./hosts/<hostname>/hardware-configuration.nix
 ```
+
+Use [`nh`](https://github.com/nix-community/nh) to simplify commands when possible.

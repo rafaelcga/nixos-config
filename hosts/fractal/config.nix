@@ -12,5 +12,12 @@
       loader = "limine";
     };
     i18n.enable = true;
+    graphics = {
+      enable = true;
+      vendors = [
+        "amd"
+        "nvidia"
+      ];
+    };
   };
 }

@@ -8,6 +8,7 @@ in
     locale = lib.mkOption {
       default = "en_IE.UTF-8"; # Irish English (for international locale)
       type = lib.types.str;
+      description = "Which glibc valid locale to apply to all options";
     };
   };
 

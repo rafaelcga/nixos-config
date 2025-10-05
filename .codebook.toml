@@ -1,0 +1,5 @@
+words = [
+    "nixos",
+    "rafaelcga",
+]
+ignore_paths = [".git/**/*"]
