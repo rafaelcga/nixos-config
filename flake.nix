@@ -19,10 +19,9 @@
     let
       lib = nixpkgs.lib.extend (
         final: prev: {
-          local = import ./lib { inherit (nixpkgs) lib; };
+          local = import ./lib { inherit nixpkgs; };
         }
       );
-
       system = "x86_64-linux";
       stateVersion = "25.11";
       hostName = "fractal";
@@ -31,10 +30,11 @@
         flavor = "frappe";
         accent = "teal";
       };
+
       specialArgs = {
         inherit
-          lib
           inputs
+          lib
           stateVersion
           hostName
           userName
