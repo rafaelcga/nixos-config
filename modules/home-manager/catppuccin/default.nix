@@ -19,11 +19,14 @@ in
       inherit (catppuccinTheme) flavor accent;
       cache.enable = true;
     };
-    gtk.theme = {
-      name = "Catppuccin";
-      package = pkgs.magnetic-catppuccin-gtk.override {
-        accent = [ catppuccinTheme.accent ];
-        tweaks = [ catppuccinTheme.flavor ];
+    gtk = {
+      enable = true;
+      theme = {
+        name = "Catppuccin";
+        package = pkgs.magnetic-catppuccin-gtk.override {
+          accent = [ catppuccinTheme.accent ];
+          tweaks = [ catppuccinTheme.flavor ];
+        };
       };
     };
   };
