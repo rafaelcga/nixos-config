@@ -20,5 +20,7 @@
         "nvidia"
       ];
     };
+    time.enable = true;
+    networking.enable = true;
   };
 }

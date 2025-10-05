@@ -17,21 +17,32 @@
     let
       system = "x86_64-linux";
       stateVersion = "25.11";
+      hostName = "fractal";
+      userName = "rafael";
       pkgs = import nixpkgs { inherit system; };
+      specialArgs = {
+        inherit
+          inputs
+          stateVersion
+          hostName
+          userName
+          ;
+      };
     in
     {
       # Set default formatter for `nix fmt`
       formatter.${system} = pkgs.nixfmt-tree;
-      nixosConfigurations.fractal = nixpkgs.lib.nixosSystem {
+      nixosConfigurations.${hostName} = nixpkgs.lib.nixosSystem {
+        inherit specialArgs;
         modules = [
-          ./hosts/fractal/config.nix
-          ./hosts/fractal/configuration.nix
+          ./hosts/${hostName}/config.nix
+          ./hosts/${hostName}/configuration.nix
           home-manager.nixosModules.home-manager
           {
             system = { inherit stateVersion; };
             home-manager = {
               backupFileExtension = "bak";
-              users.rafael = {
+              users.${userName} = {
                 imports = [ ];
                 home = { inherit stateVersion; };
               };
