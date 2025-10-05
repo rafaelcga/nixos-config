@@ -64,14 +64,11 @@
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
-    zed-editor-fhs # fix libssl.so.3
     git
     wget
     gh
-    nil
     nh
     fastfetch
-    nixfmt-rfc-style
   ];
 
   # Some programs need SUID wrappers, can be configured further or are

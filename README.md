@@ -11,3 +11,5 @@ nixos-generate-config --show-hardware-config > ./hosts/<hostname>/hardware-confi
 ```
 
 Use [`nh`](https://github.com/nix-community/nh) to simplify commands when possible.
+
+Style: hyphen-case for modules and camelCase for option attributes.
