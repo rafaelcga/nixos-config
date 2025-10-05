@@ -14,6 +14,7 @@
     i18n.enable = true;
     graphics = {
       enable = true;
+      enable32Bit = true;
       vendors = [
         "amd"
         "nvidia"

@@ -9,14 +9,18 @@ let
   vendorPackages = with pkgs; {
     "intel" = [
       intel-media-driver
-      driversi686Linux.intel-media-driver # 32-bit
       intel-compute-runtime
       vpl-gpu-rt
     ];
   };
+  vendorPackages32Bit = with pkgs; {
+    "intel" = [ driversi686Linux.intel-media-driver ];
+  };
   extraPackages = lib.concatLists (
     builtins.map (
-      vendor: if builtins.hasAttr vendor vendorPackages then vendorPackages.${vendor} else [ ]
+      vendor:
+      (vendorPackages.${vendor} or [ ])
+      ++ (if cfg.enable32Bit then (vendorPackages32Bit.${vendor} or [ ]) else [ ])
     ) cfg.vendors
   );
   usesNvidia = builtins.elem "nvidia" cfg.vendors;
@@ -24,6 +28,11 @@ in
 {
   options.modules.nixos.graphics = {
     enable = lib.mkEnableOption "graphics configuration";
+    enable32Bit = lib.mkOption {
+      default = false;
+      type = lib.types.bool;
+      description = "Whether to enable 32-bit drivers";
+    };
     vendors = lib.mkOption {
       default = [ ];
       type = lib.types.listOf (
@@ -46,7 +55,7 @@ in
     hardware = {
       graphics = {
         enable = true;
-        enable32Bit = true;
+        inherit (cfg) enable32Bit;
         inherit extraPackages;
       };
       nvidia = lib.mkIf usesNvidia {
