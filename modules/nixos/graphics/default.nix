@@ -37,10 +37,12 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    hardware.graphics = {
-      enable = true;
-      enable32Bit = true;
-      extraPackages = lib.concatLists (builtins.map (vendor: vendorPackages.${vendor}) cfg.vendors);
+    hardware = {
+      graphics = {
+        enable = true;
+        enable32Bit = true;
+        extraPackages = lib.concatLists (builtins.map (vendor: vendorPackages.${vendor}) cfg.vendors);
+      };
       nvidia = lib.mkIf (builtins.elem "nvidia" cfg.vendors) {
         open = true; # Open-source kernel module
         package = config.boot.kernelPackages.nvidiaPackages.latest;
