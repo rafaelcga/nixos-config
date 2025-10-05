@@ -1,4 +1,4 @@
-{ }:
+{ ... }:
 {
   imports = [
     ./capitalize-first.nix
