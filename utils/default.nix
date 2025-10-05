@@ -1,6 +1,0 @@
-{ ... }:
-{
-  imports = [
-    ./capitalize-first.nix
-  ];
-}

@@ -17,7 +17,12 @@
       ...
     }@inputs:
     let
-      utils = import ./utils { lib = nixpkgs.lib; };
+      lib = nixpkgs.lib.extend (
+        final: prev: {
+          local = import ./lib { inherit (nixpkgs) lib; };
+        }
+      );
+
       system = "x86_64-linux";
       stateVersion = "25.11";
       hostName = "fractal";
@@ -26,17 +31,18 @@
         flavor = "frappe";
         accent = "teal";
       };
-      pkgs = import nixpkgs { inherit system; };
       specialArgs = {
         inherit
+          lib
           inputs
-          utils
           stateVersion
           hostName
           userName
           catppuccinTheme
           ;
       };
+
+      pkgs = import nixpkgs { inherit system; };
     in
     {
       # Set default formatter for `nix fmt`
