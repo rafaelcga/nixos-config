@@ -17,11 +17,6 @@
       ...
     }@inputs:
     let
-      lib = nixpkgs.lib.extend (
-        final: prev: {
-          local = import ./lib { inherit nixpkgs; };
-        }
-      );
       system = "x86_64-linux";
       stateVersion = "25.11";
       hostName = "fractal";
@@ -34,12 +29,12 @@
       specialArgs = {
         inherit
           inputs
-          lib
           stateVersion
           hostName
           userName
           catppuccinTheme
           ;
+        localLib = import ./lib { inherit nixpkgs; };
       };
 
       pkgs = import nixpkgs { inherit system; };
