@@ -16,6 +16,7 @@
     }@inputs:
     let
       system = "x86_64-linux";
+      stateVersion = "25.11";
       pkgs = import nixpkgs { inherit system; };
     in
     {
@@ -27,11 +28,12 @@
           ./hosts/fractal/configuration.nix
           home-manager.nixosModules.home-manager
           {
+            system = { inherit stateVersion; };
             home-manager = {
               backupFileExtension = "bak";
               users.rafael = {
                 imports = [ ];
-                home.stateVersion = "25.11";
+                home = { inherit stateVersion; };
               };
               useGlobalPkgs = true;
               useUserPackages = true;
