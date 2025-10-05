@@ -6,5 +6,6 @@
     ./graphics
     ./time
     ./networking
+    ./nix
   ];
 }
