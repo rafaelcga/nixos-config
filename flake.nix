@@ -43,7 +43,7 @@
             home-manager = {
               backupFileExtension = "bak";
               users.${userName} = {
-                imports = [ ];
+                imports = [ ./hosts/${hostName}/config-home.nix ];
                 home = { inherit stateVersion; };
               };
               useGlobalPkgs = true;
