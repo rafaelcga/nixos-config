@@ -13,9 +13,13 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    home.packages = [ pkgs.papirus-folders ];
     gtk = {
       enable = true;
-      iconTheme = pkgs.papirus-icon-theme;
+      iconTheme = {
+        name = "Papirus";
+        package = pkgs.papirus-icon-theme;
+      };
     };
   };
 }
