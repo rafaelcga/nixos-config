@@ -16,7 +16,10 @@ in
     services.flatpak.enable = true;
     systemd.services.flathub-repo = {
       wants = [ "network-online.target" ];
-      after = [ "network-online.target" ];
+      after = [
+        "network-online.target"
+        "nss-lookup.target"
+      ];
       wantedBy = [ "multi-user.target" ];
       path = [ pkgs.flatpak ];
       script = ''
