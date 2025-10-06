@@ -9,5 +9,6 @@
     ./nix
     ./zram
     ./catppuccin
+    ./desktop
   ];
 }

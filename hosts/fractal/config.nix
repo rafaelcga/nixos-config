@@ -25,5 +25,9 @@
     nix.enable = true;
     zram.enable = true;
     catppuccin.enable = true;
+    desktop = {
+      enable = true;
+      environment = "gnome";
+    };
   };
 }

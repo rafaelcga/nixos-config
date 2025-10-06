@@ -12,15 +12,17 @@ let
       intel-compute-runtime
       vpl-gpu-rt
     ];
+    "amd" = [ ];
+    "nvidia" = [ ];
   };
   vendorPackages32Bit = with pkgs; {
     "intel" = [ driversi686Linux.intel-media-driver ];
+    "amd" = [ ];
+    "nvidia" = [ ];
   };
   extraPackages = lib.concatLists (
     builtins.map (
-      vendor:
-      (vendorPackages.${vendor} or [ ])
-      ++ (if cfg.enable32Bit then (vendorPackages32Bit.${vendor} or [ ]) else [ ])
+      vendor: vendorPackages.${vendor} ++ (if cfg.enable32Bit then vendorPackages32Bit.${vendor} else [ ])
     ) cfg.vendors
   );
   usesNvidia = builtins.elem "nvidia" cfg.vendors;
