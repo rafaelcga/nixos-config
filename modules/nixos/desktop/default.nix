@@ -21,7 +21,16 @@ in
     };
   };
 
-  config = lib.mkIf cfg.enable {
-    modules.nixos.desktop.${cfg.environment}.enable = true;
-  };
+  config = lib.mkIf cfg.enable (
+    lib.mkMerge [
+      # Only enable the selected environment
+      (lib.mkIf (cfg.environment == "gnome") {
+        modules.nixos.desktop.gnome.enable = true;
+      })
+      # Add more environments here
+      # (lib.mkIf (cfg.environment == "kde") {
+      #   modules.nixos.desktop.kde.enable = true;
+      # })
+    ]
+  );
 }

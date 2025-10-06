@@ -7,7 +7,7 @@
 let
   cfg = config.modules.nixos.desktop.gnome;
   extensions = with pkgs; [ gnomeExtensions.appindicator ];
-  extensionsUuid = builtins.map (extension: extension.gsconnect.extensionUuid) extensions;
+  extensionsUuid = builtins.map (extension: extension.extensionUuid) extensions;
 in
 {
   options.modules.nixos.desktop.gnome = {
