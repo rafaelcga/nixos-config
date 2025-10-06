@@ -17,6 +17,8 @@
       ...
     }@inputs:
     let
+      lib = import ./lib/extended-lib.nix inputs;
+
       system = "x86_64-linux";
       stateVersion = "25.11";
       hostName = "fractal";
@@ -25,11 +27,9 @@
         flavor = "frappe";
         accent = "teal";
       };
-
       specialArgs = {
         inherit
           inputs
-          stateVersion
           hostName
           userName
           catppuccinTheme
@@ -40,6 +40,7 @@
       pkgs = import nixpkgs { inherit system; };
     in
     {
+      inherit lib;
       # Set default formatter for `nix fmt`
       formatter.${system} = pkgs.nixfmt-tree;
       nixosConfigurations.${hostName} = nixpkgs.lib.nixosSystem {
