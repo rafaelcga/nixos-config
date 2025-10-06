@@ -14,5 +14,6 @@
     ./theme
     ./user
     ./fish
+    ./bash
   ];
 }

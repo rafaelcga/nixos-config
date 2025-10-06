@@ -16,6 +16,7 @@ in
 
   config = lib.mkIf cfg.enable {
     programs.fish.enable = true;
+    environment.shells = [ pkgs.fish ];
     users.users.${userName}.shell = lib.mkIf cfg.makeDefault pkgs.fish;
   };
 }
