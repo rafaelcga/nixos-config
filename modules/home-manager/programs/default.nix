@@ -23,6 +23,11 @@ in
         };
         difftastic.enable = true;
       };
+      atuin = {
+        enable = true;
+        enableBashIntegration = true;
+        enableFishIntegration = true;
+      };
       gh.enable = true;
       nh.enable = true;
       micro.enable = true;
