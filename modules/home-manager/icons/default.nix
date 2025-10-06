@@ -17,8 +17,8 @@ in
     gtk = {
       enable = true;
       iconTheme = {
-        name = "Papirus";
-        package = pkgs.papirus-icon-theme;
+        name = lib.mkDefault "Papirus";
+        package = lib.mkDefault pkgs.papirus-icon-theme;
       };
     };
   };
