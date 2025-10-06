@@ -16,19 +16,22 @@ in
     programs = {
       git = {
         enable = true;
-        # TODO: git identity
+        userName = "rafaelcga";
+        userEmail = "68070715+rafaelcga@users.noreply.github.com";
         difftastic.enable = true;
       };
-      nh = {
-        enable = true;
-        flake = "$HOME/nixos-config";
-      };
+      nh.enable = true;
+      micro.enable = true;
       fastfetch.enable = true;
     };
     home.packages = with pkgs; [
       fzf
       tree
       btop
+      sops
     ];
+    systemd.user.sessionVariables = {
+      NH_FLAKE = "${config.home.homeDirectory}/nixos-config"; # path w.r.t. $HOME
+    };
   };
 }

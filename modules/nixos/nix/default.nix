@@ -15,10 +15,16 @@ in
   config = lib.mkIf cfg.enable {
     nix = {
       package = pkgs.nixVersions.latest;
-      settings.experimental-features = [
-        "nix-command"
-        "flakes"
-      ];
+      settings = {
+        trusted-users = [
+          "root"
+          "@wheel"
+        ];
+        experimental-features = [
+          "nix-command"
+          "flakes"
+        ];
+      };
       optimise.automatic = true;
       channel.enable = false;
       gc = {

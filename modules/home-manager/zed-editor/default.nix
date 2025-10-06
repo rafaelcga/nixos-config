@@ -27,6 +27,7 @@ in
         "toml"
         "fish"
         "latex"
+        "codebook"
         "caddyfile"
         "git-firefly"
         "basedpyright"
