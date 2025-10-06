@@ -19,10 +19,13 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    programs.fish = {
-      enable = true;
-      interactiveShellInit = lib.mkIf config.modules.home-manager.programs.enable "atuin init fish | source";
-      shellInit = "set -U fish_greeting";
+    programs = {
+      fish = {
+        enable = true;
+        interactiveShellInit = "atuin init fish | source";
+        shellInit = "set -U fish_greeting";
+      };
+      atuin.enable = true;
     };
     environment.shells = [ pkgs.fish ];
     users.users.${userName}.shell = lib.mkIf cfg.makeDefault pkgs.fish;
