@@ -12,5 +12,6 @@
     ./flatpak
     ./audio
     ./theme
+    ./user
   ];
 }
