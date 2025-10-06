@@ -1,22 +1,24 @@
 {
   config,
   lib,
-  catppuccinTheme,
   ...
 }:
 let
-  cfg = config.modules.home-manager.catppuccin;
+  cfg = config.modules.nixos.theme;
+  flavor = "frappe";
+  accent = "teal";
 in
 {
-  options.modules.home-manager.catppuccin = {
+  options.modules.nixos.theme = {
     enable = lib.mkEnableOption "Catppuccin color theme flake";
   };
 
   config = lib.mkIf cfg.enable {
     catppuccin = {
       enable = true;
-      inherit (catppuccinTheme) flavor accent;
+      inherit flavor accent;
       cache.enable = true;
     };
+
   };
 }

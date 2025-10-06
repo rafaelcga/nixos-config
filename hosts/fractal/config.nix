@@ -24,9 +24,9 @@
     networking.enable = true;
     nix.enable = true;
     zram.enable = true;
-    catppuccin.enable = true;
     desktop.gnome.enable = true;
     flatpak.enable = true;
     audio.enable = true;
+    theme.enable = true;
   };
 }

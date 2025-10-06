@@ -8,9 +8,9 @@
     ./networking
     ./nix
     ./zram
-    ./catppuccin
     ./desktop
     ./flatpak
     ./audio
+    ./theme
   ];
 }

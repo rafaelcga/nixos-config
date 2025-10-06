@@ -28,17 +28,12 @@
       stateVersion = "25.11";
       hostName = "fractal";
       userName = "rafael";
-      catppuccinTheme = {
-        flavor = "frappe";
-        accent = "teal";
-      };
       specialArgs = {
         inherit
           lib
           inputs
           hostName
           userName
-          catppuccinTheme
           ;
       };
 
