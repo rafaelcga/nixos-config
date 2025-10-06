@@ -26,5 +26,6 @@
     zram.enable = true;
     catppuccin.enable = true;
     desktop.gnome.enable = true;
+    flatpak.enable = true;
   };
 }

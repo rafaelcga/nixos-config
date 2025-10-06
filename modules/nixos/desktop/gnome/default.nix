@@ -33,8 +33,8 @@ in
       gnome-music
       gnome-system-monitor
       gnome-weather
-      loupe
       gnome-connections
+      gnome-software
       simple-scan
       snapshot
       totem
@@ -43,7 +43,14 @@ in
       geary
     ];
     # Add packages replacing GNOME ones
-    environment.systemPackages = with pkgs; [ ghostty ] ++ extensions;
+    environment.systemPackages =
+      with pkgs;
+      [
+        ghostty
+        papers
+        cosmic-store
+      ]
+      ++ extensions;
     programs.nautilus-open-any-terminal = {
       enable = true;
       terminal = "ghostty";

@@ -44,23 +44,10 @@
       "networkmanager"
       "wheel"
     ];
-    packages = with pkgs; [
-      #  thunderbird
-    ];
   };
 
   # Install firefox.
   programs.firefox.enable = true;
-
-  # List packages installed in system profile. To search, run:
-  # $ nix search wget
-  environment.systemPackages = with pkgs; [
-    git
-    wget
-    gh
-    nh
-    fastfetch
-  ];
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.

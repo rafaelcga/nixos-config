@@ -10,5 +10,6 @@
     ./zram
     ./catppuccin
     ./desktop
+    ./flatpak
   ];
 }
