@@ -1,6 +1,1 @@
-{ ... }:
-{
-  programs = {
-    gh.enable = true;
-  };
-}
+{ ... }: { }

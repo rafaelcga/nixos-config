@@ -23,6 +23,7 @@ in
         };
         difftastic.enable = true;
       };
+      gh.enable = true;
       nh.enable = true;
       micro.enable = true;
       fastfetch.enable = true;
