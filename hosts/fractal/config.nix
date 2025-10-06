@@ -27,5 +27,6 @@
     catppuccin.enable = true;
     desktop.gnome.enable = true;
     flatpak.enable = true;
+    audio.enable = true;
   };
 }

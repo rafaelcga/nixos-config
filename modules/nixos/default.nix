@@ -11,5 +11,6 @@
     ./catppuccin
     ./desktop
     ./flatpak
+    ./audio
   ];
 }
