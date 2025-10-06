@@ -25,8 +25,10 @@ in
         echo 'eval "$(atuin init bash)"'
       '';
     };
-    services.atuin.enable = true;
     environment.shells = [ pkgs.bash ];
-    users.users.${userName}.shell = lib.mkIf cfg.makeDefault pkgs.bash;
+    users.users.${userName} = {
+      packages = [ pkgs.atuin ];
+      shell = lib.mkIf cfg.makeDefault pkgs.bash;
+    };
   };
 }

@@ -24,8 +24,10 @@ in
       interactiveShellInit = "atuin init fish | source";
       shellInit = "set -U fish_greeting";
     };
-    services.atuin.enable = true;
     environment.shells = [ pkgs.fish ];
-    users.users.${userName}.shell = lib.mkIf cfg.makeDefault pkgs.fish;
+    users.users.${userName} = {
+      packages = [ pkgs.atuin ];
+      shell = lib.mkIf cfg.makeDefault pkgs.fish;
+    };
   };
 }
