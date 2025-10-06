@@ -21,7 +21,7 @@ in
       };
       nh = {
         enable = true;
-        flake = "~/nixos-config";
+        flake = "$HOME/nixos-config";
       };
       fastfetch.enable = true;
     };
