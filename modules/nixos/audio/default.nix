@@ -1,6 +1,7 @@
 { config, lib, ... }:
 let
   cfg = config.modules.nixos.audio;
+  bufferSize = 128;
   bluetoothEnabled = config.hardware.bluetooth.enable;
 in
 {
@@ -32,9 +33,9 @@ in
       extraConfig.pipewire."92-low-latency" = {
         "context.properties" = {
           "default.clock.rate" = 48000;
-          "default.clock.quantum" = 32;
-          "default.clock.min-quantum" = 32;
-          "default.clock.max-quantum" = 32;
+          "default.clock.quantum" = bufferSize;
+          "default.clock.min-quantum" = bufferSize;
+          "default.clock.max-quantum" = bufferSize;
         };
       };
     };
