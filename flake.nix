@@ -29,12 +29,12 @@
       };
       specialArgs = {
         inherit
+          lib
           inputs
           hostName
           userName
           catppuccinTheme
           ;
-        localLib = import ./lib { inherit nixpkgs; };
       };
 
       pkgs = import nixpkgs { inherit system; };

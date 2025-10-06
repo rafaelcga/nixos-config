@@ -2,7 +2,6 @@
   config,
   lib,
   pkgs,
-  localLib,
   catppuccinTheme,
   ...
 }:
@@ -10,9 +9,9 @@ let
   cfg = config.modules.home-manager.catppuccin;
   themeName =
     "Catppuccin-GTK-"
-    + localLib.capitalizeFirst catppuccinTheme.accent
+    + lib.local.capitalizeFirst catppuccinTheme.accent
     + "-Dark-"
-    + localLib.capitalizeFirst catppuccinTheme.flavor;
+    + lib.local.capitalizeFirst catppuccinTheme.flavor;
 in
 {
   options.modules.home-manager.catppuccin = {
