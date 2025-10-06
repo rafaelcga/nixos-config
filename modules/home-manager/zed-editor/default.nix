@@ -19,7 +19,7 @@ in
         ruff
         basedpyright
         nil
-        nixfmt-rfc-style
+        nixfmt
       ];
       extensions = [
         "ini"
