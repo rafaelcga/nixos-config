@@ -11,7 +11,11 @@ in
 {
   options.modules.nixos.bash = {
     enable = lib.mkEnableOption "bash shell configuration";
-    makeDefault = lib.mkEnableOption "Use bash as user shell";
+    makeDefault = lib.mkOption {
+      default = true;
+      type = lib.types.bool;
+      description = "Use bash as user shell";
+    };
   };
 
   config = lib.mkIf cfg.enable {

@@ -11,7 +11,11 @@ in
 {
   options.modules.nixos.fish = {
     enable = lib.mkEnableOption "fish shell configuration";
-    makeDefault = lib.mkEnableOption "Use fish as user shell";
+    makeDefault = lib.mkOption {
+      default = true;
+      type = lib.types.bool;
+      description = "Use fish as user shell";
+    };
   };
 
   config = lib.mkIf cfg.enable {

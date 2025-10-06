@@ -28,6 +28,7 @@
     flatpak.enable = true;
     audio.enable = true;
     theme.enable = true;
+    user.enable = true;
     fish.enable = true;
   };
 }
