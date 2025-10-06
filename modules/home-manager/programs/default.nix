@@ -25,11 +25,10 @@ in
       };
       fastfetch.enable = true;
     };
+    home.packages = with pkgs; [
+      fzf
+      tree
+      btop
+    ];
   };
-
-  home.packages = with pkgs; [
-    fzf
-    tree
-    btop
-  ];
 }
