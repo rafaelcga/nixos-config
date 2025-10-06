@@ -19,7 +19,12 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    programs.bash.enable = true;
+    programs.bash = {
+      enable = true;
+      shellInit = ''
+        echo 'eval "$(atuin init bash)"'
+      '';
+    };
     environment.shells = [ pkgs.bash ];
     users.users.${userName}.shell = lib.mkIf cfg.makeDefault pkgs.bash;
   };
