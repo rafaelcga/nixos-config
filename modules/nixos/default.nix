@@ -13,5 +13,6 @@
     ./audio
     ./theme
     ./user
+    ./fish
   ];
 }
