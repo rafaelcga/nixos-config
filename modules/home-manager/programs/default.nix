@@ -18,6 +18,9 @@ in
         enable = true;
         userName = "rafaelcga";
         userEmail = "68070715+rafaelcga@users.noreply.github.com";
+        extraConfig = {
+          pull.rebase = false;
+        };
         difftastic.enable = true;
       };
       nh.enable = true;
