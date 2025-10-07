@@ -18,5 +18,6 @@
     ./bash
     ./keyboard
     ./printing
+    ./steam
   ];
 }
