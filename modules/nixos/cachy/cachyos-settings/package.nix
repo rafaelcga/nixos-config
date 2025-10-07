@@ -19,8 +19,8 @@ stdenv.mkDerivation rec {
 
     mkdir -p $out/etc
     mkdir -p $out/usr
-    cp -v -a $src/etc $out/etc
-    cp -v -a $src/usr $out/usr
+    cp -v -a $src/etc $out
+    cp -v -a $src/usr $out
 
     runHook postInstall
   '';
