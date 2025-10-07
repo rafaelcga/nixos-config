@@ -17,8 +17,8 @@ stdenv.mkDerivation rec {
   installPhase = ''
     mkdir -p $out/etc
     mkdir -p $out/usr
-    cp -r $src/etc/. $out/etc/
-    cp -r $src/usr/. $out/usr/
+    cp -v -a $src/etc $out/etc
+    cp -v -a $src/usr $out/usr
   '';
 
   meta = with lib; {
