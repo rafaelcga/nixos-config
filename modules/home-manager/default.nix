@@ -4,5 +4,6 @@
     ./zed-editor
     ./programs
     ./papirus
+    ./cursor-theme
   ];
 }
