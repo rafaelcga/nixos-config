@@ -6,9 +6,13 @@
 }:
 let
   cfg = config.modules.home-manager.papirus;
-  papirus-folders = pkgs.catppuccin-papirus-folders.override {
-    inherit (config.catppuccin) flavor accent;
-  };
+  papirus =
+    if builtins.hasAttr "catppuccin" config then
+      pkgs.catppuccin-papirus-folders.override {
+        inherit (config.catppuccin) flavor accent;
+      }
+    else
+      pkgs.papirus-icon-theme;
 in
 {
   options.modules.home-manager.papirus = {
@@ -16,8 +20,6 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    home.packages = [
-      papirus-folders
-    ];
+    home.packages = [ papirus ];
   };
 }
