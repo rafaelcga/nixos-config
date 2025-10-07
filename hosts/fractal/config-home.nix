@@ -10,7 +10,6 @@
     home-manager = {
       zed-editor.enable = true;
       programs.enable = true;
-      chrome.enable = true;
       icons.enable = true;
     };
     nixos = {

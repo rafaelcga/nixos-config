@@ -30,5 +30,6 @@
     audio.enable = true;
     theme.enable = true;
     fish.enable = true;
+    keyboard.enable = true;
   };
 }

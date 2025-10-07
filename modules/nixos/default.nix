@@ -16,5 +16,7 @@
     ./user
     ./fish
     ./bash
+    ./keyboard
+    ./printing
   ];
 }

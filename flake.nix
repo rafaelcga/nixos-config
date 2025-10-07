@@ -47,7 +47,6 @@
         inherit specialArgs;
         modules = [
           ./hosts/${hostName}/config.nix
-          ./hosts/${hostName}/configuration.nix
           home-manager.nixosModules.home-manager
           catppuccin.nixosModules.catppuccin
           sops-nix.nixosModules.sops
