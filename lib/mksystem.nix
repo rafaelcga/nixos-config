@@ -8,12 +8,15 @@
       stateVersion,
     }:
     let
-      inherit (inputs)
-        nixpkgs
-        home-manager
-        catppuccin
-        sops-nix
-        ;
+      externalNixosModules = with inputs; [
+        home-manager.nixosModules.home-manager
+        sops-nix.nixosModules.sops
+        catppuccin.nixosModules.catppuccin
+      ];
+      externalHomeManagerModules = with inputs; [
+        sops-nix.homeManagerModules.sops
+        catppuccin.homeModules.catppuccin
+      ];
       specialArgs = {
         inherit
           lib
@@ -24,13 +27,9 @@
       };
     in
     {
-      ${hostName} = nixpkgs.lib.nixosSystem {
+      ${hostName} = inputs.nixpkgs.lib.nixosSystem {
         inherit specialArgs;
-        modules = [
-          home-manager.nixosModules.home-manager
-          sops-nix.nixosModules.sops
-          catppuccin.nixosModules.catppuccin
-
+        modules = externalNixosModules ++ [
           ../hosts/${hostName}/config.nix
           ../secrets
           {
@@ -44,10 +43,7 @@
                 ];
                 home = { inherit stateVersion; };
               };
-              sharedModules = [
-                sops-nix.homeManagerModules.sops
-                catppuccin.homeModules.catppuccin
-
+              sharedModules = externalHomeManagerModules ++ [
                 ../secrets
               ];
               useGlobalPkgs = true;

@@ -13,19 +13,12 @@
   };
 
   outputs =
-    {
-      self,
-      nixpkgs,
-      home-manager,
-      sops-nix,
-      catppuccin,
-      ...
-    }@inputs:
+    { ... }@inputs:
     let
       lib = import ./lib/extended-lib.nix inputs;
+      pkgs = import inputs.nixpkgs { inherit system; };
       system = "x86_64-linux";
       stateVersion = "25.11";
-      pkgs = import nixpkgs { inherit system; };
     in
     {
       # Set default formatter for `nix fmt`
