@@ -99,7 +99,7 @@ in
                 command = [ "nixfmt" ];
               };
               diagnostics = {
-                ignored = [ ];
+                ignored = [ "unused_rec" ];
                 excludedFiles = [ ];
               };
               nix = {
