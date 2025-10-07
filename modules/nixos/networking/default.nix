@@ -15,6 +15,17 @@ in
   config = lib.mkIf cfg.enable {
     networking = {
       inherit hostName;
+      wireless.iwd = {
+        enable = true;
+        settings = {
+          Network = {
+            EnableIPv6 = true;
+          };
+          Settings = {
+            AutoConnect = true;
+          };
+        };
+      };
       networkmanager = {
         enable = true;
         wifi.backend = "iwd";
