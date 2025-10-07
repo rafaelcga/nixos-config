@@ -11,7 +11,7 @@ stdenv.mkDerivation rec {
     owner = "CachyOS";
     repo = "CachyOS-Settings";
     rev = "master";
-    sha256 = lib.fakeSha256;
+    sha256 = "sha256-MRuhWZXzFDxzypY5oFueUzCKSsGGA9Mp+XKpXwzqSjE=";
   };
 
   installPhase = ''
