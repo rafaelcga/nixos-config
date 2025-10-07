@@ -29,15 +29,13 @@ in
       micro.enable = true;
       fastfetch.enable = true;
     };
-    home = {
-      packages = with pkgs; [
-        fzf
-        age
-        tree
-        btop
-        sops
-      ];
-    };
+    home.packages = with pkgs; [
+      fzf
+      age
+      tree
+      btop
+      sops
+    ];
     systemd.user.sessionVariables = lib.mkForce {
       EDITOR = "micro";
       NH_FLAKE = "${config.home.homeDirectory}/nixos-config"; # path w.r.t. $HOME

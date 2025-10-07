@@ -48,6 +48,7 @@ in
       [
         ghostty
         papers
+        celluloid
         cosmic-store
       ]
       ++ extensions;
