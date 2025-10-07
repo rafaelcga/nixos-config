@@ -16,7 +16,11 @@ in
     home.pointerCursor = {
       enable = true;
       name = "Posy_Cursor_Black_125_175";
+      size = 32;
       package = pkgs.posy-cursors;
+      x11.enable = true;
+      gtk.enable = true;
+      hyprcursor.enable = true;
     };
   };
 }
