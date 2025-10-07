@@ -1,4 +1,9 @@
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 let
   cfg = config.modules.nixos.steam;
 in
@@ -13,6 +18,22 @@ in
       remotePlay.openFirewall = true;
       dedicatedServer.openFirewall = true;
       localNetworkGameTransfers.openFirewall = true;
+      package = pkgs.steam.override {
+        extraPkgs =
+          pkgs': with pkgs'; [
+            xorg.libXcursor
+            xorg.libXi
+            xorg.libXinerama
+            xorg.libXScrnSaver
+            libpng
+            libpulseaudio
+            libvorbis
+            stdenv.cc.cc.lib # Provides libstdc++.so.6
+            libkrb5
+            keyutils
+            # Add other libraries as needed
+          ];
+      };
     };
   };
 }
