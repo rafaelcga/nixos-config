@@ -25,7 +25,7 @@
     nix.enable = true;
     lix.enable = true;
     zram.enable = true;
-    desktop.gnome.enable = true;
+    desktop.cosmic.enable = true;
     flatpak.enable = true;
     audio.enable = true;
     theme.enable = true;

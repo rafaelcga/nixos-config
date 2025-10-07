@@ -58,6 +58,7 @@ in
     };
     programs = {
       xwayland.enable = true;
+      nautilus-open-any-terminal.enable = true;
       dconf.profiles.user.databases = [
         {
           settings = {
