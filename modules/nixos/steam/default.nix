@@ -17,7 +17,6 @@ in
       enable = true;
       remotePlay.openFirewall = true;
       dedicatedServer.openFirewall = true;
-      localNetworkGameTransfers.openFirewall = true;
       package = pkgs.steam.override {
         extraPkgs =
           pkgs': with pkgs'; [
@@ -36,5 +35,6 @@ in
           ];
       };
     };
+    hardware.steam-hardware.enable = true;
   };
 }
