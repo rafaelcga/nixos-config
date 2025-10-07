@@ -7,6 +7,7 @@
     ./time
     ./networking
     ./nix
+    ./lix
     ./zram
     ./desktop
     ./flatpak

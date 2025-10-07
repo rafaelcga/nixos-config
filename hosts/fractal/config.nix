@@ -23,6 +23,7 @@
     time.enable = true;
     networking.enable = true;
     nix.enable = true;
+    lix.enable = true;
     zram.enable = true;
     desktop.gnome.enable = true;
     flatpak.enable = true;
