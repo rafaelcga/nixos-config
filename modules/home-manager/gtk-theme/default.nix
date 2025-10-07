@@ -13,6 +13,11 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    dconf.settings = {
+      "org/gnome/desktop/interface" = {
+        color-scheme = "prefer-dark";
+      };
+    };
     gtk = {
       enable = true;
       gtk3 = {
@@ -22,13 +27,13 @@ in
           package = pkgs.gnome-themes-extra;
         };
         extraConfig = {
-          gtk-application-prefer-dark-theme = true;
+          gtk-application-prefer-dark-theme = 1;
         };
       };
       gtk4 = {
         enable = true;
         extraConfig = {
-          gtk-application-prefer-dark-theme = true;
+          gtk-application-prefer-dark-theme = 1;
         };
       };
     };
