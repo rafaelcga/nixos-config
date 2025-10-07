@@ -19,7 +19,7 @@ in
         enable = true;
         theme = {
           name = "Adwaita-dark";
-          package = pkgs.gnome.gnome-themes-extra;
+          package = pkgs.gnome-themes-extra;
         };
         extraConfig = {
           gtk-application-prefer-dark-theme = true;
@@ -32,7 +32,7 @@ in
         };
       };
     };
-    qt = {
+    qt = lib.mkIf (!config.catppuccin.enable) {
       enable = true;
       style = {
         name = "adwaita-dark";
