@@ -14,7 +14,6 @@ in
 
   config = lib.mkIf cfg.enable {
     home.packages = with pkgs; [
-      papirus-icon-theme
       papirus-folders
     ];
     gtk.enable = true;
