@@ -18,9 +18,14 @@ in
       # displayManager.cosmic-greeter.enable = true;
       displayManager.gdm.enable = true;
     };
-    environment.systemPackages = with pkgs; [
-      papers
-      celluloid
-    ];
+    environment = {
+      cosmic.excludePackages = with pkgs; [
+        cosmic-player
+      ];
+      systemPackages = with pkgs; [
+        papers
+        celluloid
+      ];
+    };
   };
 }
