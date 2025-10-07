@@ -25,6 +25,7 @@ in
       };
       gh.enable = true;
       nh.enable = true;
+      atuin.enable = true;
       micro.enable = true;
       fastfetch.enable = true;
     };
