@@ -32,6 +32,7 @@ in
             libkrb5
             keyutils
             # Add other libraries as needed
+            adwaita-icon-theme
           ];
       };
     };
