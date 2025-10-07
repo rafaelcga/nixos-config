@@ -17,5 +17,6 @@ in
       papirus-icon-theme
       papirus-folders
     ];
+    gtk.enable = true;
   };
 }
