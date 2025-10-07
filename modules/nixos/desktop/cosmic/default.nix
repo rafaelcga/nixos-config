@@ -23,6 +23,7 @@ in
         cosmic-player
       ];
       systemPackages = with pkgs; [
+        loupe
         papers
         celluloid
       ];
