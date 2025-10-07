@@ -11,6 +11,7 @@
       zed-editor.enable = true;
       programs.enable = true;
       icons.enable = true;
+      gtk-theme.enable = true;
     };
     nixos = {
       theme.enable = true;
