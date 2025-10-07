@@ -38,7 +38,7 @@ in
         sops
       ];
     };
-    pam.sessionVariables = {
+    systemd.user.sessionVariables = lib.mkForce {
       EDITOR = "micro";
       NH_FLAKE = "${config.home.homeDirectory}/nixos-config"; # path w.r.t. $HOME
     };
