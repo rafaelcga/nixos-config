@@ -32,7 +32,6 @@ in
             keyutils
             # Add other libraries as needed
             adwaita-icon-theme
-            posy-cursors
           ];
       };
     };

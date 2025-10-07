@@ -15,9 +15,9 @@ in
   config = lib.mkIf cfg.enable {
     home.pointerCursor = {
       enable = true;
-      name = "Posy_Cursor_Black_125_175";
+      name = "Adwaita";
       size = 32;
-      package = pkgs.posy-cursors;
+      package = pkgs.adwaita-icon-theme;
       x11.enable = true;
       gtk.enable = true;
       hyprcursor.enable = true;
