@@ -6,6 +6,7 @@
 }:
 let
   cfg = config.modules.nixos.cachy;
+  cachyos-settings = pkgs.callPackage ./cachyos-settings/package.nix { };
 in
 {
   options.modules.nixos.cachy = {
@@ -19,5 +20,7 @@ in
       package = pkgs.ananicy-cpp;
       rulesProvider = pkgs.ananicy-rules-cachyos;
     };
+    environment.etc."security/limits.d/20-audio.conf".source =
+      "${cachyos-settings}/etc/security/limits.d/20-audio.conf";
   };
 }

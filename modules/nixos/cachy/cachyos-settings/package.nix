@@ -15,16 +15,20 @@ stdenv.mkDerivation rec {
   };
 
   installPhase = ''
+    runHook preInstall
+
     mkdir -p $out/etc
     mkdir -p $out/usr
     cp -v -a $src/etc $out/etc
     cp -v -a $src/usr $out/usr
+
+    runHook postInstall
   '';
 
   meta = with lib; {
     description = "CachyOS system settings for Nix";
     homepage = "https://github.com/CachyOS/CachyOS-Settings";
-    license = licenses.gpl3;
+    license = licenses.gpl3Only;
     platforms = platforms.linux;
   };
 }
