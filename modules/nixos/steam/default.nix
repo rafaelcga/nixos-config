@@ -35,7 +35,7 @@ in
           ];
       };
     };
-    xdg.icons.fallbackCursorThemes = "Adwaita";
+    xdg.icons.fallbackCursorThemes = [ "Adwaita" ];
     hardware.steam-hardware.enable = true;
   };
 }
