@@ -6,6 +6,7 @@
 }:
 let
   cfg = config.modules.nixos.lix;
+  version = "latest";
 in
 {
   options.modules.nixos.lix = {
@@ -15,7 +16,7 @@ in
   config = lib.mkIf cfg.enable {
     nixpkgs.overlays = [
       (final: prev: {
-        inherit (prev.lixPackageSets.stable)
+        inherit (prev.lixPackageSets.${version})
           nixpkgs-review
           nix-eval-jobs
           nix-fast-build
@@ -24,6 +25,6 @@ in
       })
     ];
 
-    nix.package = lib.mkForce pkgs.lixPackageSets.stable.lix;
+    nix.package = lib.mkForce pkgs.lixPackageSets.${version}.lix;
   };
 }
