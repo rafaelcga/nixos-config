@@ -4,10 +4,10 @@
   ...
 }:
 let
-  cfg = config.modules.nixos.theme;
+  cfg = config.modules.common.theme;
 in
 {
-  options.modules.nixos.theme = {
+  options.modules.common.theme = {
     enable = lib.mkEnableOption "Catppuccin color theme flake";
     flavor = lib.mkOption {
       type = lib.types.enum [
@@ -47,6 +47,5 @@ in
       inherit (cfg) flavor accent;
       cache.enable = true;
     };
-
   };
 }

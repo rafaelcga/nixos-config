@@ -12,7 +12,6 @@
     ./desktop
     ./flatpak
     ./audio
-    ./theme
     ./user
     ./fish
     ./bash
