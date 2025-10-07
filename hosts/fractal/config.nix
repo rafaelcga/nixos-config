@@ -32,5 +32,6 @@
     fish.enable = true;
     keyboard.enable = true;
     steam.enable = true;
+    cachy.enable = true;
   };
 }

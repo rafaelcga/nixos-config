@@ -19,5 +19,6 @@
     ./keyboard
     ./printing
     ./steam
+    ./cachy
   ];
 }

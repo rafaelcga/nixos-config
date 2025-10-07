@@ -9,11 +9,13 @@
     }:
     let
       externalNixosModules = with inputs; [
+        chaotic.nixosModules.default
         home-manager.nixosModules.home-manager
         sops-nix.nixosModules.sops
         catppuccin.nixosModules.catppuccin
       ];
       externalHomeManagerModules = with inputs; [
+        chaotic.homeManagerModules.default
         sops-nix.homeManagerModules.sops
         catppuccin.homeModules.catppuccin
       ];
