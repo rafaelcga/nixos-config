@@ -7,4 +7,9 @@
     };
     firefox.enable = true;
   };
+  home.packages = with pkgs; [
+    discord
+    spotify
+    telegram-desktop
+  ];
 }
