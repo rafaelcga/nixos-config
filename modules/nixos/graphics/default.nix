@@ -62,6 +62,7 @@ in
       };
       nvidia = lib.mkIf usesNvidia {
         open = true; # Open-source kernel module
+        forceFullCompositionPipeline = true;
         package = config.boot.kernelPackages.nvidiaPackages.latest;
       };
     };
