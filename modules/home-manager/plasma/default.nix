@@ -16,7 +16,8 @@ let
       "BreezeDark";
   catppuccinKde = lib.mkIf usesCatppuccin (
     pkgs.catppuccin-kde.override {
-      inherit (config.catppuccin) flavor accent;
+      flavour = [ config.catppuccin.flavor ];
+      accents = [ config.catppuccin.accent ];
     }
   );
 in
