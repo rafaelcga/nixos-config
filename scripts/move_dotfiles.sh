@@ -11,7 +11,7 @@ if [ ! -d "$BACKUP_DIR" ]; then
   exit 1
 fi
 
-for item in "$HOME_DIR"/.*; do
+for item in "$HOME"/.*; do
   [ -e "$item" ] || continue # Skip if file does not exist (no files found)
 
   base_name=$(basename "$item")
