@@ -31,12 +31,12 @@ in
       enable = true;
       workspace = {
         inherit colorScheme;
+        splashScreen.theme = "None"; # No splash screen
       };
       fonts.general = {
         family = "JetBrainsMono Nerd Font";
         pointSize = 12;
       };
-      splashScreen.theme = "None"; # No splash screen
       input.keyboard.numlockOnStartup = "on";
       kscreenlocker.autoLock = false;
       powerdevil.AC = {
