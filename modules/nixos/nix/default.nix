@@ -26,7 +26,6 @@ in
         ];
       };
       optimise.automatic = true;
-      channel.enable = false;
       gc = {
         automatic = true;
         dates = "weekly";
