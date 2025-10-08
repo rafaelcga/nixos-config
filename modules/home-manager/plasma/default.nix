@@ -1,4 +1,9 @@
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 let
   cfg = config.modules.home-manager.plasma;
   usesCatppuccin = config.catppuccin.enable or false;
@@ -9,6 +14,11 @@ let
       + (lib.local.capitalizeFirst config.catppuccin.accent)
     else
       "BreezeDark";
+  catppuccinKde = lib.mkIf usesCatppuccin (
+    pkgs.catppuccin-kde.override {
+      inherit (config.catppuccin) flavor accent;
+    }
+  );
 in
 {
   options.modules.home-manager.plasma = {
@@ -21,6 +31,9 @@ in
       workspace = {
         inherit colorScheme;
       };
+    };
+    home = lib.mkIf usesCatppuccin {
+      packages = [ catppuccinKde ];
     };
   };
 }
