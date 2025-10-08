@@ -30,7 +30,7 @@
       nix.enable = true;
       lix.enable = true;
       zram.enable = true;
-      desktop.cosmic.enable = true;
+      desktop.plasma.enable = true;
       flatpak.enable = true;
       audio.enable = true;
       fish.enable = true;

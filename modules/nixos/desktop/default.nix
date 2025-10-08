@@ -3,5 +3,6 @@
   imports = [
     ./gnome
     ./cosmic
+    ./plasma
   ];
 }
