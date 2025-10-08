@@ -56,7 +56,8 @@ in
         historyBehavior = "enableAutoComplete";
       };
       shortcuts = {
-        "org.kde.krunner.desktop"."_launch" = "Meta"; # KRunner launch
+        "services/org.kde.krunner.desktop"."_launch" = "Meta"; # KRunner launch
+        "plasmashell"."activate application launcher" = [ ]; # Deactivate app launcher
       };
       # Configurations applied to config files; check example home.nix in
       # https://github.com/nix-community/plasma-manager/blob/trunk/examples/home.nix
