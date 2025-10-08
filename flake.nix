@@ -36,13 +36,26 @@
       pkgs = import inputs.nixpkgs { inherit system; };
       system = "x86_64-linux";
       stateVersion = "25.11";
+
+      externalNixosModules = with inputs; [
+        chaotic.nixosModules.default
+        home-manager.nixosModules.home-manager
+        sops-nix.nixosModules.sops
+        catppuccin.nixosModules.catppuccin
+      ];
+      externalHomeManagerModules = with inputs; [
+        plasma-manager.homeModules.plasma-manager
+        chaotic.homeManagerModules.default
+        sops-nix.homeManagerModules.sops
+        catppuccin.homeModules.catppuccin
+      ];
     in
     {
       # Set default formatter for `nix fmt`
       formatter.${system} = pkgs.nixfmt-tree;
       nixosConfigurations = (
         lib.local.mkSystem {
-          inherit inputs stateVersion;
+          inherit stateVersion externalNixosModules externalHomeManagerModules;
           hostName = "fractal";
           userName = "rafael";
         }

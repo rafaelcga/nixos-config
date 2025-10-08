@@ -2,35 +2,23 @@
 {
   mkSystem =
     {
-      inputs,
       hostName,
       userName,
       stateVersion,
+      externalNixosModules ? [ ],
+      externalHomeManagerModules ? [ ],
     }:
     let
-      externalNixosModules = with inputs; [
-        chaotic.nixosModules.default
-        home-manager.nixosModules.home-manager
-        sops-nix.nixosModules.sops
-        catppuccin.nixosModules.catppuccin
-      ];
-      externalHomeManagerModules = with inputs; [
-        plasma-manager.homeModules.plasma-manager
-        chaotic.homeManagerModules.default
-        sops-nix.homeManagerModules.sops
-        catppuccin.homeModules.catppuccin
-      ];
       specialArgs = {
         inherit
           lib
-          inputs
           hostName
           userName
           ;
       };
     in
     {
-      ${hostName} = inputs.nixpkgs.lib.nixosSystem {
+      ${hostName} = lib.nixosSystem {
         inherit specialArgs;
         modules = externalNixosModules ++ [
           ../hosts/${hostName}/config.nix
