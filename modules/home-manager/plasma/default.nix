@@ -48,9 +48,11 @@ in
     home = lib.mkIf usesCatppuccin {
       packages = with pkgs; [
         darkly
+        darkly-qt5
         catppuccinKde
         nerd-fonts.jetbrains-mono
       ];
     };
+    qt.platformTheme.name = "qtct";
   };
 }
