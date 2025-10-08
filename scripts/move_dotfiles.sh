@@ -19,6 +19,11 @@ for item in "$HOME_DIR"/.*; do
   if [ "$base_name" = "." ] || [ "$base_name" = ".." ] || ["$item" = "$BACKUP_DIR"]; then
     continue
   fi
+  if [ -L "$item" ]; then
+    echo " -> Skipping symbolic link: '$base_name'"
+    continue
+  fi
+
   echo " -> Moving '$base_name'..."
   mv "$item" "$BACKUP_DIR/"
 done
