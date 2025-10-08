@@ -2,7 +2,8 @@
 let
   upperFlavor = lib.local.capitalizeFirst config.catppuccin.flavor or "";
   upperAccent = lib.local.capitalizeFirst config.catppuccin.accent or "";
-  nixosLogoPath = ../../resources/icons/nix-snowflake-rainbow-pastel.png;
+  nixosLogoPath = ../../resources/splash/nix-snowflake-rainbow-pastel.png;
+  splashPreviewPath = ../../resources/splash/preview.png;
 in
 (final: prev: {
   catppuccin-kde =
@@ -12,8 +13,10 @@ in
     }).overrideAttrs
       (oldAttrs: {
         postInstall = (oldAttrs.postInstall or "") + ''
-          theme_dir=Catppuccin-${upperFlavor}-${upperAccent}
-          cp ${nixosLogoPath} $out/share/plasma/look-and-feel/$theme_dir/contents/splash/images/Logo.png
+          theme_dir="Catppuccin-${upperFlavor}-${upperAccent}"
+          contents_dir="$out/share/plasma/look-and-feel/$theme_dir/contents"
+          cp ${nixosLogoPath} $contents_dir/splash/images/Logo.png
+          cp ${splashPreviewPath} $contents_dir/previews/splash.png
         '';
       });
   catppuccin-papirus-folders = prev.catppuccin-papirus-folders.override {
