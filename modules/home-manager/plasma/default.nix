@@ -38,7 +38,6 @@ in
           inherit (themeConfig) library;
         };
       };
-      configFile.kdeglobals.KDE.widgetStyle = config.programs.plasma.workspace.windowDecorations.theme;
       fonts = {
         general = fontConfig;
         toolbar = fontConfig;
@@ -51,6 +50,15 @@ in
         autoSuspend.action = "nothing";
         dimDisplay.enable = false;
         turnOffDisplay.idleTimeout = "never";
+      };
+      # Configurations applied to config files; check example home.nix in
+      # https://github.com/nix-community/plasma-manager/blob/trunk/examples/home.nix
+      configFile.kdeglobals = {
+        KDE.widgetStyle = themeConfig.name;
+        General = {
+          TerminalApplication = "ghostty";
+          TerminalService = "Ghostty.desktop";
+        };
       };
     };
     home = lib.mkIf usesCatppuccin {
