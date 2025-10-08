@@ -22,7 +22,7 @@ let
   };
   extraPackages = lib.concatLists (
     builtins.map (
-      vendor: vendorPackages.${vendor} ++ (if cfg.enable32Bit then vendorPackages32Bit.${vendor} else [ ])
+      vendor: vendorPackages.${vendor} ++ lib.optionals cfg.enable32Bit vendorPackages32Bit.${vendor}
     ) cfg.vendors
   );
   usesNvidia = builtins.elem "nvidia" cfg.vendors;
