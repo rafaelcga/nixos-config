@@ -15,5 +15,6 @@ in
         wayland.enable = true;
       };
     };
+    hardware.bluetooth.enable = true;
   };
 }

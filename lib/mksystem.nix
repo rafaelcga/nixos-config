@@ -15,6 +15,7 @@
         catppuccin.nixosModules.catppuccin
       ];
       externalHomeManagerModules = with inputs; [
+        plasma-manager.homeModules.plasma-manager
         chaotic.homeManagerModules.default
         sops-nix.homeManagerModules.sops
         catppuccin.homeModules.catppuccin
