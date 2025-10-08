@@ -23,6 +23,7 @@
         modules = nixosModules ++ [
           ../hosts/${hostName}/config.nix
           ../secrets
+          ../overlays
           {
             system = { inherit stateVersion; };
             home-manager = {

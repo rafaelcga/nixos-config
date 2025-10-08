@@ -11,22 +11,8 @@ let
   upperAccent = lib.local.capitalizeFirst config.catppuccin.accent or "";
 
   colorScheme = if usesCatppuccin then "Catppuccin${upperFlavor}${upperAccent}" else "BreezeDark";
-  globalThemeName = if usesCatppuccin then "Catppuccin-${upperFlavor}-${upperAccent}" else "";
-
-  nixosLogoPath = ../../../resources/icons/nix-snowflake-rainbow-pastel.png;
-  originalLogoPath = "/share/plasma/look-and-feel/${globalThemeName}/contents/splash/images/Logo.png";
-  catppuccinKde = lib.mkIf usesCatppuccin (
-    (pkgs.catppuccin-kde.overrideAttrs (old: {
-      postInstall = (old.postInstall or "") + ''
-        cp ${nixosLogoPath} $out${originalLogoPath}
-      '';
-    })).override
-      {
-        flavour = [ config.catppuccin.flavor ];
-        accents = [ config.catppuccin.accent ];
-      }
-  );
-  splashTheme = if usesCatppuccin then "${globalThemeName}-splash" else "Breeze";
+  splashTheme =
+    if usesCatppuccin then "Catppuccin-${upperFlavor}-${upperAccent}-splash" else "Breeze";
 
   fontConfig = {
     family = "JetBrainsMono Nerd Font";
@@ -72,7 +58,7 @@ in
       packages = with pkgs; [
         darkly
         darkly-qt5
-        catppuccinKde
+        catppuccin-kde
         nerd-fonts.jetbrains-mono
       ];
     };
