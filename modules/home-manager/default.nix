@@ -6,5 +6,6 @@
     ./papirus
     ./cursor-theme
     ./plasma
+    ./ghostty
   ];
 }

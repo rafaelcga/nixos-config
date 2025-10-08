@@ -16,6 +16,7 @@
       papirus.enable = true;
       cursor-theme.enable = true;
       plasma.enable = true;
+      ghostty.enable = true;
     };
   };
 }
