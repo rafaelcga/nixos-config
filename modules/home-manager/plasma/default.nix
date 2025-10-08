@@ -36,9 +36,12 @@ in
         family = "JetBrainsMono Nerd Font";
         pointSize = 12;
       };
+      input.keyboard.numlockOnStartup = "on";
+      kscreenlocker.autoLock = false;
       powerdevil.AC = {
         autoSuspend.action = "nothing";
         dimDisplay.enable = false;
+        turnOffDisplay.idleTimeout = "never";
       };
     };
     home = lib.mkIf usesCatppuccin {
