@@ -52,7 +52,7 @@ in
         turnOffDisplay.idleTimeout = "never";
       };
       shortcuts = {
-        krunner."Launch" = "Meta";
+        KRunner."Launch" = "Meta";
       };
       # Configurations applied to config files; check example home.nix in
       # https://github.com/nix-community/plasma-manager/blob/trunk/examples/home.nix
