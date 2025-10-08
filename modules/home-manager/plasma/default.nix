@@ -51,7 +51,9 @@ in
         dimDisplay.enable = false;
         turnOffDisplay.idleTimeout = "never";
       };
-      krunner.shortcuts.launch = "Meta";
+      shortcuts = {
+        krunner."Launch" = "Meta";
+      };
       # Configurations applied to config files; check example home.nix in
       # https://github.com/nix-community/plasma-manager/blob/trunk/examples/home.nix
       configFile.kdeglobals = {
