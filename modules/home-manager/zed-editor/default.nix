@@ -15,6 +15,8 @@ in
   config = lib.mkIf cfg.enable {
     programs.zed-editor = {
       enable = true;
+
+      ## EXTENSIONS AND PACKAGES
       extraPackages = with pkgs; [
         ruff
         basedpyright
@@ -22,6 +24,7 @@ in
         nixfmt
         shfmt
         shellcheck
+        nerd-fonts.jetbrains-mono
       ];
       extensions = [
         "ini"
@@ -34,6 +37,8 @@ in
         "git-firefly"
         "basedpyright"
       ];
+
+      ## SETTINGS JSON
       userSettings = {
         disable_ai = true;
         # UI settings
@@ -139,6 +144,5 @@ in
         };
       };
     };
-    home.packages = [ pkgs.nerd-fonts.jetbrains-mono ];
   };
 }

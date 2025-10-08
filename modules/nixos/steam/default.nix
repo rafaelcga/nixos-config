@@ -13,6 +13,7 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    hardware.steam-hardware.enable = true; # Steam controllers and such
     programs.steam = {
       enable = true;
       remotePlay.openFirewall = true;
@@ -35,6 +36,5 @@ in
           ];
       };
     };
-    hardware.steam-hardware.enable = true;
   };
 }
