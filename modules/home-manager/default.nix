@@ -5,5 +5,6 @@
     ./programs
     ./papirus
     ./cursor-theme
+    ./plasma
   ];
 }

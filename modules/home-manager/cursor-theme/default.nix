@@ -6,6 +6,7 @@
 }:
 let
   cfg = config.modules.home-manager.cursor-theme;
+  usesPlasma = config.programs.plasma.enable or false;
 in
 {
   options.modules.home-manager.cursor-theme = {
@@ -21,6 +22,12 @@ in
       x11.enable = true;
       gtk.enable = true;
       hyprcursor.enable = true;
+    };
+    programs = lib.mkIf usesPlasma {
+      cursor = {
+        theme = config.home.pointerCursor.name;
+        inherit (config.home.pointerCursor) size;
+      };
     };
   };
 }
