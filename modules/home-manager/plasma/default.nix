@@ -32,9 +32,18 @@ in
       workspace = {
         inherit colorScheme;
       };
+      fonts = {
+        general = {
+          family = "JetBrainsMono Nerd Font";
+          pointSize = 14;
+        };
+      };
     };
     home = lib.mkIf usesCatppuccin {
-      packages = [ catppuccinKde ];
+      packages = with pkgs; [
+        catppuccinKde
+        nerd-fonts.jetbrains-mono
+      ];
     };
   };
 }
