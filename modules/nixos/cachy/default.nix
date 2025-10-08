@@ -10,12 +10,10 @@ let
 in
 {
   options.modules.nixos.cachy = {
-    enable = lib.mkEnableOption "Cachy kernel and optimizations configuration";
+    enable = lib.mkEnableOption "CachyOS optimizations configuration";
   };
 
   config = lib.mkIf cfg.enable {
-    # boot.kernelPackages = lib.mkForce pkgs.linuxPackages_cachyos;
-    boot.kernelPackages = lib.mkForce pkgs.linuxPackages_zen;
     services = {
       udev = {
         enable = true;

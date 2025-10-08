@@ -1,16 +1,6 @@
 {
-  # nixConfig = {
-  #   extra-substituters = [
-  #     "https://chaotic-nyx.cachix.org"
-  #   ];
-  #   extra-trusted-public-keys = [
-  #     "chaotic-nyx.cachix.org-1:HfnXSw4pj95iI/n17rIDy40agHj12WfF+Gqk6SonIT8="
-  #   ];
-  # };
-
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    # chaotic.url = "github:chaotic-cx/nyx/nyxpkgs-unstable";
     home-manager = {
       url = "github:nix-community/home-manager/master";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -43,12 +33,10 @@
 
       nixosModules = with inputs; [
         home-manager.nixosModules.home-manager
-        # chaotic.nixosModules.default
         sops-nix.nixosModules.sops
         catppuccin.nixosModules.catppuccin
       ];
       homeManagerModules = with inputs; [
-        # chaotic.homeManagerModules.default
         sops-nix.homeManagerModules.sops
         catppuccin.homeModules.catppuccin
         plasma-manager.homeModules.plasma-manager
