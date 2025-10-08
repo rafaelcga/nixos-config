@@ -11,7 +11,7 @@ let
   upperAccent = lib.local.capitalizeFirst config.catppuccin.accent or "";
 
   colorScheme = if usesCatppuccin then "Catppuccin${upperFlavor}${upperAccent}" else "BreezeDark";
-  splashTheme = if usesCatppuccin then "Catppuccin ${upperFlavor} ${upperAccent}" else "Breeze";
+  splashTheme = if usesCatppuccin then "Catppuccin-${upperFlavor}-${upperAccent}" else "Breeze";
 
   fontConfig = {
     family = "JetBrainsMono Nerd Font";
