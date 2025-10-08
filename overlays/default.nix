@@ -1,6 +1,6 @@
 { config, lib, ... }:
 {
   nixpkgs.overlays = [
-    (import ./catppuccin-kde { inherit config lib; })
+    (import ./catppuccin { inherit config lib; })
   ];
 }

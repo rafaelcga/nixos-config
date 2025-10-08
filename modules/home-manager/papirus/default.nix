@@ -8,14 +8,6 @@ let
   cfg = config.modules.home-manager.papirus;
   usesPlasma = config.programs.plasma.enable or false;
   usesCatppuccin = config.catppuccin.enable or false;
-
-  papirus =
-    if usesCatppuccin then
-      pkgs.catppuccin-papirus-folders.override {
-        inherit (config.catppuccin) flavor accent;
-      }
-    else
-      pkgs.papirus-icon-theme;
 in
 {
   options.modules.home-manager.papirus = {
@@ -23,7 +15,9 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    home.packages = [ papirus ];
+    home.packages = [
+      (if usesCatppuccin then pkgs.catppuccin-papirus-folders else pkgs.papirus-icon-theme)
+    ];
     programs = lib.mkIf usesPlasma {
       plasma.workspace.iconTheme = "Papirus-Dark";
     };

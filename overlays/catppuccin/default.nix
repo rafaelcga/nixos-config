@@ -16,4 +16,7 @@ in
           cp ${nixosLogoPath} $out/share/plasma/look-and-feel/$theme_dir/contents/splash/images/Logo.png
         '';
       });
+  catppuccin-papirus-folders = prev.catppuccin-papirus-folders.override {
+    inherit (config.catppuccin) flavor accent;
+  };
 })
