@@ -21,6 +21,7 @@ in
         nil
         nixfmt
         shfmt
+        shellcheck
       ];
       extensions = [
         "ini"
