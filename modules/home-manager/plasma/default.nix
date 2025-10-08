@@ -35,7 +35,7 @@ in
       fonts = {
         general = {
           family = "JetBrainsMono Nerd Font";
-          pointSize = 14;
+          pointSize = 12;
         };
       };
     };
