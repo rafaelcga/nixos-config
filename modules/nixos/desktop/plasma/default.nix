@@ -1,4 +1,9 @@
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 let
   cfg = config.modules.nixos.desktop.plasma;
 in
@@ -15,5 +20,19 @@ in
         wayland.enable = true;
       };
     };
+    environment = {
+      plasma6.excludePackages = with pkgs.kdePackages; [
+        konsole
+        okular
+        kate
+      ];
+      systemPackages = with pkgs; [
+        ghostty
+        papers
+        celluloid
+        cosmic-edit
+      ];
+    };
+    hardware.bluetooth.enable = true;
   };
 }

@@ -2,36 +2,25 @@
 {
   mkSystem =
     {
-      inputs,
       hostName,
       userName,
       stateVersion,
+      nixosModules ? [ ],
+      homeManagerModules ? [ ],
     }:
     let
-      externalNixosModules = with inputs; [
-        chaotic.nixosModules.default
-        home-manager.nixosModules.home-manager
-        sops-nix.nixosModules.sops
-        catppuccin.nixosModules.catppuccin
-      ];
-      externalHomeManagerModules = with inputs; [
-        chaotic.homeManagerModules.default
-        sops-nix.homeManagerModules.sops
-        catppuccin.homeModules.catppuccin
-      ];
       specialArgs = {
         inherit
           lib
-          inputs
           hostName
           userName
           ;
       };
     in
     {
-      ${hostName} = inputs.nixpkgs.lib.nixosSystem {
+      ${hostName} = lib.nixosSystem {
         inherit specialArgs;
-        modules = externalNixosModules ++ [
+        modules = nixosModules ++ [
           ../hosts/${hostName}/config.nix
           ../secrets
           {
@@ -45,7 +34,7 @@
                 ];
                 home = { inherit stateVersion; };
               };
-              sharedModules = externalHomeManagerModules ++ [
+              sharedModules = homeManagerModules ++ [
                 ../secrets
               ];
               useGlobalPkgs = true;

@@ -17,6 +17,11 @@
       url = "github:nix-community/home-manager/master";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    plasma-manager = {
+      url = "github:nix-community/plasma-manager";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.home-manager.follows = "home-manager";
+    };
     sops-nix = {
       url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -31,13 +36,26 @@
       pkgs = import inputs.nixpkgs { inherit system; };
       system = "x86_64-linux";
       stateVersion = "25.11";
+
+      nixosModules = with inputs; [
+        chaotic.nixosModules.default
+        home-manager.nixosModules.home-manager
+        sops-nix.nixosModules.sops
+        catppuccin.nixosModules.catppuccin
+      ];
+      homeManagerModules = with inputs; [
+        plasma-manager.homeModules.plasma-manager
+        chaotic.homeManagerModules.default
+        sops-nix.homeManagerModules.sops
+        catppuccin.homeModules.catppuccin
+      ];
     in
     {
       # Set default formatter for `nix fmt`
       formatter.${system} = pkgs.nixfmt-tree;
       nixosConfigurations = (
         lib.local.mkSystem {
-          inherit inputs stateVersion;
+          inherit stateVersion nixosModules homeManagerModules;
           hostName = "fractal";
           userName = "rafael";
         }
