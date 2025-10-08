@@ -6,26 +6,21 @@
 }:
 let
   cfg = config.modules.nixos.graphics;
+  usesNvidia = builtins.elem "nvidia" cfg.vendors;
+
   vendorPackages = with pkgs; {
     "intel" = [
       intel-media-driver
       intel-compute-runtime
       vpl-gpu-rt
+    ]
+    ++ lib.optionals cfg.enable32Bit [
+      driversi686Linux.intel-media-driver
     ];
     "amd" = [ ];
     "nvidia" = [ ];
   };
-  vendorPackages32Bit = with pkgs; {
-    "intel" = [ driversi686Linux.intel-media-driver ];
-    "amd" = [ ];
-    "nvidia" = [ ];
-  };
-  extraPackages = lib.concatLists (
-    builtins.map (
-      vendor: vendorPackages.${vendor} ++ lib.optionals cfg.enable32Bit vendorPackages32Bit.${vendor}
-    ) cfg.vendors
-  );
-  usesNvidia = builtins.elem "nvidia" cfg.vendors;
+  extraPackages = lib.concatLists (builtins.map (vendor: vendorPackages.${vendor}) cfg.vendors);
 in
 {
   options.modules.nixos.graphics = {
