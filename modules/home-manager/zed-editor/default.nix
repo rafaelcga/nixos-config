@@ -20,6 +20,7 @@ in
         basedpyright
         nil
         nixfmt
+        shfmt
       ];
       extensions = [
         "ini"
@@ -69,6 +70,20 @@ in
               "!nixd"
             ];
             format_on_save = "on";
+          };
+          "Shell Script" = {
+            format_on_save = "on";
+            formatter = {
+              external = {
+                command = "shfmt";
+                arguments = [
+                  "--filename"
+                  "{buffer_path}"
+                  "--indent"
+                  "2"
+                ];
+              };
+            };
           };
         };
         # Language-servers
