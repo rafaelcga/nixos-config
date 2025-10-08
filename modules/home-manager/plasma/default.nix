@@ -51,8 +51,12 @@ in
         dimDisplay.enable = false;
         turnOffDisplay.idleTimeout = "never";
       };
+      krunner = {
+        position = "center";
+        historyBehavior = "enableAutoComplete";
+      };
       shortcuts = {
-        "KRunner"."Launch" = "Meta";
+        "org.kde.krunner.desktop"."_launch" = "Meta"; # KRunner launch
       };
       # Configurations applied to config files; check example home.nix in
       # https://github.com/nix-community/plasma-manager/blob/trunk/examples/home.nix
