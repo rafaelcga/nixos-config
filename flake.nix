@@ -37,13 +37,13 @@
       system = "x86_64-linux";
       stateVersion = "25.11";
 
-      externalNixosModules = with inputs; [
+      nixosModules = with inputs; [
         chaotic.nixosModules.default
         home-manager.nixosModules.home-manager
         sops-nix.nixosModules.sops
         catppuccin.nixosModules.catppuccin
       ];
-      externalHomeManagerModules = with inputs; [
+      homeManagerModules = with inputs; [
         plasma-manager.homeModules.plasma-manager
         chaotic.homeManagerModules.default
         sops-nix.homeManagerModules.sops
@@ -55,7 +55,7 @@
       formatter.${system} = pkgs.nixfmt-tree;
       nixosConfigurations = (
         lib.local.mkSystem {
-          inherit stateVersion externalNixosModules externalHomeManagerModules;
+          inherit stateVersion nixosModules homeManagerModules;
           hostName = "fractal";
           userName = "rafael";
         }

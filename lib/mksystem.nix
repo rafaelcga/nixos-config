@@ -5,8 +5,8 @@
       hostName,
       userName,
       stateVersion,
-      externalNixosModules ? [ ],
-      externalHomeManagerModules ? [ ],
+      nixosModules ? [ ],
+      homeManagerModules ? [ ],
     }:
     let
       specialArgs = {
@@ -20,7 +20,7 @@
     {
       ${hostName} = lib.nixosSystem {
         inherit specialArgs;
-        modules = externalNixosModules ++ [
+        modules = nixosModules ++ [
           ../hosts/${hostName}/config.nix
           ../secrets
           {
@@ -34,7 +34,7 @@
                 ];
                 home = { inherit stateVersion; };
               };
-              sharedModules = externalHomeManagerModules ++ [
+              sharedModules = homeManagerModules ++ [
                 ../secrets
               ];
               useGlobalPkgs = true;
