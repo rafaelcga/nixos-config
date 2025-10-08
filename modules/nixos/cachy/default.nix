@@ -14,7 +14,8 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    boot.kernelPackages = lib.mkForce pkgs.linuxPackages_cachyos;
+    # boot.kernelPackages = lib.mkForce pkgs.linuxPackages_cachyos;
+    boot.kernelPackages = lib.mkForce pkgs.linuxPackages_zen;
     services = {
       udev = {
         enable = true;
