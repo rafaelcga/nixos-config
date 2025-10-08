@@ -20,6 +20,14 @@ let
       accents = [ config.catppuccin.accent ];
     }
   );
+  fontConfig = {
+    family = "JetBrainsMono Nerd Font";
+    pointSize = 12;
+  };
+  themeConfig = {
+    name = "Darkly";
+    library = "org.kde.darkly";
+  };
 in
 {
   options.modules.home-manager.plasma = {
@@ -32,10 +40,17 @@ in
       workspace = {
         inherit colorScheme;
         splashScreen.theme = "None"; # No splash screen
+        windowDecorations = {
+          theme = themeConfig.name;
+          inherit (themeConfig) library;
+        };
       };
-      fonts.general = {
-        family = "JetBrainsMono Nerd Font";
-        pointSize = 12;
+      configFile.kdeglobals.KDE.widgetStyle = config.programs.plasma.workspace.windowDecorations.theme;
+      fonts = {
+        general = fontConfig;
+        toolbar = fontConfig;
+        menu = fontConfig;
+        windowTitle = fontConfig;
       };
       input.keyboard.numlockOnStartup = "on";
       kscreenlocker.autoLock = false;
