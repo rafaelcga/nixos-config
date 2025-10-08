@@ -25,7 +25,7 @@ in
   config = lib.mkIf cfg.enable {
     home.packages = [ papirus ];
     programs = lib.mkIf usesPlasma {
-      workspace.iconTheme = "Papirus-Dark";
+      plasma.workspace.iconTheme = "Papirus-Dark";
     };
   };
 }

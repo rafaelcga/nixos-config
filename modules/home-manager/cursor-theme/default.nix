@@ -24,7 +24,7 @@ in
       hyprcursor.enable = true;
     };
     programs = lib.mkIf usesPlasma {
-      cursor = {
+      plasma.workspace.cursor = {
         theme = config.home.pointerCursor.name;
         inherit (config.home.pointerCursor) size;
       };
