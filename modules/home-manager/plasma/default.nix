@@ -36,6 +36,7 @@ in
         family = "JetBrainsMono Nerd Font";
         pointSize = 12;
       };
+      splashScreen.theme = "None"; # No splash screen
       input.keyboard.numlockOnStartup = "on";
       kscreenlocker.autoLock = false;
       powerdevil.AC = {
@@ -46,6 +47,7 @@ in
     };
     home = lib.mkIf usesCatppuccin {
       packages = with pkgs; [
+        darkly
         catppuccinKde
         nerd-fonts.jetbrains-mono
       ];
