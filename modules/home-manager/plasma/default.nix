@@ -32,11 +32,13 @@ in
       workspace = {
         inherit colorScheme;
       };
-      fonts = {
-        general = {
-          family = "JetBrainsMono Nerd Font";
-          pointSize = 12;
-        };
+      fonts.general = {
+        family = "JetBrainsMono Nerd Font";
+        pointSize = 12;
+      };
+      powerdevil.AC = {
+        autoSuspend.action = "nothing";
+        dimDisplay.enable = false;
       };
     };
     home = lib.mkIf usesCatppuccin {
