@@ -142,7 +142,6 @@ in
         darkly
         darkly-qt5
         catppuccin-kde
-        kdePackages.karousel # Scrolling window manager KWin Script
         nerd-fonts.jetbrains-mono
       ];
     };
