@@ -145,14 +145,17 @@ in
           "krunner_sessions,krunner_powerdevil,windows,krunner_services,krunner_systemsettings";
       };
     };
-    home = lib.mkIf usesCatppuccin {
-      packages = with pkgs; [
+    home.packages =
+      with pkgs;
+      [
         darkly
         darkly-qt5
-        catppuccin-kde
         nerd-fonts.jetbrains-mono
+      ]
+      ++ lib.optionals usesCatppuccin [
+        catppuccin-kde
+        catppuccin-sddm
       ];
-    };
     qt.platformTheme.name = "qtct"; # Required by Darkly
   };
 }
