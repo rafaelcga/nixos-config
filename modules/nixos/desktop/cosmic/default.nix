@@ -26,6 +26,7 @@ in
         papers
         celluloid
       ];
+      sessionVariables.NIXOS_OZONE_WL = "1";
     };
   };
 }
