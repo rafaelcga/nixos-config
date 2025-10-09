@@ -25,6 +25,7 @@ in
       };
       gh.enable = true;
       nh.enable = true;
+      btop.enable = true;
       atuin.enable = true;
       micro.enable = true;
       fastfetch.enable = true;
@@ -33,7 +34,6 @@ in
       fzf
       age
       tree
-      btop
       sops
     ];
     systemd.user.sessionVariables = lib.mkForce {
