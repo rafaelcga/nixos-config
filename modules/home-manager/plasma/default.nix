@@ -12,6 +12,7 @@ let
 
   colorScheme = if usesCatppuccin then "Catppuccin${upperFlavor}${upperAccent}" else "BreezeDark";
   splashTheme = if usesCatppuccin then "Catppuccin-${upperFlavor}-${upperAccent}" else "Breeze";
+  pastelIconPath = ../../../resources/splash/nix-snowflake-rainbow-pastel.svg;
 
   fontConfig = {
     family = "JetBrainsMono Nerd Font";
@@ -59,6 +60,59 @@ in
         "services/org.kde.krunner.desktop"."_launch" = "Meta"; # KRunner launch
         "plasmashell"."activate application launcher" = [ ]; # Deactivate app launcher
       };
+      # Check ${plasma-manager}/modules/widgets or widget names in
+      # ~/.config/plasma-org.kde.plasma.desktop-appletsrc
+      panels = [
+        {
+          height = 32;
+          lengthMode = "fill";
+          location = "top";
+          alignment = "center";
+          hiding = "none";
+          floating.enable = false;
+          opacity = "opaque";
+          screen = 0;
+          widgets = [
+            {
+              kickoff = {
+                icon = builtins.toString pastelIconPath;
+              };
+            }
+            {
+              pager.general = {
+                displayedText = "desktopNumber";
+                showWindowOutlines = false;
+              };
+            }
+            {
+              panelSpacer.expanding = true;
+            }
+            {
+              digitalClock.date.enable = false;
+            }
+            {
+              panelSpacer.expanding = true;
+            }
+            {
+              keyboardLayout.displayStyle = "label";
+            }
+            {
+              systemTray = {
+                icons = {
+                  spacing = "medium";
+                  scaleToFit = true;
+                };
+                items = {
+                  hidden = [
+                    "org.kde.plasma.brightness"
+                    "org.kde.plasma.clipboard"
+                  ];
+                };
+              };
+            }
+          ];
+        }
+      ];
       # Configurations applied to config files; check example home.nix in
       # https://github.com/nix-community/plasma-manager/blob/trunk/examples/home.nix
       # To easily check which to change, you can also run their `rc2nix` tool:
