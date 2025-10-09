@@ -10,8 +10,8 @@ let
   upperFlavor = lib.local.capitalizeFirst config.catppuccin.flavor or "";
   upperAccent = lib.local.capitalizeFirst config.catppuccin.accent or "";
 
-  colorScheme = if usesCatppuccin then "Catppuccin${upperFlavor}${upperAccent}" else "BreezeDark";
-  splashTheme = if usesCatppuccin then "Catppuccin-${upperFlavor}-${upperAccent}" else "Breeze";
+  globalTheme = if usesCatppuccin then "Catppuccin-${upperFlavor}-${upperAccent}" else "BreezeDark";
+  widgetStyle = "Darkly";
 
   pastelIconPath = ../../../resources/splash/nix-snowflake-rainbow-pastel.svg;
   wallpaperPath = ../../../resources/wallpapers/nebula.jpg;
@@ -19,10 +19,6 @@ let
   fontConfig = {
     family = "JetBrainsMono Nerd Font";
     pointSize = 12;
-  };
-  themeConfig = {
-    name = "Darkly";
-    library = "org.kde.darkly";
   };
 in
 {
@@ -34,14 +30,19 @@ in
     programs.plasma = {
       enable = true;
       workspace = {
-        inherit colorScheme;
-        splashScreen.theme = splashTheme;
-        windowDecorations = {
-          theme = themeConfig.name;
-          inherit (themeConfig) library;
-        };
+        lookAndFeel = globalTheme;
         wallpaper = builtins.toString wallpaperPath;
         wallpaperFillMode = "preserveAspectCrop";
+      };
+      kwin.titlebarButtons = {
+        left = [
+          "more-window-actions"
+        ];
+        right = [
+          "minimize"
+          "maximize"
+          "close"
+        ];
       };
       kscreenlocker = {
         autoLock = false;
@@ -127,7 +128,7 @@ in
       # `nix run github:nix-community/plasma-manager`
       configFile = {
         kdeglobals = {
-          KDE.widgetStyle = themeConfig.name;
+          KDE = { inherit widgetStyle; };
           General = {
             TerminalApplication = "ghostty";
             TerminalService = "Ghostty.desktop";
