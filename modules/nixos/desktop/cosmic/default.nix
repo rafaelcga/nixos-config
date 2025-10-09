@@ -15,8 +15,7 @@ in
   config = lib.mkIf cfg.enable {
     services = {
       desktopManager.cosmic.enable = true;
-      # displayManager.cosmic-greeter.enable = true;
-      displayManager.gdm.enable = true;
+      displayManager.cosmic-greeter.enable = true;
     };
     environment = {
       cosmic.excludePackages = with pkgs; [
