@@ -28,6 +28,7 @@ in
       ];
       extensions = [
         "ini"
+        "nix"
         "ruff"
         "toml"
         "fish"
