@@ -17,6 +17,7 @@
       cursor-theme.enable = true;
       plasma.enable = true;
       ghostty.enable = true;
+      rofi.enable = true;
     };
   };
 }

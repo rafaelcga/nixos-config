@@ -7,5 +7,6 @@
     ./cursor-theme
     ./plasma
     ./ghostty
+    ./rofi
   ];
 }
