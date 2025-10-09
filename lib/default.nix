@@ -13,7 +13,7 @@ let
     let
       isNixFile = { item, type }: (lib.hasSuffix ".nix" item) && (type == "regular");
       isModule =
-        { item, type }: (builtins.pathExists rootDir + "${item}/default.nix") && (type == "directory");
+        { item, type }: (builtins.pathExists (rootDir + "${item}/default.nix")) && (type == "directory");
     in
     (builtins.attrNames (
       lib.filterAttrs (
