@@ -32,6 +32,7 @@ in
         celluloid
         cosmic-edit
       ];
+      sessionVariables.NIXOS_OZONE_WL = "1"; # Hint Electron apps to use Wayland
     };
     hardware.bluetooth.enable = true;
   };
