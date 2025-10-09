@@ -4,7 +4,7 @@ let
   # default.nix) in a given rootDir; can pass file or directory names to exclude.
   listNixModules =
     {
-      rootDir ? ./.,
+      rootDir,
       exclude ? [
         "default.nix"
         "extended-lib.nix"
@@ -23,7 +23,7 @@ let
   # Wrapper to return absolute paths
   listNixPaths =
     {
-      rootDir ? ./.,
+      rootDir,
       exclude ? [
         "default.nix"
         "extended-lib.nix"
@@ -34,7 +34,8 @@ let
     in
     (builtins.map (module: rootDir + "/${module}") nixModules);
 
-  nixFileStems = builtins.map (fileName: lib.removeSuffix ".nix" fileName) (listNixModules { });
+  nixFileNames = listNixModules { rootDir = ./.; };
+  nixFileStems = builtins.map (fileName: lib.removeSuffix ".nix" fileName) nixFileNames;
   modules = lib.genAttrs nixFileStems (stem: import ./${stem}.nix { inherit lib; });
   moduleFunctions = lib.mergeAttrsList (lib.attrValues modules);
 in

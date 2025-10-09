@@ -1,4 +1,4 @@
 { lib, ... }:
 {
-  imports = lib.local.listNixPaths { };
+  imports = (lib.local.listNixPaths { rootDir = ./.; });
 }
