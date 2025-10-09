@@ -61,14 +61,16 @@ in
       };
       # Configurations applied to config files; check example home.nix in
       # https://github.com/nix-community/plasma-manager/blob/trunk/examples/home.nix
-      configFile.kdeglobals = {
-        KDE.widgetStyle = themeConfig.name;
-        General = {
-          TerminalApplication = "ghostty";
-          TerminalService = "Ghostty.desktop";
+      configFile = {
+        kdeglobals = {
+          KDE.widgetStyle = themeConfig.name;
+          General = {
+            TerminalApplication = "ghostty";
+            TerminalService = "Ghostty.desktop";
+          };
         };
         # Order plugins so that (already open) Windows come up before Applications
-        "krunnerrc"."Plugins/Favorites"."plugins" =
+        krunnerrc."Plugins/Favorites".plugins =
           "krunner_sessions,krunner_powerdevil,windows,krunner_services,krunner_systemsettings";
       };
     };
