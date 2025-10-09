@@ -4,6 +4,7 @@ let
   upperAccent = lib.local.capitalizeFirst config.catppuccin.accent or "";
   nixosLogoPath = ../../resources/splash/nix-snowflake-rainbow-pastel.png;
   splashPreviewPath = ../../resources/splash/preview.png;
+  blankWallpaperPath = ../../resources/wallpapers/blank_wall.png;
 in
 (final: prev: {
   catppuccin-kde =
@@ -19,7 +20,16 @@ in
           cp ${splashPreviewPath} $contents_dir/previews/splash.png
         '';
       });
+
   catppuccin-papirus-folders = prev.catppuccin-papirus-folders.override {
     inherit (config.catppuccin) flavor accent;
+  };
+
+  catppuccin-sddm = prev.catppuccin-sddm.override {
+    inherit (config.catppuccin) flavor accent;
+    font = "JetBrainsMono Nerd Font";
+    fontSize = 12;
+    background = blankWallpaperPath;
+    userIcon = true;
   };
 })
