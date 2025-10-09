@@ -34,6 +34,7 @@ in
         papers
         celluloid
         cosmic-edit
+        nerd-fonts.jetbrains-mono
       ];
       sessionVariables.NIXOS_OZONE_WL = "1"; # Hint Electron apps to use Wayland
     };
