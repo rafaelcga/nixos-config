@@ -61,6 +61,8 @@ in
       };
       # Configurations applied to config files; check example home.nix in
       # https://github.com/nix-community/plasma-manager/blob/trunk/examples/home.nix
+      # To easily check which to change, you can also run their `rc2nix` tool:
+      # `nix run github:nix-community/plasma-manager`
       configFile = {
         kdeglobals = {
           KDE.widgetStyle = themeConfig.name;
