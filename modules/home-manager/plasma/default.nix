@@ -84,6 +84,6 @@ in
         nerd-fonts.jetbrains-mono
       ];
     };
-    qt.platformTheme.name = "qtct";
+    qt.platformTheme.name = "qtct"; # Required by Darkly
   };
 }
