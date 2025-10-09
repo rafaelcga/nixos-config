@@ -34,7 +34,7 @@ in
         papers
         celluloid
         cosmic-edit
-        nerd-fonts.jetbrains-mono
+        nerd-fonts.jetbrains-mono # Install font globally for SDDM
       ];
       sessionVariables.NIXOS_OZONE_WL = "1"; # Hint Electron apps to use Wayland
     };
@@ -46,7 +46,6 @@ in
         font = "JetBrainsMono Nerd Font";
         fontSize = "12";
         background = blankWallpaperPath;
-        userIcon = true;
       };
     };
   };
