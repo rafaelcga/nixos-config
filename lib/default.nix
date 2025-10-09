@@ -34,6 +34,7 @@ let
     in
     (builtins.map (module: rootDir + "/${module}") nixModules);
 
+  # Import functions and make them available at a higher scope
   nixFileNames = listNixModules { rootDir = ./.; };
   nixFileStems = builtins.map (fileName: lib.removeSuffix ".nix" fileName) nixFileNames;
   modules = lib.genAttrs nixFileStems (stem: import ./${stem}.nix { inherit lib; });
