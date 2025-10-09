@@ -10,7 +10,8 @@ let
   upperFlavor = lib.local.capitalizeFirst config.catppuccin.flavor or "";
   upperAccent = lib.local.capitalizeFirst config.catppuccin.accent or "";
 
-  globalTheme = if usesCatppuccin then "Catppuccin-${upperFlavor}-${upperAccent}" else "BreezeDark";
+  globalTheme = if usesCatppuccin then "Catppuccin-${upperFlavor}-${upperAccent}" else "Breeze-Dark";
+  colorScheme = builtins.replaceStrings [ "-" ] [ "" ] globalTheme;
   widgetStyle = "Darkly";
 
   pastelIconPath = ../../../resources/splash/nix-snowflake-rainbow-pastel.svg;
@@ -30,13 +31,14 @@ in
     programs.plasma = {
       enable = true;
       workspace = {
-        lookAndFeel = globalTheme;
-        wallpaper = builtins.toString wallpaperPath;
-        wallpaperFillMode = "preserveAspectCrop";
+        inherit colorScheme;
         windowDecorations = {
           theme = "Breeze";
           library = "org.kde.breeze";
         };
+        splashScreen.theme = globalTheme;
+        wallpaper = builtins.toString wallpaperPath;
+        wallpaperFillMode = "preserveAspectCrop";
       };
       kwin.titlebarButtons = {
         left = [
