@@ -41,11 +41,11 @@ in
           inherit (themeConfig) library;
         };
         wallpaper = builtins.toString wallpaperPath;
+        wallpaperFillMode = "preserveAspectCrop";
       };
       kscreenlocker = {
         autoLock = false;
-        wallpaper = builtins.toString wallpaperPath;
-        wallpaperFillMode = "preserveAspectCrop";
+        appearance.wallpaper = builtins.toString wallpaperPath;
       };
       fonts = {
         general = fontConfig;
