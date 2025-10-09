@@ -1,7 +1,6 @@
 { ... }:
 {
   imports = [
-    ./gnome
     ./cosmic
     ./plasma
   ];
