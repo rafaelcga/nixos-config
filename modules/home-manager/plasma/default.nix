@@ -33,6 +33,10 @@ in
         lookAndFeel = globalTheme;
         wallpaper = builtins.toString wallpaperPath;
         wallpaperFillMode = "preserveAspectCrop";
+        windowDecorations = {
+          theme = "Breeze";
+          library = "org.kde.breeze";
+        };
       };
       kwin.titlebarButtons = {
         left = [
