@@ -29,7 +29,7 @@ in
   catppuccin-sddm = prev.catppuccin-sddm.override {
     inherit (config.catppuccin) flavor accent;
     font = "JetBrainsMono Nerd Font";
-    fontSize = 12;
+    fontSize = "12";
     background = blankWallpaperPath;
     userIcon = true;
   };
