@@ -1,6 +1,4 @@
-{ ... }:
+{ lib, ... }:
 {
-  imports = [
-    ./programs
-  ];
+  imports = lib.local.listNixPaths { };
 }
