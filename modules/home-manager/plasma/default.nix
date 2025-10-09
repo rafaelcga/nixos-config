@@ -154,7 +154,6 @@ in
       ]
       ++ lib.optionals usesCatppuccin [
         catppuccin-kde
-        catppuccin-sddm
       ];
     qt.platformTheme.name = "qtct"; # Required by Darkly
   };

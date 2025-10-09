@@ -6,6 +6,9 @@
 }:
 let
   cfg = config.modules.nixos.desktop.plasma;
+  usesCatppuccin = config.catppuccin.enable or false;
+
+  blankWallpaperPath = ../../../../resources/wallpapers/blank_wall.png;
 in
 {
   options.modules.nixos.desktop.plasma = {
@@ -35,5 +38,13 @@ in
       sessionVariables.NIXOS_OZONE_WL = "1"; # Hint Electron apps to use Wayland
     };
     hardware.bluetooth.enable = true;
+
+    catppuccin = lib.mkIf usesCatppuccin {
+      inherit (config.catppuccin) flavor accent;
+      font = "JetBrainsMono Nerd Font";
+      fontSize = "12";
+      background = blankWallpaperPath;
+      userIcon = true;
+    };
   };
 }
