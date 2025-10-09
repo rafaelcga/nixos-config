@@ -59,6 +59,7 @@ in
         dimDisplay.enable = false;
         turnOffDisplay.idleTimeout = "never";
       };
+      session.sessionRestore.restoreOpenApplicationsOnLogin = "startWithEmptySession";
       krunner = {
         position = "center";
         historyBehavior = "enableAutoComplete";
