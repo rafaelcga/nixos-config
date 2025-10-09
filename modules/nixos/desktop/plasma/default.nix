@@ -40,11 +40,13 @@ in
     hardware.bluetooth.enable = true;
 
     catppuccin = lib.mkIf usesCatppuccin {
-      inherit (config.catppuccin) flavor accent;
-      font = "JetBrainsMono Nerd Font";
-      fontSize = "12";
-      background = blankWallpaperPath;
-      userIcon = true;
+      sddm = {
+        inherit (config.catppuccin) flavor accent;
+        font = "JetBrainsMono Nerd Font";
+        fontSize = "12";
+        background = blankWallpaperPath;
+        userIcon = true;
+      };
     };
   };
 }
