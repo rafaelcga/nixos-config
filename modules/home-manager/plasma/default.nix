@@ -86,7 +86,7 @@ in
           hiding = "none";
           floating = false;
           opacity = "opaque";
-          screen = 0;
+          screen = 1;
           widgets = [
             {
               kickoff = {
