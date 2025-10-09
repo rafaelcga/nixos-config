@@ -68,7 +68,7 @@ in
           TerminalService = "Ghostty.desktop";
         };
         # Order plugins so that (already open) Windows come up before Applications
-        krunnerrc."Plugins/Favorites".plugins =
+        "krunnerrc"."Plugins/Favorites"."plugins" =
           "krunner_sessions,krunner_powerdevil,windows,krunner_services,krunner_systemsettings";
       };
     };
