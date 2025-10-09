@@ -1,7 +1,4 @@
-{ ... }:
+{ lib, ... }:
 {
-  imports = [
-    ./cosmic
-    ./plasma
-  ];
+  imports = (lib.local.listNixPaths { rootDir = ./.; });
 }

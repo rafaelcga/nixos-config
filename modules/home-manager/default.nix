@@ -1,11 +1,4 @@
-{ ... }:
+{ lib, ... }:
 {
-  imports = [
-    ./zed-editor
-    ./programs
-    ./papirus
-    ./cursor-theme
-    ./plasma
-    ./ghostty
-  ];
+  imports = (lib.local.listNixPaths { rootDir = ./.; });
 }

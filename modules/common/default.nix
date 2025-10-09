@@ -1,6 +1,4 @@
-{ ... }:
+{ lib, ... }:
 {
-  imports = [
-    ./theme
-  ];
+  imports = (lib.local.listNixPaths { rootDir = ./.; });
 }

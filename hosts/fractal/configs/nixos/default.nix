@@ -1,8 +1,4 @@
-{ ... }:
+{ lib, ... }:
 {
-  imports = [
-    ./boot
-    ./user
-    ./environment
-  ];
+  imports = (lib.local.listNixPaths { rootDir = ./.; });
 }
