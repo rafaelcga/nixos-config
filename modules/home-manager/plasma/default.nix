@@ -69,7 +69,7 @@ in
           location = "top";
           alignment = "center";
           hiding = "none";
-          floating.enable = false;
+          floating = false;
           opacity = "opaque";
           screen = 0;
           widgets = [
