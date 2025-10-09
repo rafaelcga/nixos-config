@@ -2,6 +2,7 @@
 let
   upperFlavor = lib.local.capitalizeFirst config.catppuccin.flavor or "";
   upperAccent = lib.local.capitalizeFirst config.catppuccin.accent or "";
+
   nixosLogoPath = ../../resources/splash/nix-snowflake-rainbow-pastel.png;
   splashPreviewPath = ../../resources/splash/preview.png;
   blankWallpaperPath = ../../resources/wallpapers/blank_wall.png;
