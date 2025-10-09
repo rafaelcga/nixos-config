@@ -12,7 +12,9 @@ let
 
   colorScheme = if usesCatppuccin then "Catppuccin${upperFlavor}${upperAccent}" else "BreezeDark";
   splashTheme = if usesCatppuccin then "Catppuccin-${upperFlavor}-${upperAccent}" else "Breeze";
+
   pastelIconPath = ../../../resources/splash/nix-snowflake-rainbow-pastel.svg;
+  wallpaperPath = ../../../resources/wallpapers/nebula.jpg;
 
   fontConfig = {
     family = "JetBrainsMono Nerd Font";
@@ -38,6 +40,12 @@ in
           theme = themeConfig.name;
           inherit (themeConfig) library;
         };
+        wallpaper = builtins.toString wallpaperPath;
+      };
+      kscreenlocker = {
+        autoLock = false;
+        wallpaper = builtins.toString wallpaperPath;
+        wallpaperFillMode = "preserveAspectCrop";
       };
       fonts = {
         general = fontConfig;
@@ -46,7 +54,6 @@ in
         windowTitle = fontConfig;
       };
       input.keyboard.numlockOnStartup = "on";
-      kscreenlocker.autoLock = false;
       powerdevil.AC = {
         autoSuspend.action = "nothing";
         dimDisplay.enable = false;
