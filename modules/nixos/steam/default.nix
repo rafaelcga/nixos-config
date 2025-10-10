@@ -37,4 +37,18 @@ in
       };
     };
   };
+
+  # Proton CachyOS/GE variables
+  environment.sessionVariables = {
+    # Upscaling
+    PROTON_DLSS_UPGRADE = 1;
+    PROTON_NVIDIA_LIBS = 1;
+    PROTON_FSR4_UPGRADE = 1;
+    PROTON_XESS_UPGRADE = 1;
+    # Compositor
+    PROTON_ENABLE_WAYLAND = 1;
+    PROTON_NO_WM_DECORATION = 1;
+    # CPU
+    PROTON_USE_NTSYNC = 1;
+  };
 }
