@@ -26,8 +26,8 @@ in
       nh = {
         enable = true;
         clean = {
-          enable = true;
-          extraArgs = "--keep-since 7d --keep 3";
+          enable = true; # nh clean as a service
+          extraArgs = "--keep-since 4d --keep 3";
         };
         flake = "${config.home.homeDirectory}/nixos-config"; # path w.r.t. $HOME
       };
