@@ -27,11 +27,12 @@ in
           "flakes"
         ];
       };
-      gc = {
-        automatic = true;
-        dates = "weekly";
-        options = "--delete-older-than 7d";
-      };
+      # Use programs.nh.clean as garbage collector instead
+      # gc = {
+      #   automatic = true;
+      #   dates = "weekly";
+      #   options = "--delete-older-than 7d";
+      # };
     };
     programs.nh = {
       enable = true;
