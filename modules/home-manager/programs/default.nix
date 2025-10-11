@@ -29,7 +29,7 @@ in
           enable = true; # nh clean as a service
           extraArgs = "--keep-since 4d --keep 3";
         };
-        flake = "${config.home.homeDirectory}/nixos-config"; # path w.r.t. $HOME
+        osFlake = "${config.home.homeDirectory}/nixos-config"; # path w.r.t. $HOME
       };
       gh.enable = true;
       btop.enable = true;
