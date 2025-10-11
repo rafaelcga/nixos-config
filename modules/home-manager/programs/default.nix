@@ -23,14 +23,6 @@ in
         };
         difftastic.enable = true;
       };
-      nh = {
-        enable = true;
-        clean = {
-          enable = true; # nh clean as a service
-          extraArgs = "--keep-since 4d --keep 3";
-        };
-        osFlake = "${config.home.homeDirectory}/nixos-config"; # path w.r.t. $HOME
-      };
       gh.enable = true;
       btop.enable = true;
       atuin.enable = true;

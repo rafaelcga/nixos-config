@@ -2,6 +2,7 @@
   config,
   lib,
   pkgs,
+  userName,
   ...
 }:
 let
@@ -31,6 +32,14 @@ in
         dates = "weekly";
         options = "--delete-older-than 7d";
       };
+    };
+    programs.nh = {
+      enable = true;
+      clean = {
+        enable = true; # nh clean as a service
+        extraArgs = "--keep-since 4d --keep 3";
+      };
+      flake = "/home/${userName}/nixos-config"; # path w.r.t. $HOME
     };
     nixpkgs.config.allowUnfree = true;
   };
