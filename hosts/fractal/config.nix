@@ -33,7 +33,6 @@
       desktop.plasma.enable = true;
       flatpak.enable = true;
       audio.enable = true;
-      fish.enable = true;
       keyboard.enable = true;
       steam.enable = true;
       cachy.enable = true;
