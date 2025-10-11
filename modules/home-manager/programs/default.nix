@@ -23,8 +23,15 @@ in
         };
         difftastic.enable = true;
       };
+      nh = {
+        enable = true;
+        clean = {
+          enable = true;
+          extraArgs = "--keep-since 7d --keep 3";
+        };
+        flake = "${config.home.homeDirectory}/nixos-config"; # path w.r.t. $HOME
+      };
       gh.enable = true;
-      nh.enable = true;
       btop.enable = true;
       atuin.enable = true;
       micro.enable = true;
@@ -36,9 +43,5 @@ in
       tree
       sops
     ];
-    systemd.user.sessionVariables = lib.mkForce {
-      EDITOR = "micro";
-      NH_FLAKE = "${config.home.homeDirectory}/nixos-config"; # path w.r.t. $HOME
-    };
   };
 }

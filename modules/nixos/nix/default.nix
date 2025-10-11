@@ -16,6 +16,7 @@ in
     nix = {
       package = pkgs.nixVersions.latest;
       settings = {
+        auto-optimise-store = true; # Optimizes store after every build
         trusted-users = [
           "root"
           "@wheel"
@@ -25,7 +26,6 @@ in
           "flakes"
         ];
       };
-      optimise.automatic = true;
       gc = {
         automatic = true;
         dates = "weekly";
