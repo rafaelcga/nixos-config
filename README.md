@@ -1,13 +1,8 @@
 # nixos-config
 
-Apply this configuration:
+Setup with:
 ```bash
-sudo nixos-rebuild switch --flake github:rafaelcga/nixos-config#<hostname>
+bash ./scripts/setup.sh <hostname>
 ```
 
-Regenerate `hardware-configuration.nix`:
-```bash
-nixos-generate-config --show-hardware-config > "./hosts/$HOSTNAME/hardware-configuration.nix"
-```
-
-Use [`nh`](https://github.com/nix-community/nh) instead once the system is deployed.
+Use [`nh`](https://github.com/nix-community/nh) once the system is deployed.
