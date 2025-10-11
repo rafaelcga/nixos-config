@@ -19,7 +19,7 @@ in
         userName = "rafaelcga";
         userEmail = "68070715+rafaelcga@users.noreply.github.com";
         extraConfig = {
-          pull.rebase = false;
+          pull.rebase = true;
         };
         difftastic.enable = true;
       };
