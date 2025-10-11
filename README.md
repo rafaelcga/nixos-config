@@ -10,6 +10,4 @@ Regenerate `hardware-configuration.nix`:
 nixos-generate-config --show-hardware-config > "./hosts/$HOSTNAME/hardware-configuration.nix"
 ```
 
-Use [`nh`](https://github.com/nix-community/nh) to simplify commands when possible.
-
-Style: hyphen-case for modules and camelCase for option attributes.
+Use [`nh`](https://github.com/nix-community/nh) instead once the system is deployed.
