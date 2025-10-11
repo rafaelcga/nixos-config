@@ -2,7 +2,6 @@
   config,
   lib,
   pkgs,
-  userName,
   ...
 }:
 let
@@ -40,7 +39,7 @@ in
         enable = true; # nh clean as a service
         extraArgs = "--keep-since 4d --keep 3";
       };
-      flake = "/home/${userName}/nixos-config"; # path w.r.t. $HOME
+      flake = builtins.toString ../../..; # repo's absolute path
     };
     nixpkgs.config.allowUnfree = true;
   };
