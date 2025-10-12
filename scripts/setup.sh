@@ -16,5 +16,8 @@ if [ ! -d "$REPO_DIR/hosts/$hostname" ]; then
 fi
 
 echo "Regenerating hardware config for $hostname..."
-nixos-generate-config --show-hardware-config >"$REPO_DIR/hosts/$hostname/hardware-configuration.nix"
+nixos-generate-config --show-hardware-config --no-filesystems >"$REPO_DIR/hosts/$hostname/hardware-configuration.nix"
+(
+  cd "$REPO_DIR" && git add . # Add untracked files within a sub-shell
+)
 sudo nixos-rebuild switch --flake "$REPO_DIR#$hostname"
