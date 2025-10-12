@@ -39,7 +39,6 @@ in
         enable = true; # nh clean as a service
         extraArgs = "--keep-since 4d --keep 3";
       };
-      flake = builtins.toString ../../..; # repo's absolute path
     };
     nixpkgs.config.allowUnfree = true;
   };
