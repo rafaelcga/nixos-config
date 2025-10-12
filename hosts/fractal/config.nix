@@ -4,6 +4,7 @@
     ../../modules/common
     ../../modules/nixos
     ./configs/nixos
+    ./config-disk.nix
     ./hardware-configuration.nix
   ];
 
