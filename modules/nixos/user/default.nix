@@ -1,7 +1,11 @@
 { pkgs, userName, ... }:
 {
+  environment = {
+    variables.EDITOR = "micro";
+    systemPackages = [ pkgs.micro ];
+    shells = [ pkgs.fish ];
+  };
   programs.fish.enable = true;
-  environment.shells = [ pkgs.fish ];
   users.users.${userName} = {
     isNormalUser = true;
     extraGroups = [
