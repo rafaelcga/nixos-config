@@ -11,10 +11,12 @@
       theme.enable = true;
     };
     home-manager = {
-      zed-editor.enable = true;
+      # Desktop environment
+      plasma.enable = true;
       papirus.enable = true;
       cursor-theme.enable = true;
-      plasma.enable = true;
+      # Programs
+      zed-editor.enable = true;
       ghostty.enable = true;
     };
   };

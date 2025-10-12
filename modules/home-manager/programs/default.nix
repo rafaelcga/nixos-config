@@ -1,4 +1,9 @@
-{ pkgs, ... }:
+{
+  lib,
+  pkgs,
+  osConfig,
+  ...
+}:
 {
   programs = {
     git = {
@@ -29,4 +34,11 @@
     tree
     sops
   ];
+  # virt-manager declarative connection config
+  dconf.settings = lib.mkIf (osConfig.modules.nixos.qemu.enable or false) {
+    "org/virt-manager/virt-manager/connections" = {
+      autoconnect = [ "qemu:///system" ];
+      uris = [ "qemu:///system" ];
+    };
+  };
 }

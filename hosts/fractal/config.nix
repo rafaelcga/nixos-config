@@ -12,11 +12,20 @@
       theme.enable = true;
     };
     nixos = {
+      # Core
       boot = {
         enable = true;
         loader = "limine";
       };
+      networking.enable = true;
+      nix.enable = true;
+      lix.enable = true;
+      zram.enable = true;
       i18n.enable = true;
+      time.enable = true;
+      cachy.enable = true;
+      keyboard.enable = true;
+      audio.enable = true;
       graphics = {
         enable = true;
         enable32Bit = true;
@@ -25,17 +34,12 @@
           "nvidia"
         ];
       };
-      time.enable = true;
-      networking.enable = true;
-      nix.enable = true;
-      lix.enable = true;
-      zram.enable = true;
+      # Desktop environment
       desktop.plasma.enable = true;
+      # Programs
       flatpak.enable = true;
-      audio.enable = true;
-      keyboard.enable = true;
       steam.enable = true;
-      cachy.enable = true;
+      qemu.enable = true;
     };
   };
 }
