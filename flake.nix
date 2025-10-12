@@ -45,13 +45,17 @@
     {
       # Set default formatter for `nix fmt`
       formatter.${system} = pkgs.nixfmt-tree;
-      nixosConfigurations = (
-        lib.local.mkSystem {
+      nixosConfigurations =
+        (lib.local.mkSystem {
           inherit stateVersion nixosModules homeManagerModules;
           hostName = "fractal";
           userName = "rafael";
-        }
-      );
+        })
+        // (lib.local.mkSystem {
+          inherit stateVersion nixosModules homeManagerModules;
+          hostName = "beelink";
+          userName = "seal";
+        });
       # // (another)
     };
 }
