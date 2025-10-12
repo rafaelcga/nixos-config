@@ -22,7 +22,7 @@
         inherit specialArgs;
         modules = nixosModules ++ [
           ../hosts/${hostName}/config.nix
-          ../secrets
+          # ../secrets
           ../overlays
           {
             system = { inherit stateVersion; };
@@ -36,7 +36,7 @@
                 home = { inherit stateVersion; };
               };
               sharedModules = homeManagerModules ++ [
-                ../secrets
+                # ../secrets
               ];
               useGlobalPkgs = true;
               useUserPackages = true;
