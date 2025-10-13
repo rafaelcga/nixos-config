@@ -14,8 +14,8 @@ in
       /etc/ssh/ssh_host_ed25519_key
       "${homeDir}/.ssh/id_ed25519"
     ];
-    sops.secrets.user_password = {
-      neededForUsers = true;
+    secrets = {
+      user_password.neededForUsers = true;
     };
   };
 }
