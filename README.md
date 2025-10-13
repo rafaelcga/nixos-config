@@ -34,7 +34,7 @@ export hostname="<hostname>"
 ```bash
 mkdir -p /tmp/ssh
 cp <key_path> /tmp/ssh/id_ed25519
-chmod 0600 /tmp/ssh/id_ed25519
+chmod 600 /tmp/ssh/id_ed25519
 ```
 
 2. Clone the repo, `cd` into it and update the `hardware-configuration.nix` to
@@ -53,9 +53,10 @@ sudo nix --experimental-features "nix-command flakes" \
     --mode destroy,format,mount ./hosts/$hostname/config-disk.nix
 ```
 
-4. Perform install with `nixos-install`:
+4. Perform install with `nixos-install` and reboot:
 ```bash
 sudo nixos-install --flake ".#$hostname"
+sudo reboot
 ```
 
 ### SSH
