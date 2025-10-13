@@ -1,7 +1,7 @@
 keys:
-  - &primary age10em7mxcjc4t49mnfmr3ndgasm9e0fcurl6teh87qa4qnf53mqaeselpdcc
+  - &rafael age19vzc4uldaruqkrvqkl7qnacc560nsqq0a02j7f88u72w427cxs5s0psrkg
 creation_rules:
-  - path_regex: secrets/secrets.yaml$
+  - path_regex: hosts/[^/]+/secrets.yaml$
     key_groups:
       - age:
-          - *primary
+          - *rafael

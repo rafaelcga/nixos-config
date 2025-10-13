@@ -8,7 +8,6 @@
     firefox.enable = true;
   };
   home.packages = with pkgs; [
-    discord
     telegram-desktop
   ];
 }

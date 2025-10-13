@@ -13,6 +13,7 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    services.openssh.enable = true;
     networking = {
       inherit hostName;
       wireless.iwd = {

@@ -5,6 +5,10 @@
       url = "github:nix-community/home-manager/master";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    disko = {
+      url = "github:nix-community/disko/latest";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     sops-nix = {
       url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -33,11 +37,11 @@
 
       nixosModules = with inputs; [
         home-manager.nixosModules.home-manager
+        disko.nixosModules.disko
         sops-nix.nixosModules.sops
         catppuccin.nixosModules.catppuccin
       ];
       homeManagerModules = with inputs; [
-        sops-nix.homeManagerModules.sops
         catppuccin.homeModules.catppuccin
         plasma-manager.homeModules.plasma-manager
       ];
@@ -45,13 +49,17 @@
     {
       # Set default formatter for `nix fmt`
       formatter.${system} = pkgs.nixfmt-tree;
-      nixosConfigurations = (
-        lib.local.mkSystem {
+      nixosConfigurations =
+        (lib.local.mkSystem {
           inherit stateVersion nixosModules homeManagerModules;
           hostName = "fractal";
           userName = "rafael";
-        }
-      );
+        })
+        // (lib.local.mkSystem {
+          inherit stateVersion nixosModules homeManagerModules;
+          hostName = "beelink";
+          userName = "seal";
+        });
       # // (another)
     };
 }
