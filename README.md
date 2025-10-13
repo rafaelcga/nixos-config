@@ -11,7 +11,7 @@ My [NixOS](https://nixos.org/) configuration, using
 
 > [!IMPORTANT]
 > **Disclaimer:** This configuration is not intended to be cloned and used as-is,
-> it uses secrets and declarative disk partition, so it **will** result in a broken
+> it uses secrets and declarative disk partition, so it **_will_** result in a broken
 > install for you.
 >
 > However, feel free to use it as a reference, fork it and modify it to your hearts
