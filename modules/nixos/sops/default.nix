@@ -5,7 +5,7 @@
   ...
 }:
 let
-  homeDir = config.users.users.${userName}.home or config.home.homeDirectory;
+  homeDir = config.users.users.${userName}.home;
 in
 {
   sops = {

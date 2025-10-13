@@ -42,7 +42,6 @@
         catppuccin.nixosModules.catppuccin
       ];
       homeManagerModules = with inputs; [
-        sops-nix.homeManagerModules.sops
         catppuccin.homeModules.catppuccin
         plasma-manager.homeModules.plasma-manager
       ];
