@@ -10,7 +10,7 @@ My [NixOS](https://nixos.org/) configuration, using
 </div>
 
 > [!IMPORTANT]
-> **Disclaimer:** This configuration is not intended to be cloned and used as-is,
+> **Disclaimer:** This configuration is not intended to be cloned and built as-is,
 > it uses secrets and declarative disk partition, so it **_will_** result in a broken
 > install for you.
 >
@@ -26,11 +26,11 @@ through SSH.
 
 ### Local ISO
 
-TODO
+_TODO_
 
 ### SSH
 
-TODO
+_TODO_
 
 ## Maintenance
 
