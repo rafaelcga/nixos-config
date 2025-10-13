@@ -40,6 +40,7 @@ in
       ];
       sessionVariables.NIXOS_OZONE_WL = "1"; # Hint Electron apps to use Wayland
     };
+    programs.gnome-disks.enable = true;
     hardware.bluetooth.enable = true;
 
     catppuccin = lib.mkIf usesCatppuccin {
