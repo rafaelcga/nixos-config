@@ -9,6 +9,14 @@ My [NixOS](https://nixos.org/) configuration, using
 
 </div>
 
+> [!IMPORTANT]
+> **Disclaimer:** This configuration is not intended to be cloned and used as-is,
+> it uses secrets and declarative disk partition, so it **will** result in a broken
+> install for you.
+>
+> However, feel free to use it as a reference, fork it and modify it to your hearts
+> content.
+
 ## Install
 
 Use [`nh`](https://github.com/nix-community/nh) once the system is deployed.
