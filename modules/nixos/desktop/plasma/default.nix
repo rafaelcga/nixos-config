@@ -25,15 +25,17 @@ in
     };
     environment = {
       plasma6.excludePackages = with pkgs.kdePackages; [
-        konsole
-        okular
         kate
+        okular
+        konsole
+        discover
       ];
       systemPackages = with pkgs; [
-        ghostty
         papers
+        ghostty
         celluloid
         cosmic-edit
+        cosmic-store
         nerd-fonts.jetbrains-mono # Install font globally for SDDM
       ];
       sessionVariables.NIXOS_OZONE_WL = "1"; # Hint Electron apps to use Wayland
