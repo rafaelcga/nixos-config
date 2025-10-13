@@ -127,6 +127,10 @@ in
               nix = {
                 binary = "nix";
                 maxMemoryMB = 2560;
+                flake = {
+                  autoArchive = true;
+                  autoEvalInputs = true;
+                };
               };
             };
           };
