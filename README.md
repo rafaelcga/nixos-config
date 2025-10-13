@@ -42,7 +42,7 @@ be that of the target host (omitting disk configuration):
 ```bash
 git clone https://github.com/rafaelcga/nixos-config.git
 cd nixos-config
-nixos-generate-config --show-hardware-config --no-filesystems > hosts/$hostname/hardware-configuration.nix
+nixos-generate-config --show-hardware-config --no-filesystems > ./hosts/$hostname/hardware-configuration.nix
 git add . # In case there was no prior configuration
 ```
 
