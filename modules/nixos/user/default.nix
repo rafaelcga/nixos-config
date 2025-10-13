@@ -1,4 +1,9 @@
-{ pkgs, userName, ... }:
+{
+  config,
+  pkgs,
+  userName,
+  ...
+}:
 {
   environment = {
     variables.EDITOR = "micro";
@@ -8,6 +13,7 @@
   programs.fish.enable = true;
   users.users.${userName} = {
     isNormalUser = true;
+    hashedPasswordFile = config.sops.secrets.user_password.path;
     extraGroups = [
       "networkmanager"
       "wheel"
