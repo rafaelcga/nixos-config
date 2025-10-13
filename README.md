@@ -1,6 +1,8 @@
 <div align="center">
 <img alt="NixOS" src="resources/splash/nix-snowflake-rainbow-pastel.svg" width="140px"/>
+
 # NixOS Config
+
 </div>
 
 ## Install
