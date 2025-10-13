@@ -19,5 +19,6 @@ in
       libvirtd.enable = true;
       spiceUSBRedirection.enable = true;
     };
+    networking.firewall.trustedInterfaces = [ "virbr0" ]; # Enables VM networking
   };
 }
