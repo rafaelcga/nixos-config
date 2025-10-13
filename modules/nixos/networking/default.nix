@@ -32,10 +32,7 @@ in
         wifi.backend = "iwd";
       };
       nftables.enable = true;
-      firewall = {
-        enable = true;
-        filterForward = true;
-      };
+      firewall.enable = true;
     };
   };
 }
