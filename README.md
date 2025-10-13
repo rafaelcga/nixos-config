@@ -19,4 +19,19 @@ My [NixOS](https://nixos.org/) configuration, using
 
 ## Install
 
-Use [`nh`](https://github.com/nix-community/nh) once the system is deployed.
+There are two ways to easily bootstrap an install of a system:
+[`disko-install`](https://github.com/nix-community/disko/blob/master/docs/disko-install.md)
+for local ISOs, and [`nixos-anywhere`](https://github.com/nix-community/nixos-anywhere)
+through SSH.
+
+### Local ISO
+
+TODO
+
+### SSH
+
+TODO
+
+## Maintenance
+
+Use [`nh`](https://github.com/nix-community/nh) as a `nix` helper once the system is deployed.
