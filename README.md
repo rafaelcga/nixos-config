@@ -30,11 +30,13 @@ There are two ways to easily bootstrap an install of a system: using `disko` +
 export hostname="<hostname>"
 ```
 
-1. Procure SSH key and copy it to `/tmp/ssh/id_ed25519` in the live ISO.
+1. Procure SSH key and copy it to `/tmp/ssh/id_ed25519` in the live ISO. Make sure
+it is readable by the `root` user, as `nixos-install` is done with `sudo`.
 ```bash
 mkdir -p /tmp/ssh
 cp <key_path> /tmp/ssh/id_ed25519
-chmod 600 /tmp/ssh/id_ed25519
+sudo chown root:root /tmp/ssh/id_ed25519
+sudo chmod 600 /tmp/ssh/id_ed25519
 ```
 
 2. Clone the repo, `cd` into it and update the `hardware-configuration.nix` to
