@@ -6,6 +6,7 @@
 }:
 let
   cfg = config.modules.nixos.networking;
+  usesQemu = config.modules.nixos.qemu.enable or false;
 in
 {
   options.modules.nixos.networking = {
@@ -35,6 +36,7 @@ in
       firewall = {
         enable = true;
         filterForward = true;
+        trustedInterfaces = lib.mkIf usesQemu [ "virbr0" ]; # Enables VM networking
       };
     };
   };
