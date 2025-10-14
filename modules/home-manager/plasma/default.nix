@@ -40,15 +40,18 @@ in
         wallpaper = builtins.toString wallpaperPath;
         wallpaperFillMode = "preserveAspectCrop";
       };
-      kwin.titlebarButtons = {
-        left = [
-          "more-window-actions"
-        ];
-        right = [
-          "minimize"
-          "maximize"
-          "close"
-        ];
+      kwin = {
+        effects.shakeCursor.enable = false;
+        titlebarButtons = {
+          left = [
+            "more-window-actions"
+          ];
+          right = [
+            "minimize"
+            "maximize"
+            "close"
+          ];
+        };
       };
       kscreenlocker = {
         autoLock = false;
