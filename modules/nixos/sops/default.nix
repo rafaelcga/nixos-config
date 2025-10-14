@@ -6,15 +6,16 @@
 }:
 let
   homeDir = config.users.users.${userName}.home;
+  potentialSshKeyPaths = [
+    "/etc/ssh/ssh_host_ed25519_key"
+    "${homeDir}/.ssh/id_ed25519"
+    "/tmp/ssh/id_ed25519" # tmp location for local installs
+  ];
 in
 {
   sops = {
     defaultSopsFile = ../../../hosts/${hostName}/secrets.yaml;
-    age.sshKeyPaths = [
-      "/etc/ssh/ssh_host_ed25519_key"
-      "${homeDir}/.ssh/id_ed25519"
-      "/tmp/ssh/id_ed25519" # tmp location for local installs
-    ];
+    age.sshKeyPaths = builtins.filter builtins.pathExists potentialSshKeyPaths;
     secrets = {
       user_password.neededForUsers = true;
     };
