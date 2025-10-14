@@ -15,12 +15,14 @@ in
   config = lib.mkIf cfg.enable {
     programs.zed-editor = {
       enable = true;
+      # Add OpenSSL for Zed's LSP binaries
+      package = pkgs.zed-editor.fhsWithPackages (pkgs': [ pkgs.openssl ]);
 
       ## EXTENSIONS AND PACKAGES
       extraPackages = with pkgs; [
         ruff
         basedpyright
-        nil
+        nixd
         nixfmt
         shfmt
         shellcheck
@@ -73,8 +75,8 @@ in
           };
           Nix = {
             language_servers = [
-              "nil"
-              "!nixd"
+              "nixd"
+              "!nil"
             ];
             format_on_save = "on";
           };
@@ -111,25 +113,6 @@ in
                 build = {
                   onSave = true;
                   forwardSearchAfter = true;
-                };
-              };
-            };
-          };
-          nil = {
-            settings = {
-              formatting = {
-                command = [ "nixfmt" ];
-              };
-              diagnostics = {
-                ignored = [ "unused_rec" ];
-                excludedFiles = [ ];
-              };
-              nix = {
-                binary = "nix";
-                maxMemoryMB = 2560;
-                flake = {
-                  autoArchive = true;
-                  autoEvalInputs = true;
                 };
               };
             };
