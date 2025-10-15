@@ -82,7 +82,7 @@ in
       # ~/.config/plasma-org.kde.plasma.desktop-appletsrc
       panels = [
         {
-          height = 32;
+          height = 24;
           lengthMode = "fill";
           location = "top";
           alignment = "center";
@@ -106,7 +106,11 @@ in
               panelSpacer.expanding = true;
             }
             {
-              digitalClock.date.enable = false;
+              digitalClock.date = {
+                enable = true;
+                format.custom = "ddd d MMMM";
+                position = "besideTime";
+              };
             }
             {
               panelSpacer.expanding = true;
