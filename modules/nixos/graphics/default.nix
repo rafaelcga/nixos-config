@@ -10,9 +10,10 @@ let
 
   vendorPackages = with pkgs; {
     "intel" = [
+      intel-ocl
+      vpl-gpu-rt
       intel-media-driver
       intel-compute-runtime
-      vpl-gpu-rt
     ]
     ++ lib.optionals cfg.enable32Bit [
       driversi686Linux.intel-media-driver
