@@ -1,5 +1,5 @@
 { lib, ... }:
-rec {
+{
   mkSystem =
     {
       inputs,
@@ -44,7 +44,4 @@ rec {
         ];
       };
     };
-
-  # Factory of partial function
-  mkSystemWithDefaults = defaults: args: mkSystem (defaults // args);
 }

@@ -46,14 +46,20 @@
       ];
 
       pkgs = import inputs.nixpkgs { inherit system; };
-      buildHost = lib.local.mkSystemWithDefaults {
-        inherit
-          inputs
-          stateVersion
-          nixosModules
-          homeManagerModules
-          ;
-      };
+      buildHost =
+        {
+          hostName,
+          userName,
+        }@args:
+        lib.local.mkSystem {
+          inherit
+            inputs
+            stateVersion
+            nixosModules
+            homeManagerModules
+            ;
+        }
+        // args;
     in
     {
       # Set default formatter for `nix fmt`
