@@ -15,8 +15,7 @@ in
   config = lib.mkIf cfg.enable {
     programs.zed-editor = {
       enable = true;
-      # Add OpenSSL for Zed's LSP binaries
-      package = pkgs.zed-editor.fhsWithPackages (pkgs: [ pkgs.openssl ]);
+      package = pkgs.zed-editor-fhs; # Use FHS for dynamic libraries
 
       ## EXTENSIONS AND PACKAGES
       extraPackages = with pkgs; [
