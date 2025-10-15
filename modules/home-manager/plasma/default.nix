@@ -82,7 +82,7 @@ in
       # ~/.config/plasma-org.kde.plasma.desktop-appletsrc
       panels = [
         {
-          height = 24;
+          height = 28;
           lengthMode = "fill";
           location = "top";
           alignment = "center";
