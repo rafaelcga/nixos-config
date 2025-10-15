@@ -31,7 +31,6 @@
     { ... }@inputs:
     let
       lib = import ./lib/extended-lib.nix inputs;
-      pkgs = import inputs.nixpkgs { inherit system; };
       system = "x86_64-linux";
       stateVersion = "25.11";
 
@@ -46,7 +45,8 @@
         plasma-manager.homeModules.plasma-manager
       ];
 
-      buildHost = lib.mkSystemWithDefaults {
+      pkgs = import inputs.nixpkgs { inherit system; };
+      buildHost = lib.local.mkSystemWithDefaults {
         inherit
           inputs
           stateVersion
