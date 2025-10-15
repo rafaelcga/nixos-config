@@ -50,16 +50,17 @@
         {
           hostName,
           userName,
-        }@args:
+        }:
         lib.local.mkSystem {
           inherit
             inputs
+            hostName
+            userName
             stateVersion
             nixosModules
             homeManagerModules
             ;
-        }
-        // args;
+        };
     in
     {
       # Set default formatter for `nix fmt`
