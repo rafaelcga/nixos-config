@@ -45,18 +45,25 @@
         catppuccin.homeModules.catppuccin
         plasma-manager.homeModules.plasma-manager
       ];
+
+      buildHost = lib.mkSystemWithDefaults {
+        inherit
+          inputs
+          stateVersion
+          nixosModules
+          homeManagerModules
+          ;
+      };
     in
     {
       # Set default formatter for `nix fmt`
       formatter.${system} = pkgs.nixfmt-tree;
       nixosConfigurations =
-        (lib.local.mkSystem {
-          inherit stateVersion nixosModules homeManagerModules;
+        (buildHost {
           hostName = "fractal";
           userName = "rafael";
         })
-        // (lib.local.mkSystem {
-          inherit stateVersion nixosModules homeManagerModules;
+        // (buildHost {
           hostName = "beelink";
           userName = "seal";
         });

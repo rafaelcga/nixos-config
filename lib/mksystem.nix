@@ -1,7 +1,8 @@
 { lib, ... }:
-{
+rec {
   mkSystem =
     {
+      inputs,
       hostName,
       userName,
       stateVersion,
@@ -12,6 +13,7 @@
       specialArgs = {
         inherit
           lib
+          inputs
           hostName
           userName
           ;
@@ -42,4 +44,7 @@
         ];
       };
     };
+
+  # Factory of partial function
+  mkSystemWithDefaults = defaults: args: mkSystem (defaults // args);
 }
