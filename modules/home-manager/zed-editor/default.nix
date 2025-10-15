@@ -20,11 +20,11 @@ in
       ## EXTENSIONS AND PACKAGES
       extraPackages = with pkgs; [
         ruff
-        basedpyright
         nixd
-        nixfmt
         shfmt
+        nixfmt
         shellcheck
+        basedpyright
         nerd-fonts.jetbrains-mono
       ];
       extensions = [
