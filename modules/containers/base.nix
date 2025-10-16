@@ -3,6 +3,7 @@ let
   inherit (config.system) stateVersion;
 in
 {
+  # Base containers.* attribute set, to be imported and merged
   autoStart = true;
   privateNetwork = true;
   hostAddress = "192.168.100.10";
