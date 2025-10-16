@@ -40,7 +40,6 @@
       # Programs
       flatpak.enable = true;
       steam.enable = true;
-      qemu.enable = true;
     };
   };
 }
