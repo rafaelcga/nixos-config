@@ -1,6 +1,8 @@
 { config, lib, ... }:
 let
   cfg = config.modules.containers;
+  usesNetworkManager = config.networking.networkmanager.enable;
+
   internalInterface = if config.networking.nftables.enable then "ve-*" else "ve-+";
 in
 {
@@ -15,11 +17,18 @@ in
   imports = lib.optionals cfg.enable (lib.local.listNixPaths { rootDir = ./.; });
 
   config = lib.mkIf cfg.enable {
-    networking.nat = {
-      enable = true;
-      internalInterfaces = [ internalInterface ];
-      inherit (cfg) externalInterface;
-      enableIPv6 = true;
+    networking = {
+      nat = {
+        enable = true;
+        internalInterfaces = [ internalInterface ];
+        inherit (cfg) externalInterface;
+        enableIPv6 = true;
+      };
+      # Prevent NetworkManager from managing container interfaces
+      # https://nixos.org/manual/nixos/stable/#sec-container-networking
+      networkmanager = lib.mkIf usesNetworkManager {
+        unmanaged = [ "interface-name:ve-*" ];
+      };
     };
   };
 }
