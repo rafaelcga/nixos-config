@@ -10,6 +10,11 @@ in
 {
   options.modules.nixos.networking = {
     enable = lib.mkEnableOption "networking configuration";
+    fail2ban.enable = lib.mkOption {
+      default = false;
+      type = lib.types.bool;
+      description = "Whether to enable fail2ban for SSH";
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -34,14 +39,19 @@ in
       firewall.enable = true;
     };
 
-    services.openssh.enable = true;
-    services.fail2ban = {
-      enable = true;
-      maxretry = 5;
-      bantime = "24h";
-      bantime-increment = {
+    services = {
+      openssh = {
         enable = true;
-        maxtime = "168h"; # Do not ban more than 1 week
+        settings.PermitRootLogin = "no";
+      };
+      fail2ban = lib.mkIf cfg.fail2ban.enable {
+        enable = true;
+        maxretry = 5;
+        bantime = "24h";
+        bantime-increment = {
+          enable = true;
+          maxtime = "168h"; # Do not ban more than 1 week
+        };
       };
     };
   };
