@@ -16,7 +16,7 @@ let
   widgetStyle = "Darkly";
 
   pastelIconPath = "${inputs.self}/resources/splash/nix-snowflake-rainbow-pastel.svg";
-  wallpaperPath = "${inputs.self}resources/wallpapers/nebula.jpg";
+  wallpaperPath = "${inputs.self}/resources/wallpapers/nebula.jpg";
 
   fontConfig = {
     family = "JetBrainsMono Nerd Font";
