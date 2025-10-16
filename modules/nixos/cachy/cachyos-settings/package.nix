@@ -3,7 +3,7 @@
   stdenv,
   fetchFromGitHub,
 }:
-stdenv.mkDerivation rec {
+stdenv.mkDerivation {
   pname = "cachyos-settings";
   version = "1.2.10";
 
