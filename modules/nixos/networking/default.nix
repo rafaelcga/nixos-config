@@ -13,7 +13,6 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    services.openssh.enable = true;
     networking = {
       inherit hostName;
       wireless.iwd = {
@@ -33,6 +32,17 @@ in
       };
       nftables.enable = true;
       firewall.enable = true;
+    };
+
+    services.openssh.enable = true;
+    services.fail2ban = {
+      enable = true;
+      maxretry = 5;
+      bantime = "24h";
+      bantime-increment = {
+        enable = true;
+        maxtime = "168h"; # Do not ban more than 1 week
+      };
     };
   };
 }
