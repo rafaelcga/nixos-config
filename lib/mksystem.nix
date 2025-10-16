@@ -23,8 +23,8 @@
       ${hostName} = lib.nixosSystem {
         inherit specialArgs;
         modules = nixosModules ++ [
-          ../hosts/${hostName}/config.nix
-          ../overlays
+          "${inputs.self}/hosts/${hostName}/config.nix"
+          "${inputs.self}/overlays"
           {
             system = { inherit stateVersion; };
             home-manager = {
@@ -32,7 +32,7 @@
               extraSpecialArgs = specialArgs;
               users.${userName} = {
                 imports = [
-                  ../hosts/${hostName}/config-home.nix
+                  "${inputs.self}/hosts/${hostName}/config-home.nix"
                 ];
                 home = { inherit stateVersion; };
               };

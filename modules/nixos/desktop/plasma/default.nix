@@ -2,13 +2,14 @@
   config,
   lib,
   pkgs,
+  inputs,
   ...
 }:
 let
   cfg = config.modules.nixos.desktop.plasma;
   usesCatppuccin = config.catppuccin.enable or false;
 
-  blankWallpaperPath = ../../../../resources/wallpapers/blank_wall.png;
+  blankWallpaperPath = "${inputs.self}/resources/wallpapers/blank_wall.png";
 in
 {
   options.modules.nixos.desktop.plasma = {

@@ -1,8 +1,8 @@
-{ ... }:
+{ inputs, ... }:
 {
   imports = [
-    ../../modules/common
-    ../../modules/nixos
+    "${inputs.self}/modules/common"
+    "${inputs.self}/modules/nixos"
     ./configs/nixos
     ./config-disk.nix
     ./hardware-configuration.nix

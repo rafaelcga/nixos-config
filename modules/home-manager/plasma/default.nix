@@ -2,6 +2,7 @@
   config,
   lib,
   pkgs,
+  inputs,
   ...
 }:
 let
@@ -14,8 +15,8 @@ let
   colorScheme = builtins.replaceStrings [ "-" ] [ "" ] globalTheme;
   widgetStyle = "Darkly";
 
-  pastelIconPath = ../../../resources/splash/nix-snowflake-rainbow-pastel.svg;
-  wallpaperPath = ../../../resources/wallpapers/nebula.jpg;
+  pastelIconPath = "${inputs.self}/resources/splash/nix-snowflake-rainbow-pastel.svg";
+  wallpaperPath = "${inputs.self}resources/wallpapers/nebula.jpg";
 
   fontConfig = {
     family = "JetBrainsMono Nerd Font";

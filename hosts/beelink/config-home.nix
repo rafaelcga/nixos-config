@@ -1,8 +1,8 @@
-{ ... }:
+{ inputs, ... }:
 {
   imports = [
-    ../../modules/common
-    ../../modules/home-manager
+    "${inputs.self}/modules/common"
+    "${inputs.self}/modules/home-manager"
     ./configs/home-manager
   ];
 

@@ -1,10 +1,15 @@
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  inputs,
+  ...
+}:
 let
   upperFlavor = lib.local.capitalizeFirst config.catppuccin.flavor or "";
   upperAccent = lib.local.capitalizeFirst config.catppuccin.accent or "";
 
-  nixosLogoPath = ../../resources/splash/nix-snowflake-rainbow-pastel.png;
-  splashPreviewPath = ../../resources/splash/preview.png;
+  nixosLogoPath = "${inputs.self}/resources/splash/nix-snowflake-rainbow-pastel.png";
+  splashPreviewPath = "${inputs.self}/resources/splash/preview.png";
 in
 (final: prev: {
   catppuccin-kde =
