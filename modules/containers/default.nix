@@ -2,7 +2,6 @@
 let
   cfg = config.modules.containers;
   usesNetworkManager = config.networking.networkmanager.enable;
-
   internalInterface = if config.networking.nftables.enable then "ve-*" else "ve-+";
 in
 {
@@ -12,11 +11,31 @@ in
       type = lib.types.str; # no default to make it required
       description = "External interface for NAT";
     };
+    hostAddress = lib.mkOption {
+      default = "192.168.100.10";
+      type = lib.types.str;
+      description = "Host IPv4 address";
+    };
+    hostAddress6 = lib.mkOption {
+      default = "fc00::1";
+      type = lib.types.str;
+      description = "Host IPv6 address";
+    };
   };
 
   imports = lib.optionals cfg.enable (lib.local.listNixPaths { rootDir = ./.; });
 
   config = lib.mkIf cfg.enable {
+    containers."*" = {
+      autoStart = true;
+      privateNetwork = true;
+      inherit (cfg) hostAddress hostAddress6;
+
+      config = {
+        system = { inherit (config.system) stateVersion; };
+      };
+    };
+
     networking = {
       nat = {
         enable = true;
