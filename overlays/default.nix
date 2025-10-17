@@ -3,7 +3,7 @@
   nixpkgs.overlays = [
     (import ./catppuccin args)
     (final: prev: {
-      local = (import "${inputs.self}/packages" (args // { pkgs = final; }));
+      local = import "${inputs.self}/packages" (args // { pkgs = final; });
     })
   ];
 }

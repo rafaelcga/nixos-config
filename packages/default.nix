@@ -1,7 +1,7 @@
 { lib, pkgs, ... }:
-{
-  cachyos-settings = (import ./cachyos-settings) {
+lib.local.importModules {
+  rootDir = ./.;
+  callArgs = pkgs // {
     inherit lib;
-    inherit (pkgs) stdenv fetchFromGitHub;
   };
 }
