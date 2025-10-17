@@ -3,6 +3,15 @@ let
   cfg = config.modules.containers;
   usesNetworkManager = config.networking.networkmanager.enable;
   internalInterface = if config.networking.nftables.enable then "ve-*" else "ve-+";
+
+  commonContainerConfig = {
+    autoStart = true;
+    privateNetwork = true;
+    inherit (cfg) hostAddress hostAddress6;
+    config = {
+      system.stateVersion = config.system.stateVersion;
+    };
+  };
 in
 {
   options.modules.containers = {
@@ -26,15 +35,8 @@ in
   imports = lib.optionals cfg.enable (lib.local.listNixPaths { rootDir = ./.; });
 
   config = lib.mkIf cfg.enable {
-    containers."*" = {
-      autoStart = true;
-      privateNetwork = true;
-      inherit (cfg) hostAddress hostAddress6;
-
-      config = {
-        system = { inherit (config.system) stateVersion; };
-      };
-    };
+    # TODO: Import the containers and do recursiveUpdate with commonContainerConfig
+    # and then overriding with each containers configuration
 
     networking = {
       nat = {
