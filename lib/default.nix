@@ -1,10 +1,5 @@
 { lib, ... }@args:
 let
-  libExclude = [
-    "default.nix"
-    "extended-lib.nix"
-  ];
-
   # Returns all .nix files and modules (directories containing a default.nix) in
   # a given rootDir; can pass file or directory names to exclude
   listNixModules =
@@ -55,11 +50,14 @@ let
     );
 
   # Import functions and make them available at a higher scope
-  modules = importModules {
+  libModules = importModules {
     rootDir = ./.;
     callArgs = args;
-    exclude = libExclude;
+    exclude = [
+      "default.nix"
+      "extended-lib.nix"
+    ];
   };
-  moduleFunctions = lib.mergeAttrsList (lib.attrValues modules);
+  libFunctions = lib.mergeAttrsList (lib.attrValues libModules);
 in
-moduleFunctions // { inherit listNixPaths importModules; } // modules # modules take precedence in merge
+libFunctions // { inherit listNixPaths importModules; } // libModules # modules take precedence in merge
