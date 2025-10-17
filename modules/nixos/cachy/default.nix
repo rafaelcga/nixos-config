@@ -6,7 +6,7 @@
 }:
 let
   cfg = config.modules.nixos.cachy;
-  cachyos-settings = pkgs.callPackage ./cachyos-settings/package.nix { };
+  inherit (pkgs.local) cachyos-settings;
 in
 {
   options.modules.nixos.cachy = {
