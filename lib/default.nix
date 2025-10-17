@@ -13,14 +13,14 @@ let
       exclude ? [ "default.nix" ],
     }:
     let
-      isNixFile = { item, type }: (lib.hasSuffix ".nix" item) && (type == "regular");
-      isModule =
-        { item, type }: (builtins.pathExists "${rootDir}/${item}/default.nix") && (type == "directory");
-      fileFilter =
-        item: type:
-        (isNixFile { inherit item type; } || isModule { inherit item type; }) && !(lib.elem item exclude);
+      dirContent = builtins.readDir rootDir;
+      isFile = item: type: (lib.hasSuffix ".nix" item) && (type == "regular");
+      isDir = item: type: (builtins.pathExists "${rootDir}/${item}/default.nix") && (type == "directory");
+      isModule = item: type: (isFile item type) || (isDir item type);
     in
-    (builtins.attrNames (lib.filterAttrs fileFilter (builtins.readDir rootDir)));
+    (builtins.attrNames (
+      lib.filterAttrs (item: type: (isModule item type) && !(lib.elem item exclude)) dirContent
+    ));
 
   # Wrapper to return absolute paths
   listNixPaths =
@@ -44,7 +44,7 @@ let
       nixFileNames = listNixModules { inherit rootDir exclude; };
       nixFileStems = builtins.map (fileName: lib.removeSuffix ".nix" fileName) nixFileNames;
     in
-    (lib.genAttrs nixFileStems (stem: import ./${stem}.nix callArgs));
+    (lib.genAttrs nixFileStems (stem: import "${rootDir}/${stem}.nix" callArgs));
 
   # Import functions and make them available at a higher scope
   modules = importModules {
