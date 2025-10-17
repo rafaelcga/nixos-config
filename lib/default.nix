@@ -5,8 +5,8 @@ let
     "extended-lib.nix"
   ];
 
-  # Function that returns all .nix files and modules (directories containing a
-  # default.nix) in a given rootDir; can pass file or directory names to exclude.
+  # Returns all .nix files and modules (directories containing a default.nix) in
+  # a given rootDir; can pass file or directory names to exclude
   listNixModules =
     {
       rootDir,
@@ -14,15 +14,19 @@ let
     }:
     let
       dirContent = builtins.readDir rootDir;
-      isFile = item: type: (lib.hasSuffix ".nix" item) && (type == "regular");
-      isDir = item: type: (builtins.pathExists "${rootDir}/${item}/default.nix") && (type == "directory");
-      isModule = item: type: (isFile item type) || (isDir item type);
+      isModule =
+        name: type:
+        let
+          isNixFile = lib.hasSuffix ".nix" name && type == "regular";
+          isDirModule = type == "directory" && builtins.pathExists "${rootDir}/${name}/default.nix";
+        in
+        isNixFile || isDirModule;
     in
-    (builtins.attrNames (
-      lib.filterAttrs (item: type: (isModule item type) && !(lib.elem item exclude)) dirContent
-    ));
+    lib.attrNames (
+      lib.filterAttrs (name: type: isModule name type && !(lib.elem name exclude)) dirContent
+    );
 
-  # Wrapper to return absolute paths
+  # Returns absolute paths of modules in given root directory
   listNixPaths =
     {
       rootDir,
@@ -31,9 +35,9 @@ let
     let
       nixModules = listNixModules { inherit rootDir exclude; };
     in
-    (builtins.map (module: "${rootDir}/${module}") nixModules);
+    map (module: "${rootDir}/${module}") nixModules;
 
-  # Function to import modules
+  # Imports modules in a given root directory passing along callArgs to them
   importModules =
     {
       rootDir,
@@ -41,10 +45,14 @@ let
       exclude ? [ "default.nix" ],
     }:
     let
-      nixFileNames = listNixModules { inherit rootDir exclude; };
-      nixFileStems = builtins.map (fileName: lib.removeSuffix ".nix" fileName) nixFileNames;
+      nixModules = listNixModules { inherit rootDir exclude; };
     in
-    (lib.genAttrs nixFileStems (stem: import "${rootDir}/${stem}.nix" callArgs));
+    lib.listToAttrs (
+      map (name: {
+        name = lib.removeSuffix ".nix" name;
+        value = import "${rootDir}/${name}" callArgs;
+      }) nixModules
+    );
 
   # Import functions and make them available at a higher scope
   modules = importModules {
