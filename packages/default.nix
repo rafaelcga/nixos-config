@@ -1,4 +1,7 @@
-{ lib, ... }:
+{ lib, pkgs, ... }:
 {
-  imports = (lib.local.listNixPaths { rootDir = ./.; });
+  cachyos-settings = (import ./cachyos-settings) {
+    inherit lib;
+    inherit (pkgs) stdenv fetchFromGitHub;
+  };
 }

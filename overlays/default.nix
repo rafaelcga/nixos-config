@@ -1,14 +1,9 @@
-{
-  config,
-  lib,
-  inputs,
-  ...
-}:
+{ inputs, ... }@args:
 {
   nixpkgs.overlays = [
-    (import ./catppuccin { inherit config lib inputs; })
+    (import ./catppuccin args)
     (final: prev: {
-      local = (import "${inputs.self}/packages" { inherit config lib inputs; });
+      local = (import "${inputs.self}/packages" (args // { pkgs = final; }));
     })
   ];
 }

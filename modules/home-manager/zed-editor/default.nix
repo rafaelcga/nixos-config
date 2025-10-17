@@ -57,6 +57,7 @@ in
             ignore_system_version = false;
           };
         };
+        show_edit_predictions = false;
         # Languages
         languages = {
           Python = {
