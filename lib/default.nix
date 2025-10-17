@@ -62,4 +62,4 @@ let
   };
   moduleFunctions = lib.mergeAttrsList (lib.attrValues modules);
 in
-moduleFunctions // { inherit listNixPaths; } // modules # modules take precedence in merge
+moduleFunctions // { inherit listNixPaths importModules; } // modules # modules take precedence in merge
