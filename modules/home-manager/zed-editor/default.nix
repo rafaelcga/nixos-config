@@ -23,6 +23,7 @@ in
         nixd
         shfmt
         nixfmt
+        gemini-cli
         shellcheck
         basedpyright
         nerd-fonts.jetbrains-mono
@@ -42,7 +43,6 @@ in
 
       ## SETTINGS JSON
       userSettings = {
-        disable_ai = true;
         # UI settings
         ui_font_family = "JetBrainsMono Nerd Font";
         ui_font_size = 18;
@@ -51,6 +51,12 @@ in
         preferred_line_length = 80;
         wrap_guides = [ 80 ];
         terminal.dock = "right";
+        # AI
+        agent_servers = {
+          gemini = {
+            ignore_system_version = false;
+          };
+        };
         # Languages
         languages = {
           Python = {
