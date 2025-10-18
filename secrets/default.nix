@@ -20,6 +20,8 @@ let
   '';
 in
 {
+  imports = [ "${inputs.self}/secrets/${hostName}" ];
+
   sops = {
     defaultSopsFile = "${inputs.self}/secrets/${hostName}/secrets.yaml";
     age.sshKeyPaths = [

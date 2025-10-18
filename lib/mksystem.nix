@@ -24,6 +24,7 @@
         inherit specialArgs;
         modules = nixosModules ++ [
           "${inputs.self}/hosts/${hostName}/config.nix"
+          "${inputs.self}/secrets"
           "${inputs.self}/overlays"
           {
             system = { inherit stateVersion; };
