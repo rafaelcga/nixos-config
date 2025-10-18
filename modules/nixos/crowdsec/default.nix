@@ -8,7 +8,7 @@
 let
   cfg = config.modules.nixos.crowdsec;
   userGroup = config.users.users.${userName}.group;
-  usesCaddy = config.services.caddy.enable;
+  usesCaddy = config.modules.nixos.caddy.enable;
 
   # https://github.com/crowdsecurity/crowdsec/blob/master/docker/docker_start.sh
   mkBouncerRegistrationService =

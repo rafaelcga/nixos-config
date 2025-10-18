@@ -6,7 +6,9 @@
 }:
 let
   cfg = config.modules.nixos.caddy;
-  usesCrowdsec = config.services.crowdsec.enable;
+  usesCrowdsec = config.modules.nixos.crowdsec.enable;
+  inherit (config.modules.nixos.crowdsec) mkBouncerRegistrationService lapiPort appsecPort;
+  dotEnvs = config.sops.templates;
 
   globalConfig = ''
     acme_dns porkbun {
@@ -18,9 +20,9 @@ let
     "\n"
     + ''
       crowdsec {
-          api_url http://localhost:${config.modules.nixos.crowdsec.lapiPort}
+          api_url http://localhost:${lapiPort}
           api_key {$CROWDSEC_API_KEY}
-          appsec_url http://localhost:${config.modules.nixos.crowdsec.appsecPort}
+          appsec_url http://localhost:${appsecPort}
       }
     ''
   );
@@ -88,6 +90,7 @@ in
   config = lib.mkIf cfg.enable {
     services.caddy = {
       enable = true;
+      environmentFile = lib.mkIf (dotEnvs ? "caddy-env") dotEnvs."caddy-env".path;
       inherit globalConfig;
       package = pkgs.caddy.withPlugins {
         plugins = [
@@ -105,5 +108,13 @@ in
       80
       443
     ];
+
+    # CrowdSec Caddy bouncer registration
+    systemd.services =
+      lib.mkIf (usesCrowdsec && dotEnvs ? "caddy-bouncer-env")
+        (mkBouncerRegistrationService {
+          name = "caddy";
+          environmentFile = config.sops.templates."caddy-bouncer-env".path;
+        });
   };
 }
