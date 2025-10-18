@@ -7,7 +7,16 @@
   ...
 }:
 let
-  privateKeyPath = "${config.users.users.${userName}.home}/.ssh/id_ed25519";
+  homeDir = config.users.users.${userName}.home;
+  privateKeyPath = "${homeDir}/.ssh/id_ed25519";
+  sopsAgeKeysDir = "${homeDir}/.config/sops/age";
+
+  generateAgeKeyScript = pkgs.writeShellScript "generate_age_key.sh" ''
+    set -e
+    mkdir -p ${sopsAgeKeysDir}
+    ${pkgs.ssh-to-age}/bin/ssh-to-age -private-key -i ${privateKeyPath} > ${sopsAgeKeysDir}/keys.txt
+    chown -R ${userName}: ${sopsAgeKeysDir}
+  '';
 in
 {
   sops = {
@@ -25,4 +34,14 @@ in
     age
     sops
   ];
+
+  # Generate age key file from private SSH
+  systemd.services.generate-sops-age-key = {
+    description = "Generate age key from private SSH for sops CLI";
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = generateAgeKeyScript;
+    };
+    wantedBy = [ "multi-user.target" ];
+  };
 }
