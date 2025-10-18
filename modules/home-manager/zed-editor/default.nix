@@ -21,6 +21,7 @@ in
       extraPackages = with pkgs; [
         ruff
         nixd
+        caddy
         shfmt
         nixfmt
         gemini-cli
