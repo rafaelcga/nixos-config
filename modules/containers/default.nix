@@ -14,12 +14,12 @@ in
     hostAddress = lib.mkOption {
       default = "172.22.0.1"; # 172.22.0.0/24
       type = lib.types.str;
-      description = "Host IPv4 address";
+      description = "Host local IPv4 address";
     };
     hostAddress6 = lib.mkOption {
       default = "fc00::1";
       type = lib.types.str;
-      description = "Host IPv6 address";
+      description = "Host local IPv6 address";
     };
     commonConfig = lib.mkOption {
       default = {
