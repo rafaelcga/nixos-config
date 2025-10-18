@@ -3,15 +3,6 @@ let
   cfg = config.modules.containers;
   usesNetworkManager = config.networking.networkmanager.enable;
   internalInterface = if config.networking.nftables.enable then "ve-*" else "ve-+";
-
-  commonContainerConfig = {
-    autoStart = true;
-    privateNetwork = true;
-    inherit (cfg) hostAddress hostAddress6;
-    config = {
-      system.stateVersion = config.system.stateVersion;
-    };
-  };
 in
 {
   options.modules.containers = {
@@ -30,14 +21,23 @@ in
       type = lib.types.str;
       description = "Host IPv6 address";
     };
+    commonConfig = lib.mkOption {
+      default = {
+        autoStart = true;
+        privateNetwork = true;
+        inherit (cfg) hostAddress hostAddress6;
+        config = {
+          system.stateVersion = config.system.stateVersion;
+        };
+      };
+      type = lib.types.attrs;
+      description = "Common configuration applied to all containers";
+    };
   };
 
   imports = lib.optionals cfg.enable (lib.local.listNixPaths { rootDir = ./.; });
 
   config = lib.mkIf cfg.enable {
-    # TODO: Import the containers and do recursiveUpdate with commonContainerConfig
-    # and then overriding with each containers configuration
-
     networking = {
       nat = {
         enable = true;
