@@ -12,7 +12,7 @@ in
       description = "External interface for NAT";
     };
     hostAddress = lib.mkOption {
-      default = "192.168.100.10";
+      default = "172.22.0.1"; # 172.22.0.0/24
       type = lib.types.str;
       description = "Host IPv4 address";
     };
