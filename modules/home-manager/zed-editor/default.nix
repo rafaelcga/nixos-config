@@ -140,7 +140,7 @@ in
       };
     };
     home.sessionVariables = {
-      SOPS_EDITOR = "zeditor";
+      SOPS_EDITOR = "zeditor --wait";
     };
   };
 }
