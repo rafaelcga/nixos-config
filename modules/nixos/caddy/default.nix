@@ -11,7 +11,7 @@ let
   globalConfig = ''
     acme_dns porkbun {
         api_key {$PORKBUN_API_KEY}
-        api_secret_key {$PORKBUN_SECRET_API_KEY}
+        api_secret_key {$PORKBUN_API_SECRET_KEY}
     }
   ''
   + lib.optionalString usesCrowdsec (
