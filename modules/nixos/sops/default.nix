@@ -10,7 +10,7 @@ let
 in
 {
   sops = {
-    defaultSopsFile = "${inputs.self}/hosts/${hostName}/secrets.yaml";
+    defaultSopsFile = "${inputs.self}/secrets/${hostName}.yaml";
     age.sshKeyPaths = [
       "/etc/ssh/ssh_host_ed25519_key"
       "${homeDir}/.ssh/id_ed25519"
