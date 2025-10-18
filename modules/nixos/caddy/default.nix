@@ -46,35 +46,43 @@ let
         X-Robots-Tag none
     }
   '';
+
+  mkProxyConfig =
+    {
+      host ? "localhost",
+      port,
+    }:
+    let
+      proxyBlock = "reverse_proxy ${host}:${port}";
+      routeBlock =
+        if usesCrowdsec then
+          ''
+            route {
+                crowdsec
+                appsec
+                ${proxyBlock}
+            }
+          ''
+        else
+          proxyBlock;
+    in
+    ''
+      ${encodeBlock}
+      ${accessBlock}
+      ${headerBlock}
+      ${routeBlock}
+    '';
 in
 {
   options.modules.nixos.caddy = {
     enable = lib.mkEnableOption "Caddy configuration";
-    mkProxyConfig =
-      {
-        host ? "localhost",
-        port,
-      }:
-      let
-        proxyBlock = "reverse_proxy ${host}:${port}";
-        routeBlock =
-          if usesCrowdsec then
-            ''
-              route {
-                  crowdsec
-                  appsec
-                  ${proxyBlock}
-              }
-            ''
-          else
-            proxyBlock;
-      in
-      ''
-        ${encodeBlock}
-        ${accessBlock}
-        ${headerBlock}
-        ${routeBlock}
-      '';
+    mkProxyConfig = lib.mkOption {
+      type = lib.types.functionTo lib.types.str;
+      readOnly = true;
+      default = mkProxyConfig;
+      description = "Generates the configuration string for the reverse proxy";
+    };
+
   };
 
   config = lib.mkIf cfg.enable {

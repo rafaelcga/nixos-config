@@ -2,11 +2,38 @@
   config,
   pkgs,
   lib,
+  userName,
   ...
 }:
 let
   cfg = config.modules.nixos.crowdsec;
+  userGroup = config.users.users.${userName}.group;
   usesCaddy = config.services.caddy.enable;
+
+  # https://github.com/crowdsecurity/crowdsec/blob/master/docker/docker_start.sh
+  mkBouncerRegistrationService =
+    { name, environmentFile }:
+    {
+      "register_crowdsec_${name}_bouncer" = {
+        description = "Registers idempotently ${name} CrowdSec bouncer";
+        serviceConfig = {
+          Type = "oneshot";
+          User = userName;
+          Group = userGroup;
+          EnvironmentFile = environmentFile;
+        };
+        script = ''
+          if ! ${pkgs.crowdsec}/bin/cscli bouncers list -o json | ${pkgs.jq}/bin/jq -r '.[].name' | ${pkgs.gnugrep}/bin/grep -q "^$BOUNCER_NAME$"; then
+              if ${pkgs.crowdsec}/bin/cscli bouncers add "$BOUNCER_NAME" -k "$BOUNCER_KEY" > /dev/null; then
+                  echo "Registered bouncer for $BOUNCER_NAME"
+              else
+                  echo "Failed to register bouncer for $BOUNCER_NAME"
+              fi
+          fi
+        '';
+        wantedBy = [ "multi-user.target" ];
+      };
+    };
 in
 {
   options.modules.nixos.crowdsec = {
@@ -20,6 +47,15 @@ in
       default = 7422;
       type = lib.types.ints.unsigned;
       description = "Port in localhost (127.0.0.1) for AppSec";
+    };
+    mkBouncerRegistrationService = lib.mkOption {
+      type = lib.types.functionTo lib.types.attrs;
+      readOnly = true;
+      default = mkBouncerRegistrationService;
+      description = ''
+        Generates the attribute set for configuring a systemd service registering
+        a CrowdSec bouncer through a name and an environment variable file path.
+      '';
     };
   };
 

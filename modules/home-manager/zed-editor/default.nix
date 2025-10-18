@@ -139,5 +139,8 @@ in
         };
       };
     };
+    home.sessionVariables = {
+      SOPS_EDITOR = "zeditor";
+    };
   };
 }
