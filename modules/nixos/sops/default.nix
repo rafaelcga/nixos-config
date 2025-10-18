@@ -10,15 +10,13 @@ let
   homeDir = config.users.users.${userName}.home;
   userGroup = config.users.users.${userName}.group;
   privateKeyPath = "${homeDir}/.ssh/id_ed25519";
-  sopsDir = "${homeDir}/.config/sops";
-  sopsAgeKeysDir = "${sopsDir}/age";
+  sopsAgeKeysDir = "${homeDir}/.config/sops/age";
   sopsAgeKeyFile = "${sopsAgeKeysDir}/keys.txt";
 
   generateAgeKeyScript = pkgs.writeShellScript "generate_age_key.sh" ''
     set -e
     mkdir -p "${sopsAgeKeysDir}"
     ${pkgs.ssh-to-age}/bin/ssh-to-age -private-key -i "${privateKeyPath}" > "${sopsAgeKeyFile}"
-    chown -R ${userName}:${userGroup} "${sopsDir}"
   '';
 in
 {
@@ -43,6 +41,8 @@ in
     description = "Generate age key from private SSH for sops CLI";
     serviceConfig = {
       Type = "oneshot";
+      User = userName;
+      Group = userGroup;
       ExecStart = generateAgeKeyScript;
     };
     wantedBy = [ "multi-user.target" ];
