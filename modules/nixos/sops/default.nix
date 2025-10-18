@@ -1,5 +1,6 @@
 {
   config,
+  pkgs,
   inputs,
   hostName,
   userName,
@@ -20,7 +21,13 @@ in
       user_password.neededForUsers = true;
     };
   };
-  environment.sessionVariables = {
-    SOPS_AGE_SSH_PRIVATE_KEY_FILE = privateKeyPath; # ensure sops CLI works
+  environment = {
+    systemPackages = with pkgs; [
+      age
+      sops
+    ];
+    sessionVariables = {
+      SOPS_AGE_SSH_PRIVATE_KEY_FILE = privateKeyPath; # ensure sops CLI works
+    };
   };
 }

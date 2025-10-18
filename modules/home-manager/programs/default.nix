@@ -25,8 +25,6 @@
   };
   home.packages = with pkgs; [
     fzf
-    age
     tree
-    sops
   ];
 }
