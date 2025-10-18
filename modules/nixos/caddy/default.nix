@@ -18,16 +18,16 @@ let
     "\n"
     + ''
       crowdsec {
-          api_url http://localhost:8080
+          api_url http://localhost:${config.modules.nixos.crowdsec.lapiPort}
           api_key {$CROWDSEC_API_KEY}
-          appsec_url http://localhost:7422
+          appsec_url http://localhost:${config.modules.nixos.crowdsec.appsecPort}
       }
     ''
   );
   encodeBlock = "encode";
   accessBlock = ''
     log {
-        output file /var/log/caddy/access.log {
+        output file ${config.services.caddy.logDir}/access.log {
             roll_size 100MiB
             roll_keep 5
             roll_keep_for 14d
