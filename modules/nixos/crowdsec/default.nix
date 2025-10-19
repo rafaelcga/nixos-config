@@ -10,6 +10,19 @@ let
   userGroup = config.users.users.${userName}.group;
   usesCaddy = config.modules.nixos.caddy.enable;
 
+  collections = [
+    "crowdsecurity/linux"
+    "crowdsecurity/linux-lpe"
+    "crowdsecurity/http-cve"
+    "crowdsecurity/base-http-scenarios"
+    "crowdsecurity/sshd"
+    "crowdsecurity/sshd-impossible-travel"
+    "crowdsecurity/appsec-virtual-patching"
+    "crowdsecurity/appsec-generic-rules"
+    "crowdsecurity/appsec-crs"
+  ]
+  ++ lib.optionals usesCaddy [ "crowdsecurity/caddy" ];
+
   # https://github.com/crowdsecurity/crowdsec/blob/master/docker/docker_start.sh
   mkBouncerRegistrationService =
     { name, environmentFile }:
@@ -65,6 +78,7 @@ in
       settings.general = {
         api.server.listen_uri = "127.0.0.1:${cfg.lapiPort}";
       };
+      hub.collections = collections;
       localConfig.acquisitions = [
         {
           source = "file";
@@ -79,18 +93,13 @@ in
         {
           source = "appsec";
           listen_addr = "127.0.0.1:${cfg.appsecPort}";
-          appsec_configs = [
-            "crowdsecurity/appsec-default"
-            "crowdsecurity/appsec-generic-rules"
-            "crowdsecurity/appsec-crs"
-            "crowdsecurity/virtual-patching"
-          ];
+          appsec_configs = [ "crowdsecurity/appsec-default" ];
           labels = {
             type = "appsec";
           };
         }
       ]
-      + lib.optionals usesCaddy [
+      ++ lib.optionals usesCaddy [
         {
           source = "file";
           filename = "${config.services.caddy.logDir}/*.log";

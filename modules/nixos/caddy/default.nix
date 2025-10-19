@@ -96,7 +96,7 @@ in
         plugins = [
           "github.com/caddy-dns/porkbun@main"
         ]
-        + lib.optionals usesCrowdsec [
+        ++ lib.optionals usesCrowdsec [
           "github.com/hslatman/caddy-crowdsec-bouncer/http@main"
           "github.com/hslatman/caddy-crowdsec-bouncer/appsec@main"
           "github.com/hslatman/caddy-crowdsec-bouncer/layer4@main"
