@@ -67,7 +67,7 @@ in
             let
               systemXml = "${config.services.jellyfin.configDir}/system.xml";
               pluginJsonList = pluginReposToJson plugins;
-              pluginListNode = ".ServerConfiguration.PluginRepositories.RepositoryInfo";
+              pluginListPath = ".ServerConfiguration.PluginRepositories.RepositoryInfo";
             in
             {
               "enable_jellyfin_plugin_repos" = {
@@ -79,10 +79,17 @@ in
                   User = config.services.jellyfin.user;
                   Group = config.services.jellyfin.group;
                 };
+                # Handles the XML as JSON; ensures that the plugin list in the
+                # transformed JSON is interpreted as a list (doesn't by default
+                # if it only has one element)
                 script = ''
-                  ${pkgs.yq-go}/bin/yq -o json ${systemXml} | \
-                      ${pkgs.yq-go}/bin/yq '${pluginListNode} = (${pluginListNode} + ${pluginJsonList} | unique)' | \
-                      ${pkgs.yq-go}/bin/yq -o xml > ${systemXml}
+                  tempFile=$(mktemp) # temp file to avoid truncating input
+
+                  ${pkgs.yq-go}/bin/yq -oj "${pluginListPath} |= ([] + .)" ${systemXml} |
+                      ${pkgs.yq-go}/bin/yq "${pluginListPath} = (${pluginListPath} + ${pluginJsonList} | unique)" |
+                      ${pkgs.yq-go}/bin/yq -ox > $tempFile
+
+                  mv "$tempFile" "${systemXml}"
                 '';
               };
             };
