@@ -90,6 +90,16 @@ in
             type = "syslog";
           };
         }
+        # crowdsecurity/linux-lpe
+        {
+          source = "journalctl";
+          journalctl_filter = [
+            "-k"
+          ];
+          labels = {
+            type = "syslog";
+          };
+        }
         {
           source = "appsec";
           listen_addr = "127.0.0.1:${cfg.appsecPort}";
@@ -102,7 +112,7 @@ in
       ++ lib.optionals usesCaddy [
         {
           source = "file";
-          filename = "${config.services.caddy.logDir}/*.log";
+          filenames = [ "${config.services.caddy.logDir}/*.log" ];
           labels = {
             type = "caddy";
           };
