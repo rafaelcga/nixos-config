@@ -81,7 +81,7 @@ in
                 };
                 script = ''
                   ${pkgs.yq-go}/bin/yq -o json ${systemXml} | \
-                      ${pkgs.yq-go}/bin/yq '${pluginListNode} = ${pluginListNode} + ${pluginJsonList} | unique' | \
+                      ${pkgs.yq-go}/bin/yq '${pluginListNode} = (${pluginListNode} + ${pluginJsonList} | unique)' | \
                       ${pkgs.yq-go}/bin/yq -o xml > ${systemXml}
                 '';
               };
