@@ -29,6 +29,7 @@ let
     {
       "register_crowdsec_${name}_bouncer" = {
         description = "Registers idempotently ${name} CrowdSec bouncer";
+        wantedBy = [ "multi-user.target" ];
         serviceConfig = {
           Type = "oneshot";
           User = userName;
@@ -44,7 +45,6 @@ let
               fi
           fi
         '';
-        wantedBy = [ "multi-user.target" ];
       };
     };
 in

@@ -50,39 +50,39 @@ in
           ...
         }:
         let
-          pluginReposToXml =
+          pluginReposToJson =
             plugins:
-            let
-              pluginToXml = plugin: ''
-                <RepositoryInfo>
-                    <Name>${plugin.name}</Name>
-                    <Url>${plugin.url}</Url>
-                    <Enabled>true</Enabled>
-                </RepositoryInfo>
-              '';
-            in
-            lib.concatMapStringsSep "\n" pluginToXml plugins;
+            builtins.toJson (
+              map (plugin: {
+                Name = plugin.name;
+                Url = plugin.url;
+                Enabled = true;
+              }) plugins
+            );
 
           enablePluginRepos =
             {
               plugins ? [ ],
             }:
             let
-              systemXml = "";
-              pluginXml = pluginReposToXml plugins;
-              reposInfo = ".ServerConfiguration.PluginRepositories.RepositoryInfo";
+              systemXml = "${config.services.jellyfin.configDir}/system.xml";
+              pluginJsonList = pluginReposToJson plugins;
+              pluginListNode = ".ServerConfiguration.PluginRepositories.RepositoryInfo";
             in
             {
               "enable_jellyfin_plugin_repos" = {
                 description = "Enables idempotently all Jellyfin plugins";
+                after = [ "jellyfin.service" ];
+                wantedBy = [ "multi-user.target" ];
                 serviceConfig = {
                   Type = "oneshot";
                   User = config.services.jellyfin.user;
                   Group = config.services.jellyfin.group;
                 };
-                # TODO: fix this
                 script = ''
-                  ${pkgs.yq-go}/bin/yq '${reposInfo} + ${pluginXml} | unique' ${systemXml}
+                  ${pkgs.yq-go}/bin/yq -o json ${systemXml} | \
+                      ${pkgs.yq-go}/bin/yq '${pluginListNode} = ${pluginListNode} + ${pluginJsonList} | unique' | \
+                      ${pkgs.yq-go}/bin/yq -o xml > ${systemXml}
                 '';
               };
             };

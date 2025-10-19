@@ -36,6 +36,7 @@ in
   # Generate age key file from private SSH
   systemd.services.generate-sops-age-key = {
     description = "Generate age key from private SSH for sops CLI";
+    wantedBy = [ "multi-user.target" ];
     serviceConfig = {
       Type = "oneshot";
       User = userName;
@@ -46,6 +47,5 @@ in
       mkdir -p "${sopsAgeKeysDir}"
       ${pkgs.ssh-to-age}/bin/ssh-to-age -private-key -i "${privateKeyPath}" > "${sopsAgeKeyFile}"
     '';
-    wantedBy = [ "multi-user.target" ];
   };
 }
