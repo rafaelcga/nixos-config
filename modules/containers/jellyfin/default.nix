@@ -105,6 +105,8 @@ in
             pkgs.jellyfin-web
             pkgs.jellyfin-ffmpeg
           ];
+
+          systemd.services = enablePluginRepos cfg.plugins;
         };
     };
   };
