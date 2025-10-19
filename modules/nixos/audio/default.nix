@@ -1,12 +1,21 @@
 { config, lib, ... }:
 let
   cfg = config.modules.nixos.audio;
-  bufferSize = 128;
   bluetoothEnabled = config.hardware.bluetooth.enable;
 in
 {
   options.modules.nixos.audio = {
     enable = lib.mkEnableOption "PipeWire and audio configuration";
+    sampleRate = lib.mkOption {
+      type = lib.types.int;
+      default = 48000;
+      description = "Audio sample rate in Hz";
+    };
+    bufferSize = lib.mkOption {
+      type = lib.types.int;
+      default = 128;
+      description = "Audio buffer size (number of sample)";
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -32,10 +41,10 @@ in
       };
       extraConfig.pipewire."92-low-latency" = {
         "context.properties" = {
-          "default.clock.rate" = 48000;
-          "default.clock.quantum" = bufferSize;
-          "default.clock.min-quantum" = bufferSize;
-          "default.clock.max-quantum" = bufferSize;
+          "default.clock.rate" = cfg.sampleRate;
+          "default.clock.quantum" = cfg.bufferSize;
+          "default.clock.min-quantum" = cfg.bufferSize;
+          "default.clock.max-quantum" = cfg.bufferSize;
         };
       };
     };
