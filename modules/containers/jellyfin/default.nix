@@ -73,6 +73,7 @@ in
               "enable_jellyfin_plugin_repos" = {
                 description = "Enables idempotently all Jellyfin plugins";
                 after = [ "jellyfin.service" ];
+                wants = [ "jellyfin.service" ];
                 wantedBy = [ "multi-user.target" ];
                 serviceConfig = {
                   Type = "oneshot";
