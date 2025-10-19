@@ -4,6 +4,7 @@
     porkbun_api_key = { };
     porkbun_api_secret_key = { };
     crowdsec_api_key = { };
+    domain_name = { };
   };
 
   sops.templates = {

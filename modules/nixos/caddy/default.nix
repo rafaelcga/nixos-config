@@ -9,6 +9,7 @@ let
   usesCrowdsec = config.modules.nixos.crowdsec.enable;
   inherit (config.modules.nixos.crowdsec) mkBouncerRegistrationService lapiPort appsecPort;
   dotEnvs = config.sops.templates;
+  domainName = config.sops.secrets.domain_name or "localhost";
 
   globalConfig = ''
     acme_dns porkbun {
@@ -49,13 +50,15 @@ let
     }
   '';
 
-  mkProxyConfig =
+  mkVirtualHost =
     {
-      host ? "localhost",
-      port,
+      subdomain,
+      targetHost ? "localhost",
+      targetPort,
     }:
     let
-      proxyBlock = "reverse_proxy ${host}:${port}";
+      source = lib.optionalString (domainName == "localhost") "http://" + "${subdomain}.${domainName}";
+      proxyBlock = "reverse_proxy ${targetHost}:${targetPort}";
       routeBlock =
         if usesCrowdsec then
           ''
@@ -68,21 +71,23 @@ let
         else
           proxyBlock;
     in
-    ''
-      ${encodeBlock}
-      ${accessBlock}
-      ${headerBlock}
-      ${routeBlock}
-    '';
+    {
+      "${source}".extraConfig = ''
+        ${encodeBlock}
+        ${accessBlock}
+        ${headerBlock}
+        ${routeBlock}
+      '';
+    };
 in
 {
   options.modules.nixos.caddy = {
     enable = lib.mkEnableOption "Caddy configuration";
-    mkProxyConfig = lib.mkOption {
-      type = lib.types.functionTo lib.types.str;
+    mkVirtualHost = lib.mkOption {
+      type = lib.types.functionTo lib.types.attrs;
       readOnly = true;
-      default = mkProxyConfig;
-      description = "Generates the configuration string for the reverse proxy";
+      default = mkVirtualHost;
+      description = "Creates a Caddy virtual host";
     };
 
   };
@@ -114,7 +119,7 @@ in
       lib.mkIf (usesCrowdsec && dotEnvs ? "caddy-bouncer-env")
         (mkBouncerRegistrationService {
           name = "caddy";
-          environmentFile = config.sops.templates."caddy-bouncer-env".path;
+          environmentFile = dotEnvs."caddy-bouncer-env".path;
         });
   };
 }
