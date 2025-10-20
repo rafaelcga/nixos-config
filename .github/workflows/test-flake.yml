@@ -1,0 +1,24 @@
+name: Test NixOS Configuration
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  test-flake-outputs:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+      - name: Install Nix
+        uses: cachix/install-nix-action@main
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and test flake
+        run: |
+          nix build . -L
+          nix flake check
