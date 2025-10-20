@@ -6,19 +6,41 @@ on:
   workflow_dispatch:
   workflow_call:
 
+permissions:
+  contents: read
+
 jobs:
-  test-flake-outputs:
+  discover-hosts:
+    name: Discover NixOS hosts
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
+    outputs:
+      hosts: ${{ steps.get-hosts.outputs.hosts }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
+
+      - name: Get NixOS hosts from directories
+        id: get-hosts
+        run: |
+          JSON_LIST=$(ls -d hosts/* | xargs -n 1 basename | jq -R . | jq -s .)
+          echo "hosts=$JSON_LIST" >> "$GITHUB_OUTPUT"
+
+  build-hosts:
+    runs-on: ubuntu-latest
+    needs: discover-hosts
+    strategy:
+      matrix:
+        host: ${{ fromJSON(needs.discover-hosts.outputs.hosts) }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
       - name: Install Nix
         uses: cachix/install-nix-action@v31
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Build and test flake
         run: |
-          nix build . -L
           nix flake check
+          nix build -L .#nixosConfigurations.${{ matrix.host }}.config.system.build.toplevel
