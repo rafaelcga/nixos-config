@@ -1,9 +1,12 @@
-{ inputs, ... }@args:
+{ lib, inputs, ... }@args:
 {
   nixpkgs.overlays = [
     (import ./catppuccin args)
     (final: prev: {
-      local = import "${inputs.self}/packages" (args // { pkgs = final; });
+      local = lib.local.callPackages {
+        rootDir = "${inputs.self}/packages";
+        pkgs = final;
+      };
     })
   ];
 }
