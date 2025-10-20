@@ -22,7 +22,7 @@ jobs:
       - name: Get NixOS hosts from directories
         id: get-hosts
         run: |
-          JSON_LIST=$(ls -d hosts/* | xargs -n 1 basename | jq -R . | jq -s .)
+          JSON_LIST=$(ls -d hosts/* | xargs -n 1 basename | jq -R . | jq -sc .)
           echo "hosts=$JSON_LIST" >> "$GITHUB_OUTPUT"
 
   build-hosts:
