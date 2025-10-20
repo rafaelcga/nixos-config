@@ -1,7 +1,5 @@
 { lib, pkgs, ... }:
-lib.local.importModules {
+lib.local.callPackages {
   rootDir = ./.;
-  callArgs = pkgs // {
-    inherit lib;
-  };
+  inherit pkgs;
 }
