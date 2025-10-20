@@ -1,4 +1,7 @@
-{ pkgs, ... }:
+{ pkgs, osConfig, ... }:
+let
+  usesNvidia = builtins.elem "nvidia" osConfig.modules.nixos.graphics.vendors;
+in
 {
   programs = {
     git = {
@@ -18,8 +21,11 @@
       enable = true;
       enableFishIntegration = true;
     };
+    btop = {
+      enable = true;
+      package = if usesNvidia then pkgs.btop-cuda else pkgs.btop;
+    };
     gh.enable = true;
-    btop.enable = true;
     micro.enable = true;
     fastfetch.enable = true;
   };
