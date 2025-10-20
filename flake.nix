@@ -67,7 +67,7 @@
       # Set default formatter for `nix fmt`
       formatter.${system} = pkgs.nixfmt-tree;
       packages.${system} = lib.local.callPackages {
-        rootDir = "${inputs.self}/packages";
+        rootDir = "${inputs.self}/pkgs";
         inherit pkgs;
       };
       nixosConfigurations =

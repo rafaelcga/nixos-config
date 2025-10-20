@@ -4,7 +4,7 @@
     (import ./catppuccin args)
     (final: prev: {
       local = lib.local.callPackages {
-        rootDir = "${inputs.self}/packages";
+        rootDir = "${inputs.self}/pkgs";
         pkgs = final;
       };
     })
