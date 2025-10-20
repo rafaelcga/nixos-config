@@ -5,14 +5,13 @@
   ...
 }:
 stdenv.mkDerivation {
-  pname = "cachyos-settings";
-  version = "1.2.10";
+  name = "cachyos-settings";
 
   src = fetchFromGitHub {
     owner = "CachyOS";
     repo = "CachyOS-Settings";
     rev = "master";
-    sha256 = "sha256-MRuhWZXzFDxzypY5oFueUzCKSsGGA9Mp+XKpXwzqSjE=";
+    sha256 = "sha256-HYWRedGi0pUcryqbvoXWw5etRrCMBM1FSxZ5kdBzZLc=";
   };
 
   installPhase = ''
