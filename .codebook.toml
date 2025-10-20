@@ -3,6 +3,7 @@ words = [
     "chown",
     "mkdir",
     "nixos",
+    "pkgs",
     "rafaelcga",
 ]
 ignore_paths = [".git/**/*"]
