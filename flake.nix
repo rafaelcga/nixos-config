@@ -30,9 +30,11 @@
   outputs =
     { ... }@inputs:
     let
-      lib = import ./lib/extended-lib.nix inputs;
       system = "x86_64-linux";
       stateVersion = "25.11";
+
+      lib = import ./lib/extended-lib.nix inputs;
+      pkgs = import inputs.nixpkgs { inherit system; };
 
       nixosModules = with inputs; [
         home-manager.nixosModules.home-manager
@@ -45,7 +47,6 @@
         plasma-manager.homeModules.plasma-manager
       ];
 
-      pkgs = import inputs.nixpkgs { inherit system; };
       buildHost =
         {
           hostName,
