@@ -37,6 +37,8 @@ in
     programs.${cfg.shell}.enable = true;
     environment.shells = [ pkgs.${cfg.shell} ];
 
+    sops.secrets.user_password.neededForUsers = true;
+
     users.users.${cfg.name} = {
       shell = pkgs.${cfg.shell};
       isNormalUser = true;

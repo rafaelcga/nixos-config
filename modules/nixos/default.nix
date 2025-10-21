@@ -1,5 +1,8 @@
+{ inputs, ... }:
 {
   imports = [
+    inputs.disko.nixosModules.disko
+
     ./hardware
     ./system
 
