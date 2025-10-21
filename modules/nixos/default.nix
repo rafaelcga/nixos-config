@@ -1,10 +1,9 @@
-{ ... }:
 {
   imports = [
     ./hardware
     ./system
 
-    ./home-manager.nix
+    # ./home-manager.nix
     ./i18n.nix
     ./user.nix
   ];

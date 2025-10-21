@@ -13,21 +13,32 @@ in
       type = lib.types.str;
       description = "User name";
     };
+    home = lib.mkOption {
+      type = lib.types.str;
+      default = config.users.users.${cfg.name}.home;
+      description = "User home directory";
+    };
+    group = lib.mkOption {
+      type = lib.types.str;
+      default = config.users.users.${cfg.name}.group;
+      description = "User primary group";
+    };
     shell = lib.mkOption {
-      type = lib.types.package;
-      default = pkgs.fish;
+      type = lib.types.enum [
+        "bash"
+        "fish"
+      ];
+      default = "fish";
       description = "User login shell";
     };
   };
 
   config = {
-    modules.nixos.user = { inherit (config.users.users.${cfg.name}) home group; };
-
-    programs.${cfg.shell.pname}.enable = true;
-    environment.shells = [ cfg.shell ];
+    programs.${cfg.shell}.enable = true;
+    environment.shells = [ pkgs.${cfg.shell} ];
 
     users.users.${cfg.name} = {
-      inherit (cfg) shell;
+      shell = pkgs.${cfg.shell};
       isNormalUser = true;
       hashedPasswordFile = config.sops.secrets.user_password.path;
       extraGroups = [ "wheel" ];

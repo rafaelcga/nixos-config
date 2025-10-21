@@ -3,10 +3,7 @@
 
   outputs =
     inputs@{ flake-parts, ... }:
-    let
-      lib = import ./lib/extended-lib.nix { inherit inputs; };
-    in
-    flake-parts.lib.mkFlake { inherit inputs lib; } {
+    flake-parts.lib.mkFlake { inherit inputs; } {
       imports = [
         ./parts/hosts.nix
       ];

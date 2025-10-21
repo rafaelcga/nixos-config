@@ -1,7 +1,9 @@
 { inputs, lib, ... }:
 let
-  hosts = lib.local.listSubdirs "${inputs.self}/hosts";
+  builders = import "${inputs.self}/lib/builders.nix" { inherit inputs lib; };
+  utils = import "${inputs.self}/lib/utils.nix" { inherit inputs lib; };
+  hosts = utils.listSubdirs "${inputs.self}/hosts";
 in
 {
-  flake.nixosConfigurations = lib.mkMerge (map lib.local.mkNixosSystem hosts);
+  flake.nixosConfigurations = lib.mkMerge (map builders.mkNixosSystem hosts);
 }
