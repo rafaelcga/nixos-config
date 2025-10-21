@@ -30,6 +30,7 @@ in
         systemd.enable = true;
         verbose = true;
       };
+
       loader = {
         efi.canTouchEfiVariables = true;
         systemd-boot = lib.mkIf (cfg.loader == "systemd-boot") {
@@ -41,9 +42,9 @@ in
           enableEditor = false;
         };
       };
-      # /tmp on RAM
+
       tmp = {
-        useTmpfs = true;
+        useTmpfs = true; # /tmp on RAM
         cleanOnBoot = true;
       };
     };
