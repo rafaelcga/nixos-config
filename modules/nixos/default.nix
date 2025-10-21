@@ -9,5 +9,6 @@
     # ./home-manager.nix
     ./i18n.nix
     ./user.nix
+    ./sops.nix
   ];
 }
