@@ -8,7 +8,7 @@
         "${inputs.self}/hosts/base.nix"
         "${inputs.self}/hosts/${host}"
       ];
-      specialArgs = { inherit inputs lib; };
+      specialArgs = { inherit inputs; };
     };
   };
 }

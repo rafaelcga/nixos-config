@@ -2,11 +2,11 @@
 {
   imports = [
     inputs.disko.nixosModules.disko
+    ./home-manager.nix
 
     ./hardware
     ./system
 
-    # ./home-manager.nix
     ./i18n.nix
     ./user.nix
     ./sops.nix
