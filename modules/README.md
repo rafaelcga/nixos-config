@@ -9,7 +9,7 @@ in
   imports = [ ];
 
   options.modules.group.name = {
-    enable = lib.mkEnableOption "";
+    enable = lib.mkEnableOption "Toggle module";
     optionName = lib.mkOption {
       type = lib.types.bool;
       default = false;
