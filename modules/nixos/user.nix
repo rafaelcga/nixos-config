@@ -27,7 +27,7 @@ in
 
   config = lib.mkIf cfg.enable {
     environment.shells = [ cfg.shell ];
-    programs.fish.enable = true;
+    programs."${cfg.shell.pname}".enable = true;
     users.users.${cfg.name} = {
       inherit (cfg) shell;
       isNormalUser = true;

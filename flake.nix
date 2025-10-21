@@ -8,7 +8,7 @@
     in
     flake-parts.lib.mkFlake { inherit inputs lib; } {
       imports = [
-        ./hosts
+        ./parts/hosts.nix
       ];
       systems = [ "x86_64-linux" ];
     };
