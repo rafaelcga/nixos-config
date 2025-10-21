@@ -3,6 +3,7 @@
 
 # NixOS Config
 My [NixOS](https://nixos.org/) configuration, using
+[`flake-parts`](https://github.com/hercules-ci/flake-parts),
 [`home-manager`](https://github.com/nix-community/home-manager),
 [`sops-nix`](https://github.com/Mic92/sops-nix) and
 [`disko`](https://github.com/nix-community/disko).
