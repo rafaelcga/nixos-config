@@ -7,8 +7,8 @@
   ...
 }:
 let
-  inherit (osConfig.modules.nixos) catppuccin;
   cfg = config.modules.home-manager.plasma-manager;
+  catppuccinModule = osConfig.modules.nixos.catppuccin;
 
   panelIconPath = "${inputs.self}/resources/splash/nix-snowflake-rainbow-pastel.svg";
   wallpaperPath = "${inputs.self}/resources/wallpapers/nebula.jpg";
@@ -202,15 +202,15 @@ in
         darkly
         darkly-qt5
       ]
-      ++ lib.optionals catppuccin.enable [
+      ++ lib.optionals catppuccinModule.enable [
         catppuccin-kde
       ];
     # Required by Darkly
     qt.platformTheme.name = lib.mkIf (cfg.widgetStyle == "Darkly") "qtct";
 
-    modules.home-manager.plasma-manager = lib.mkIf catppuccin.enable {
-      colorScheme = lib.mkForce catppuccin.colorScheme;
-      splashTheme = lib.mkForce catppuccin.themeName;
+    modules.home-manager.plasma-manager = lib.mkIf catppuccinModule.enable {
+      colorScheme = lib.mkForce catppuccinModule.colorScheme;
+      splashTheme = lib.mkForce catppuccinModule.themeName;
     };
   };
 }
