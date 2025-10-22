@@ -8,7 +8,7 @@
 let
   inherit (config.modules.nixos) user;
   cfg = config.modules.nixos.catppuccin;
-  homeConfig = config.home-manager.users.${user.name}.home;
+  homeConfig = config.home-manager.users.${user.name};
 
   themeConfig = {
     catppuccin = {

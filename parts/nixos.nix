@@ -1,4 +1,9 @@
-{ inputs, lib, ... }:
+{
+  withSystem,
+  inputs,
+  lib,
+  ...
+}:
 let
   users = [
     {
@@ -37,19 +42,23 @@ let
       };
     in
     {
-      "${host.name}" = lib.nixosSystem {
-        inherit (host) system;
-        modules = [
-          coreConfig
-          "${inputs.self}/overlays"
-          "${inputs.self}/modules/nixos"
-          "${inputs.self}/hosts/${host.name}"
-          userConfig
-        ];
-        specialArgs = { inherit inputs; };
-      };
+      "${host.name}" = withSystem host.system (
+        { ... }:
+        lib.nixosSystem {
+          modules = [
+            coreConfig
+            "${inputs.self}/overlays"
+            "${inputs.self}/modules/nixos"
+            "${inputs.self}/hosts/${host.name}"
+            userConfig
+          ];
+          specialArgs = { inherit inputs; };
+        }
+      );
     };
 in
 {
+  systems = [ "x86_64-linux" ];
+
   flake.nixosConfigurations = lib.mkMerge (map mkNixosSystem hosts);
 }
