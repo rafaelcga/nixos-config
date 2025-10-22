@@ -6,13 +6,15 @@ in
   programs = {
     git = {
       enable = true;
-      userName = "rafaelcga";
-      userEmail = "68070715+rafaelcga@users.noreply.github.com";
-      extraConfig = {
+      settings = {
+        user = {
+          name = "rafaelcga";
+          email = "68070715+rafaelcga@users.noreply.github.com";
+        };
         pull.rebase = true;
       };
-      difftastic.enable = true;
     };
+    difftastic.git.enable = true;
 
     fish = {
       enable = true;
