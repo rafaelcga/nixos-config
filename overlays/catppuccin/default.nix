@@ -11,7 +11,7 @@ let
   nixosLogoPath = "${inputs.self}/resources/splash/nix-snowflake-rainbow-pastel.png";
   splashPreviewPath = "${inputs.self}/resources/splash/preview.png";
 in
-(final: prev: {
+final: prev: {
   catppuccin-kde =
     (prev.catppuccin-kde.override {
       flavour = [ config.catppuccin.flavor ];
@@ -29,4 +29,4 @@ in
   catppuccin-papirus-folders = prev.catppuccin-papirus-folders.override {
     inherit (config.catppuccin) flavor accent;
   };
-})
+}
