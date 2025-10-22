@@ -1,7 +1,7 @@
 Module template:
 
 ```nix
-{ config, lib, ... }:
+{ config, lib, pkgs, ... }:
 let
   cfg = config.modules.group.name;
 in

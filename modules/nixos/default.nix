@@ -1,5 +1,6 @@
 {
   imports = [
+    ./desktop
     ./external
     ./hardware
     ./system

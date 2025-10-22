@@ -19,6 +19,9 @@
       ];
     };
 
+    plasma.enable = true;
+    catppuccin.enable = true;
+
     cachyos-settings.enable = true;
     flatpak.enable = true;
     steam.enable = true;
