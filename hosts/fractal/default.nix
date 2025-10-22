@@ -8,6 +8,7 @@
   modules.nixos = {
     boot.loader = "limine";
     zram.enable = true;
+    ssh.enable = true;
 
     audio.enable = true;
     graphics = {

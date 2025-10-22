@@ -21,12 +21,14 @@ in
         enable = true;
         packages = [ cachyos-settings ];
       };
+
       ananicy = {
         enable = true;
         package = pkgs.ananicy-cpp;
         rulesProvider = pkgs.ananicy-rules-cachyos;
       };
     };
+
     environment.etc = {
       "sysctl.d/99-cachyos-settings.conf".source =
         "${cachyos-settings}/usr/lib/sysctl.d/99-cachyos-settings.conf";

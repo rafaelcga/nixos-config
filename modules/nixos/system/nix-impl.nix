@@ -54,6 +54,7 @@ in
       #   options = "--delete-older-than 7d";
       # };
     };
+
     programs.nh = {
       enable = true;
       clean = {

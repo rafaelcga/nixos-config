@@ -26,6 +26,7 @@ in
       alsa.support32Bit = true;
       pulse.enable = true;
       #jack.enable = true;
+
       wireplumber.extraConfig.bluetoothEnhancements = lib.mkIf usesBluetooth {
         "monitor.bluez.properties" = {
           "bluez5.enable-sbc-xq" = true;
@@ -39,6 +40,7 @@ in
           ];
         };
       };
+
       extraConfig.pipewire."92-low-latency" = {
         "context.properties" = {
           "default.clock.rate" = cfg.sampleRate;

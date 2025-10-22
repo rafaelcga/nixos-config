@@ -36,13 +36,18 @@ in
       default = "";
       description = "User's full name";
     };
+    sshPrivateKey = lib.mkOption {
+      type = lib.types.str;
+      default = "${cfg.home}/.ssh/id_ed25519";
+      description = "Path to the private SSH key";
+    };
   };
 
   config = {
     programs.${cfg.shell}.enable = true;
     environment.shells = [ pkgs.${cfg.shell} ];
 
-    sops.secrets.user_password.neededForUsers = true;
+    sops.secrets."passwords/user".neededForUsers = true;
 
     users.users.${cfg.name} = {
       inherit (cfg) description;
