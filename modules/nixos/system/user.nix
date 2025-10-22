@@ -53,7 +53,7 @@ in
       inherit (cfg) description;
       shell = pkgs.${cfg.shell};
       isNormalUser = true;
-      hashedPasswordFile = config.sops.secrets.user_password.path;
+      hashedPasswordFile = config.sops.secrets."passwords/user".path;
       extraGroups = [ "wheel" ];
     };
   };
