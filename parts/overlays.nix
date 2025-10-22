@@ -1,6 +1,6 @@
-{ inputs, ... }:
+args@{ inputs, ... }:
 {
-  flake.overlays.default = final: prev: { };
+  flake.overlays.default = import "${inputs.self}/overlays" args;
 
   perSystem =
     { system, ... }:

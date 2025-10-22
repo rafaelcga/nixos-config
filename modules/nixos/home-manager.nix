@@ -14,7 +14,7 @@ in
   home-manager = {
     users.${user.name} = {
       imports = [
-        "${inputs.self}/home/base.nix"
+        "${inputs.self}/modules/home-manager"
       ]
       ++ lib.optionals (builtins.pathExists userHomeConfig) [ userHomeConfig ];
       home = { inherit (config.system) stateVersion; };
