@@ -8,6 +8,7 @@
 let
   inherit (config.modules.nixos) user;
   cfg = config.modules.nixos.catppuccin;
+  homeConfig = config.home-manager.users.${user.name}.home;
 
   themeConfig = {
     catppuccin = {
@@ -25,6 +26,10 @@ let
       background = "${inputs.self}/resources/wallpapers/blank_wall.png";
     };
     environment.systemPackages = [ pkgs.nerd-fonts.jetbrains-mono ];
+  };
+
+  papirusConfig = lib.mkIf homeConfig.modules.home-manager.papirus.enable {
+    modules.home-manager.papirus.package = lib.mkForce pkgs.catppuccin-papirus-folders;
   };
 in
 {
@@ -71,6 +76,7 @@ in
       {
         home-manager.users.${user.name}.imports = [
           themeConfig
+          papirusConfig
         ];
       }
     ]
