@@ -9,6 +9,11 @@ in
       type = lib.types.str;
       description = "Which glibc valid locale to apply to all options";
     };
+    layout = lib.mkOption {
+      type = lib.types.str;
+      default = "es";
+      description = "Keyboard layout";
+    };
   };
 
   config = {
@@ -16,5 +21,8 @@ in
       defaultLocale = cfg.locale;
       extraLocaleSettings.LC_ALL = cfg.locale;
     };
+
+    services.xserver.xkb.layout = cfg.layout;
+    console.keyMap = cfg.layout;
   };
 }

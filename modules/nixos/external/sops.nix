@@ -42,7 +42,7 @@ in
 
     # Generate age key file from private SSH
     systemd.services.generate-sops-age-key = {
-      description = "Generate age key from private SSH for sops CLI";
+      description = "Generates age key from private SSH for sops CLI";
       wantedBy = [ "multi-user.target" ];
       serviceConfig = {
         Type = "oneshot";

@@ -5,5 +5,6 @@
     ./system
 
     ./cachyos-settings.nix
+    ./flatpak.nix
   ];
 }

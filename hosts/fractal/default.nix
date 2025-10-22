@@ -19,6 +19,7 @@
     };
 
     cachyos-settings.enable = true;
+    flatpak.enable = true;
   };
 
   environment.sessionVariables = {
