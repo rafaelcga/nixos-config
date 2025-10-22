@@ -1,6 +1,6 @@
 { inputs, ... }:
 {
-  flake.overlays.default = { };
+  flake.overlays.default = final: prev: { };
 
   perSystem =
     { system, ... }:

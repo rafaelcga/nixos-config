@@ -6,7 +6,13 @@ let
   mkNixosSystem = host: {
     "${host}" = lib.nixosSystem {
       modules = [
-        { networking.hostName = host; }
+        {
+          networking.hostName = host;
+          nixpkgs = {
+            overlays = [ inputs.self.overlays.default ];
+            config.allowUnfree = true;
+          };
+        }
         "${inputs.self}/modules/nixos"
         "${inputs.self}/hosts/base.nix"
         "${inputs.self}/hosts/${host}"
