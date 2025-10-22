@@ -2,6 +2,7 @@
   inputs,
   config,
   lib,
+  specialArgs,
   ...
 }:
 let
@@ -12,19 +13,16 @@ in
   imports = [ inputs.home-manager.nixosModules.home-manager ];
 
   home-manager = {
+    sharedModules = [ "${inputs.self}/modules/home-manager" ];
     users.${user.name} = {
-      imports = [
-        "${inputs.self}/modules/home-manager"
-      ]
-      ++ lib.optionals (builtins.pathExists userHomeConfig) [ userHomeConfig ];
+      imports = lib.optionals (builtins.pathExists userHomeConfig) [ userHomeConfig ];
       home = { inherit (config.system) stateVersion; };
     };
 
-    backupFileExtension = "bak";
-
     useGlobalPkgs = true;
     useUserPackages = true;
+    backupFileExtension = "bak";
 
-    extraSpecialArgs = { inherit inputs; };
+    extraSpecialArgs = specialArgs;
   };
 }
