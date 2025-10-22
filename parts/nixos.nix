@@ -5,6 +5,12 @@
   ...
 }:
 let
+  users = [
+    {
+      name = "rafael";
+      description = "Rafa Giménez";
+    }
+  ];
   hosts = [
     {
       name = "fractal";
@@ -17,12 +23,6 @@ let
       user = "rafael";
       system = "x86_64-linux";
       stateVersion = "25.11";
-    }
-  ];
-  users = [
-    {
-      name = "rafael";
-      description = "Rafa Giménez";
     }
   ];
 
