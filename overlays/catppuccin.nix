@@ -1,18 +1,9 @@
-{
-  inputs,
-  config,
-  lib,
-  ...
-}:
+{ inputs, config, ... }:
 let
-  inherit (config.modules.nixos.catppuccin) flavor accent;
-  utils = import "${inputs.self}/lib/utils.nix" { inherit lib; };
+  inherit (config.modules.nixos.catppuccin) flavor accent themeName;
 
   nixosLogo = "${inputs.self}/resources/splash/nix-snowflake-rainbow-pastel.png";
   splashPreview = "${inputs.self}/resources/splash/preview.png";
-
-  upperFlavor = utils.capitalizeFirst flavor;
-  upperAccent = utils.capitalizeFirst accent;
 in
 final: prev: {
   catppuccin-kde =
@@ -22,7 +13,7 @@ final: prev: {
     }).overrideAttrs
       (oldAttrs: {
         postInstall = (oldAttrs.postInstall or "") + ''
-          theme_dir="Catppuccin-${upperFlavor}-${upperAccent}"
+          theme_dir="${themeName}"
           contents_dir="$out/share/plasma/look-and-feel/$theme_dir/contents"
           cp ${nixosLogo} $contents_dir/splash/images/Logo.png
           cp ${splashPreview} $contents_dir/previews/splash.png

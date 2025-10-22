@@ -7,6 +7,8 @@
 }:
 let
   inherit (config.modules.nixos) user;
+  utils = import "${inputs.self}/lib/utils.nix" { inherit lib; };
+
   cfg = config.modules.nixos.catppuccin;
   homeConfig = config.home-manager.users.${user.name};
 
@@ -31,6 +33,9 @@ let
   papirusConfig = lib.mkIf homeConfig.modules.home-manager.papirus.enable {
     modules.home-manager.papirus.package = lib.mkForce pkgs.catppuccin-papirus-folders;
   };
+
+  upperFlavor = utils.capitalizeFirst cfg.flavor;
+  upperAccent = utils.capitalizeFirst cfg.accent;
 in
 {
   imports = [ inputs.catppuccin.nixosModules.catppuccin ];
@@ -66,6 +71,16 @@ in
       ];
       default = "teal";
       description = "Accent color";
+    };
+    themeName = lib.mkOption {
+      type = lib.types.str;
+      default = "Catppuccin-${upperFlavor}-${upperAccent}";
+      readOnly = true;
+    };
+    colorScheme = lib.mkOption {
+      type = lib.types.str;
+      default = builtins.replaceStrings [ "-" ] [ "" ] cfg.themeName;
+      readOnly = true;
     };
   };
 
