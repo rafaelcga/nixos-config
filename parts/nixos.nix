@@ -32,8 +32,9 @@ let
     in
     {
       "${host.name}" = withSystem host.system (
+        { system, ... }:
         lib.nixosSystem {
-          inherit (host) system;
+          inherit system;
           modules = [
             coreConfig
             "${inputs.self}/modules/nixos"

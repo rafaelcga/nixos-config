@@ -6,11 +6,6 @@
   ];
 
   modules.nixos = {
-    user = {
-      name = "rafael";
-      description = "Rafa Giménez";
-    };
-
     boot.loader = "limine";
 
     audio.enable = true;
@@ -22,6 +17,13 @@
         "nvidia"
       ];
     };
+
+    user = {
+      name = "rafael";
+      description = "Rafa Giménez";
+    };
+
+    cachyos-settings.enable = true;
   };
 
   environment.sessionVariables = {
