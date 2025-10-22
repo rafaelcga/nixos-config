@@ -6,6 +6,7 @@
     flake-parts.lib.mkFlake { inherit inputs; } {
       imports = [
         ./parts/nixos.nix
+        ./parts/overlays.nix
       ];
       systems = [ "x86_64-linux" ];
     };
