@@ -75,6 +75,7 @@ in
       sddmThemeConfig
       {
         home-manager.users.${user.name}.imports = [
+          inputs.catppuccin.homeModules.catppuccin
           themeConfig
           papirusConfig
         ];

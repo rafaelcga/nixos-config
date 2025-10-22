@@ -50,7 +50,8 @@ in
         Group = user.group;
       };
       script = ''
-        set -e
+        set -euo pipefail
+
         mkdir -p "$(dirname "${cfg.ageKeyFile}")"
         ${pkgs.ssh-to-age}/bin/ssh-to-age -private-key -i "${cfg.sshPrivateKey}" > "${cfg.ageKeyFile}"
       '';

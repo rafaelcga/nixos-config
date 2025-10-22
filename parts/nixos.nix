@@ -1,9 +1,4 @@
-{
-  withSystem,
-  inputs,
-  lib,
-  ...
-}:
+{ inputs, lib, ... }:
 let
   users = [
     {
@@ -31,12 +26,9 @@ let
     let
       user = lib.findFirst (user: user.name == host.user) null users;
       coreConfig = {
-        nixpkgs = {
-          overlays = [ inputs.self.overlays.default ];
-          config.allowUnfree = true;
-        };
         networking.hostName = host.name;
         system.stateVersion = host.stateVersion;
+        nixpkgs.config.allowUnfree = true;
       };
       userConfig = {
         modules.nixos.user = lib.mkIf (user != null) {
@@ -45,23 +37,19 @@ let
       };
     in
     {
-      "${host.name}" = withSystem host.system (
-        { system, ... }:
-        lib.nixosSystem {
-          inherit system;
-          modules = [
-            "${inputs.self}/modules/nixos"
-            "${inputs.self}/hosts/${host.name}"
-            coreConfig
-            userConfig
-          ];
-          specialArgs = { inherit inputs; };
-        }
-      );
+      "${host.name}" = lib.nixosSystem {
+        inherit (host) system;
+        modules = [
+          coreConfig
+          "${inputs.self}/overlays"
+          "${inputs.self}/modules/nixos"
+          "${inputs.self}/hosts/${host.name}"
+          userConfig
+        ];
+        specialArgs = { inherit inputs; };
+      };
     };
 in
 {
-  systems = [ "x86_64-linux" ];
-
   flake.nixosConfigurations = lib.mkMerge (map mkNixosSystem hosts);
 }
