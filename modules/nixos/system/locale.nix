@@ -1,10 +1,10 @@
 { config, lib, ... }:
 let
-  cfg = config.modules.nixos.i18n;
+  cfg = config.modules.nixos.locale;
 in
 {
-  options.modules.nixos.i18n = {
-    locale = lib.mkOption {
+  options.modules.nixos.locale = {
+    default = lib.mkOption {
       default = "en_IE.UTF-8"; # Irish English (for international locale)
       type = lib.types.str;
       description = "Which glibc valid locale to apply to all options";
@@ -14,15 +14,22 @@ in
       default = "es";
       description = "Keyboard layout";
     };
+    timeZone = lib.mkOption {
+      default = "Europe/Madrid";
+      type = lib.types.str;
+      description = "Time zone";
+    };
   };
 
   config = {
     i18n = {
-      defaultLocale = cfg.locale;
-      extraLocaleSettings.LC_ALL = cfg.locale;
+      defaultLocale = cfg.default;
+      extraLocaleSettings.LC_ALL = cfg.default;
     };
 
     services.xserver.xkb.layout = cfg.layout;
     console.keyMap = cfg.layout;
+
+    time.timeZone = cfg.timeZone;
   };
 }

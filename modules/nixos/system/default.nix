@@ -1,10 +1,9 @@
 {
   imports = [
     ./boot.nix
-    ./i18n.nix
+    ./locale.nix
     ./networking.nix
     ./nix-impl.nix
-    ./time.nix
     ./user.nix
     ./zram.nix
   ];
