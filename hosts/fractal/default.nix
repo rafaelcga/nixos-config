@@ -21,6 +21,7 @@
 
     cachyos-settings.enable = true;
     flatpak.enable = true;
+    steam.enable = true;
     virt-manager.enable = true;
   };
 
