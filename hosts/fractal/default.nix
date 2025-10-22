@@ -21,6 +21,7 @@
 
     cachyos-settings.enable = true;
     flatpak.enable = true;
+    virt-manager.enable = true;
   };
 
   environment.sessionVariables = {

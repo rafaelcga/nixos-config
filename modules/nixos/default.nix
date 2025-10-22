@@ -6,5 +6,6 @@
 
     ./cachyos-settings.nix
     ./flatpak.nix
+    ./virt-manager.nix
   ];
 }
