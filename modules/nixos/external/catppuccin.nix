@@ -7,10 +7,10 @@
 }:
 let
   inherit (config.modules.nixos) user;
+  inherit (config.home-manager.users.${user.name}.modules.home-manager) papirus plasma-manager;
   utils = import "${inputs.self}/lib/utils.nix" { inherit lib; };
 
   cfg = config.modules.nixos.catppuccin;
-  homeConfig = config.home-manager.users.${user.name};
 
   themeConfig = {
     catppuccin = {
@@ -30,8 +30,16 @@ let
     environment.systemPackages = [ pkgs.nerd-fonts.jetbrains-mono ];
   };
 
-  papirusConfig = lib.mkIf homeConfig.modules.home-manager.papirus.enable {
+  papirusConfig = lib.mkIf papirus.enable {
     modules.home-manager.papirus.package = lib.mkForce pkgs.catppuccin-papirus-folders;
+  };
+
+  plasmaConfig = lib.mkIf plasma-manager.enable {
+    home.packages = [ pkgs.catppuccin-kde ];
+    modules.home-manager.plasma-manager = {
+      colorScheme = lib.mkForce cfg.colorScheme;
+      splashTheme = lib.mkForce cfg.themeName;
+    };
   };
 
   upperFlavor = utils.capitalizeFirst cfg.flavor;
@@ -93,6 +101,7 @@ in
           inputs.catppuccin.homeModules.catppuccin
           themeConfig
           papirusConfig
+          plasmaConfig
         ];
       }
     ]

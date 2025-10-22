@@ -3,12 +3,11 @@
   config,
   lib,
   pkgs,
-  osConfig,
   ...
 }:
 let
+  inherit (config.modules.home-manager) cursor papirus;
   cfg = config.modules.home-manager.plasma-manager;
-  catppuccinModule = osConfig.modules.nixos.catppuccin;
 
   panelIconPath = "${inputs.self}/resources/splash/nix-snowflake-rainbow-pastel.svg";
   wallpaperPath = "${inputs.self}/resources/wallpapers/nebula.jpg";
@@ -75,6 +74,11 @@ in
         splashScreen.theme = cfg.splashTheme;
         wallpaper = wallpaperPath;
         wallpaperFillMode = "preserveAspectCrop";
+        iconTheme = lib.mkIf papirus.enable papirus.name;
+        cursor = lib.mkIf cursor.enable {
+          inherit (cursor) size;
+          theme = cursor.name;
+        };
       };
 
       kwin = {
@@ -201,16 +205,8 @@ in
       ++ lib.optionals (cfg.widgetStyle == "Darkly") [
         darkly
         darkly-qt5
-      ]
-      ++ lib.optionals catppuccinModule.enable [
-        catppuccin-kde
       ];
     # Required by Darkly
     qt.platformTheme.name = lib.mkIf (cfg.widgetStyle == "Darkly") "qtct";
-
-    modules.home-manager.plasma-manager = lib.mkIf catppuccinModule.enable {
-      colorScheme = lib.mkForce catppuccinModule.colorScheme;
-      splashTheme = lib.mkForce catppuccinModule.themeName;
-    };
   };
 }
