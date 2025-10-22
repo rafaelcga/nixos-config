@@ -31,6 +31,11 @@ in
       default = "fish";
       description = "User login shell";
     };
+    description = lib.mkOption {
+      type = lib.types.str;
+      default = "";
+      description = "User's full name";
+    };
   };
 
   config = {
@@ -40,6 +45,7 @@ in
     sops.secrets.user_password.neededForUsers = true;
 
     users.users.${cfg.name} = {
+      inherit (cfg) description;
       shell = pkgs.${cfg.shell};
       isNormalUser = true;
       hashedPasswordFile = config.sops.secrets.user_password.path;
