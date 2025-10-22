@@ -18,11 +18,6 @@
       ];
     };
 
-    user = {
-      name = "rafael";
-      description = "Rafa Giménez";
-    };
-
     cachyos-settings.enable = true;
   };
 

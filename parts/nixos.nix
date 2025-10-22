@@ -8,19 +8,28 @@ let
   hosts = [
     {
       name = "fractal";
+      user = "rafael";
       system = "x86_64-linux";
       stateVersion = "25.11";
     }
     {
       name = "beelink";
+      user = "rafael";
       system = "x86_64-linux";
       stateVersion = "25.11";
+    }
+  ];
+  users = [
+    {
+      name = "rafael";
+      description = "Rafa Giménez";
     }
   ];
 
   mkNixosSystem =
     host:
     let
+      user = lib.findFirst (user: user.name == host.user) null users;
       coreConfig = {
         nixpkgs = {
           overlays = [ inputs.self.overlays.default ];
@@ -29,6 +38,11 @@ let
         networking.hostName = host.name;
         system.stateVersion = host.stateVersion;
       };
+      userConfig = {
+        modules.nixos.user = lib.mkIf (user != null) {
+          inherit (user) name description;
+        };
+      };
     in
     {
       "${host.name}" = withSystem host.system (
@@ -36,9 +50,10 @@ let
         lib.nixosSystem {
           inherit system;
           modules = [
-            coreConfig
             "${inputs.self}/modules/nixos"
             "${inputs.self}/hosts/${host.name}"
+            coreConfig
+            userConfig
           ];
           specialArgs = { inherit inputs; };
         }
