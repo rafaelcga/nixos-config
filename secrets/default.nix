@@ -43,7 +43,8 @@ in
       Group = userGroup;
     };
     script = ''
-      set -e
+      set -euo pipefail
+
       mkdir -p "${sopsAgeKeysDir}"
       ${pkgs.ssh-to-age}/bin/ssh-to-age -private-key -i "${privateKeyPath}" > "${sopsAgeKeyFile}"
     '';
