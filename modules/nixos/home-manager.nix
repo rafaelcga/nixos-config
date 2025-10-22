@@ -7,7 +7,7 @@
 }:
 let
   inherit (config.modules.nixos) user;
-  userHomeConfig = "${inputs.self}/home/${user.name}";
+  userHomeConfig = "${inputs.self}/homes/${user.name}@${config.networking.hostName}";
 in
 {
   imports = [ inputs.home-manager.nixosModules.home-manager ];
