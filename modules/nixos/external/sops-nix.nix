@@ -7,12 +7,12 @@
 }:
 let
   inherit (config.modules.nixos) user;
-  cfg = config.modules.nixos.sops;
+  cfg = config.modules.nixos.sops-nix;
 in
 {
   imports = [ inputs.sops-nix.nixosModules.sops ];
 
-  options.modules.nixos.sops = {
+  options.modules.nixos.sops-nix = {
     sshPrivateKey = lib.mkOption {
       type = lib.types.str;
       default = "${user.home}/.ssh/id_ed25519";
