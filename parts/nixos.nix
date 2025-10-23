@@ -1,9 +1,4 @@
-{
-  withSystem,
-  inputs,
-  lib,
-  ...
-}:
+{ inputs, lib, ... }:
 let
   users = [
     {
@@ -33,7 +28,10 @@ let
       coreConfig = {
         networking.hostName = host.name;
         system.stateVersion = host.stateVersion;
-        nixpkgs.config.allowUnfree = true;
+        nixpkgs = {
+          hostPlatform = host.system;
+          config.allowUnfree = true;
+        };
       };
       userConfig = {
         modules.nixos.user = lib.mkIf (user != null) {
@@ -42,19 +40,16 @@ let
       };
     in
     {
-      "${host.name}" = withSystem host.system (
-        { ... }:
-        lib.nixosSystem {
-          modules = [
-            coreConfig
-            "${inputs.self}/overlays"
-            "${inputs.self}/modules/nixos"
-            "${inputs.self}/hosts/${host.name}"
-            userConfig
-          ];
-          specialArgs = { inherit inputs; };
-        }
-      );
+      "${host.name}" = lib.nixosSystem {
+        modules = [
+          coreConfig
+          "${inputs.self}/overlays"
+          "${inputs.self}/modules/nixos"
+          "${inputs.self}/hosts/${host.name}"
+          userConfig
+        ];
+        specialArgs = { inherit inputs; };
+      };
     };
 in
 {
