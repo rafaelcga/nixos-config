@@ -144,7 +144,6 @@ in
         "codebook"
         "caddyfile"
         "git-firefly"
-        "basedpyright"
       ];
     };
 
