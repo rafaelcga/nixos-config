@@ -1,0 +1,133 @@
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
+let
+  inherit (config.modules.nixos) user;
+  cfg = config.modules.nixos.crowdsec;
+  usesCaddy = config.modules.nixos.caddy.enable;
+
+  collections = [
+    "crowdsecurity/linux"
+    "crowdsecurity/linux-lpe"
+    "crowdsecurity/http-cve"
+    "crowdsecurity/base-http-scenarios"
+    "crowdsecurity/sshd"
+    "crowdsecurity/sshd-impossible-travel"
+    "crowdsecurity/appsec-virtual-patching"
+    "crowdsecurity/appsec-generic-rules"
+    "crowdsecurity/appsec-crs"
+  ]
+  ++ lib.optionals usesCaddy [ "crowdsecurity/caddy" ];
+
+  acquisitions = [
+    {
+      source = "file";
+      filenames = [
+        "/var/log/auth.log"
+        "/var/log/syslog"
+      ];
+      labels = {
+        type = "syslog";
+      };
+    }
+    # crowdsecurity/linux-lpe
+    {
+      source = "journalctl";
+      journalctl_filter = [
+        "-k"
+      ];
+      labels = {
+        type = "syslog";
+      };
+    }
+    {
+      source = "appsec";
+      listen_addr = "127.0.0.1:${cfg.appsecPort}";
+      appsec_configs = [ "crowdsecurity/appsec-default" ];
+      labels = {
+        type = "appsec";
+      };
+    }
+  ]
+  ++ lib.optionals usesCaddy [
+    {
+      source = "file";
+      filenames = [ "${config.services.caddy.logDir}/*.log" ];
+      labels = {
+        type = "caddy";
+      };
+    }
+  ];
+
+  # https://github.com/crowdsecurity/crowdsec/blob/master/docker/docker_start.sh
+  mkBouncerRegistrationService =
+    { name, environmentFile }:
+    {
+      "register_crowdsec_${name}_bouncer" = {
+        description = "Registers idempotently ${name} CrowdSec bouncer";
+        wantedBy = [ "multi-user.target" ];
+        serviceConfig = {
+          Type = "oneshot";
+          User = user.name;
+          Group = user.group;
+          EnvironmentFile = environmentFile;
+        };
+        script = ''
+          if ! ${pkgs.crowdsec}/bin/cscli bouncers list -o json | ${pkgs.jq}/bin/jq -r '.[].name' | ${pkgs.gnugrep}/bin/grep -q "^$BOUNCER_NAME$"; then
+              if ${pkgs.crowdsec}/bin/cscli bouncers add "$BOUNCER_NAME" -k "$BOUNCER_KEY" > /dev/null; then
+                  echo "Registered bouncer for $BOUNCER_NAME"
+              else
+                  echo "Failed to register bouncer for $BOUNCER_NAME"
+              fi
+          fi
+        '';
+      };
+    };
+in
+{
+  options.modules.nixos.crowdsec = {
+    enable = lib.mkEnableOption "CrowdSec configuration";
+
+    lapiPort = lib.mkOption {
+      default = 8080;
+      type = lib.types.ints.unsigned;
+      description = "Port in localhost (127.0.0.1) for CrowdSec's LAPI";
+    };
+
+    appsecPort = lib.mkOption {
+      default = 7422;
+      type = lib.types.ints.unsigned;
+      description = "Port in localhost (127.0.0.1) for AppSec";
+    };
+
+    mkBouncerRegistrationService = lib.mkOption {
+      type = lib.types.functionTo lib.types.attrs;
+      readOnly = true;
+      default = mkBouncerRegistrationService;
+      description = ''
+        Generates the attribute set for configuring a systemd service registering
+        a CrowdSec bouncer through a name and an environment variable file path.
+      '';
+    };
+  };
+
+  config = lib.mkIf cfg.enable {
+    sops.secrets."crowdsec/enroll_key" = { };
+
+    services.crowdsec = {
+      enable = true;
+      autoUpdateService = true;
+
+      settings.general = {
+        api.server.listen_uri = "127.0.0.1:${cfg.lapiPort}";
+      };
+      hub.collections = collections;
+      localConfig.acquisitions = acquisitions;
+    };
+
+    environment.systemPackages = [ pkgs.crowdsec-firewall-bouncer ];
+  };
+}

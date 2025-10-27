@@ -5,6 +5,7 @@
     ./external
     ./features
     ./hardware
+    ./services
     ./system
   ];
 }

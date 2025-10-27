@@ -32,6 +32,7 @@ in
     };
 
     gh.enable = true;
+    jq.enable = true;
     micro.enable = true;
     fastfetch.enable = true;
   };
