@@ -26,11 +26,13 @@ in
 {
   options.modules.nixos.graphics = {
     enable = lib.mkEnableOption "Enable graphics";
+
     enable32Bit = lib.mkOption {
       default = false;
       type = lib.types.bool;
       description = "Whether to enable 32-bit drivers";
     };
+
     vendors = lib.mkOption {
       default = [ ];
       type = lib.types.listOf (

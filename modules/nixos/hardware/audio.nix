@@ -6,11 +6,13 @@ in
 {
   options.modules.nixos.audio = {
     enable = lib.mkEnableOption "Enable audio through PipeWire";
+
     sampleRate = lib.mkOption {
       type = lib.types.int;
       default = 48000;
       description = "Audio sample rate in Hz";
     };
+
     bufferSize = lib.mkOption {
       type = lib.types.int;
       default = 128;

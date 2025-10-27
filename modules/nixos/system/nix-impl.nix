@@ -22,6 +22,7 @@ in
       default = "lix";
       description = "Nix package manager implementation to use";
     };
+
     version = lib.mkOption {
       type = lib.types.enum [
         "stable"

@@ -5,6 +5,7 @@ in
 {
   options.modules.nixos.ssh = {
     enable = lib.mkEnableOption "Enable SSH";
+
     fail2ban.enable = lib.mkOption {
       default = false;
       type = lib.types.bool;

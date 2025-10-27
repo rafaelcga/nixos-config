@@ -12,11 +12,13 @@ in
 
   options.modules.home-manager.papirus = {
     enable = lib.mkEnableOption "Enable Papirus Icon Theme";
+
     name = lib.mkOption {
       type = lib.types.str;
       default = "Papirus-Dark";
       description = "Theme name";
     };
+
     package = lib.mkOption {
       type = lib.types.package;
       default = pkgs.papirus-icon-theme;

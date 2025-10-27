@@ -106,12 +106,14 @@ in
 {
   options.modules.home-manager.zed-editor = {
     enable = lib.mkEnableOption "Enable Zed Editor";
+
     font = {
       family = lib.mkOption {
         type = lib.types.str;
         default = "JetBrainsMono Nerd Font";
         description = "Desktop environment font";
       };
+
       package = lib.mkOption {
         type = lib.types.package;
         default = pkgs.nerd-fonts.jetbrains-mono;

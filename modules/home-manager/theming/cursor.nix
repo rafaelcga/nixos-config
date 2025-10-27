@@ -10,16 +10,19 @@ in
 {
   options.modules.home-manager.cursor = {
     enable = lib.mkEnableOption "Enable cursor theming";
+
     name = lib.mkOption {
       type = lib.types.str;
       default = "Adwaita";
       description = "Cursor theme name";
     };
+
     package = lib.mkOption {
       type = lib.types.package;
       default = pkgs.adwaita-icon-theme;
       description = "Cursor theme package";
     };
+
     size = lib.mkOption {
       type = lib.types.int;
       default = 24;

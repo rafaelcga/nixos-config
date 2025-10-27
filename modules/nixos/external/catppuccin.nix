@@ -50,6 +50,7 @@ in
 
   options.modules.nixos.catppuccin = {
     enable = lib.mkEnableOption "Enable Catppuccin theme flake";
+
     flavor = lib.mkOption {
       type = lib.types.enum [
         "latte"
@@ -60,6 +61,7 @@ in
       default = "frappe";
       description = "Theme flavor (latte, frappe, macchiato, mocha)";
     };
+
     accent = lib.mkOption {
       type = lib.types.enum [
         "blue"
@@ -80,11 +82,13 @@ in
       default = "teal";
       description = "Accent color";
     };
+
     themeName = lib.mkOption {
       type = lib.types.str;
       default = "Catppuccin-${upperFlavor}-${upperAccent}";
       readOnly = true;
     };
+
     colorScheme = lib.mkOption {
       type = lib.types.str;
       default = builtins.replaceStrings [ "-" ] [ "" ] cfg.themeName;

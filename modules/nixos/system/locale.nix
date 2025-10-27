@@ -9,11 +9,13 @@ in
       type = lib.types.str;
       description = "Which glibc valid locale to apply to all options";
     };
+
     layout = lib.mkOption {
       type = lib.types.str;
       default = "es";
       description = "Keyboard layout";
     };
+
     timeZone = lib.mkOption {
       default = "Europe/Madrid";
       type = lib.types.str;

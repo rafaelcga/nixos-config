@@ -19,44 +19,52 @@ in
 
   options.modules.home-manager.plasma-manager = {
     enable = lib.mkEnableOption "Enable plasma-manager flake";
+
     windowDecorations = {
       theme = lib.mkOption {
         type = lib.types.str;
         default = "Breeze";
         description = "Window decorations theme";
       };
+
       library = lib.mkOption {
         type = lib.types.str;
         default = "org.kde.breeze";
         description = "Window decorations library";
       };
     };
+
     widgetStyle = lib.mkOption {
       type = lib.types.str;
       default = "Darkly";
       description = "Widget style";
     };
+
     colorScheme = lib.mkOption {
       type = lib.types.str;
       default = builtins.replaceStrings [ "-" ] [ "" ] cfg.splashTheme;
       description = "Color scheme";
     };
+
     splashTheme = lib.mkOption {
       type = lib.types.str;
       default = "Breeze-Dark";
       description = "Splash screen theme";
     };
+
     font = {
       family = lib.mkOption {
         type = lib.types.str;
         default = "JetBrainsMono Nerd Font";
         description = "Desktop environment font";
       };
+
       package = lib.mkOption {
         type = lib.types.package;
         default = pkgs.nerd-fonts.jetbrains-mono;
         description = "Desktop environment font's package";
       };
+
       pointSize = lib.mkOption {
         type = lib.types.int;
         default = 12;
