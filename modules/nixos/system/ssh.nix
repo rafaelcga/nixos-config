@@ -5,12 +5,6 @@ in
 {
   options.modules.nixos.ssh = {
     enable = lib.mkEnableOption "Enable SSH";
-
-    fail2ban.enable = lib.mkOption {
-      default = false;
-      type = lib.types.bool;
-      description = "Whether to enable fail2ban for SSH";
-    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -20,7 +14,7 @@ in
         settings.PermitRootLogin = "no";
       };
 
-      fail2ban = lib.mkIf cfg.fail2ban.enable {
+      fail2ban = {
         enable = true;
         maxretry = 5;
         bantime = "24h";
