@@ -39,13 +39,15 @@ in
       package = packages.${cfg.implementation};
       settings = {
         auto-optimise-store = true; # Optimizes store after every build
-        trusted-users = [
-          "root"
-          "@wheel"
-        ];
+
         experimental-features = [
           "nix-command"
           "flakes"
+        ];
+
+        trusted-users = [
+          "root"
+          "@wheel"
         ];
 
         substituters = [

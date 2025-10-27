@@ -6,6 +6,7 @@
     plasma-manager.enable = true;
 
     ghostty.enable = true;
+    lutris.enable = true;
     zed-editor.enable = true;
   };
 
