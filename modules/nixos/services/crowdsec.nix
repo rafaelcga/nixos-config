@@ -5,7 +5,6 @@
   ...
 }:
 let
-  inherit (config.modules.nixos) user;
   cfg = config.modules.nixos.crowdsec;
   usesCaddy = config.modules.nixos.caddy.enable;
 
@@ -63,27 +62,38 @@ let
   ];
 
   # https://github.com/crowdsecurity/crowdsec/blob/master/docker/docker_start.sh
-  mkBouncerRegistrationService =
-    { name, environmentFile }:
+  mkBouncer =
+    name:
+    let
+      name = lib.toLower name;
+    in
     {
-      "register_crowdsec_${name}_bouncer" = {
-        description = "Registers idempotently ${name} CrowdSec bouncer";
-        wantedBy = [ "multi-user.target" ];
-        serviceConfig = {
-          Type = "oneshot";
-          User = user.name;
-          Group = user.group;
-          EnvironmentFile = environmentFile;
+      sops.secrets."crowdsec/${name}_bouncer_key" = { };
+      sops.templates."crowdsec/${name}-env".content = ''
+        BOUNCER_KEY=${config.sops.placeholder."crowdsec/${name}_bouncer_key"}
+      '';
+
+      systemd.services = {
+        "register_crowdsec_${name}_bouncer" = {
+          description = "Registers idempotently ${name} CrowdSec bouncer";
+          after = [ "crowdsec.service" ];
+          wants = [ "crowdsec.service" ];
+          wantedBy = [ "multi-user.target" ];
+          serviceConfig = {
+            Type = "oneshot";
+            EnvironmentFile = config.sops.templates."crowdsec/${name}-env".path;
+          };
+          script = ''
+            set -euo pipefail
+
+            if ! ${pkgs.crowdsec}/bin/cscli bouncers list -o json |
+                ${pkgs.jq}/bin/jq -r ".[].name" |
+                ${pkgs.coreutils}/bin/tr "[:upper:]" "[:lower:]" |
+                ${pkgs.gnugrep}/bin/grep -q '^${name}$'; then
+                ${pkgs.crowdsec}/bin/cscli bouncers add "${name}" -k "$BOUNCER_KEY"
+            fi
+          '';
         };
-        script = ''
-          if ! ${pkgs.crowdsec}/bin/cscli bouncers list -o json | ${pkgs.jq}/bin/jq -r '.[].name' | ${pkgs.gnugrep}/bin/grep -q "^$BOUNCER_NAME$"; then
-              if ${pkgs.crowdsec}/bin/cscli bouncers add "$BOUNCER_NAME" -k "$BOUNCER_KEY" > /dev/null; then
-                  echo "Registered bouncer for $BOUNCER_NAME"
-              else
-                  echo "Failed to register bouncer for $BOUNCER_NAME"
-              fi
-          fi
-        '';
       };
     };
 in
@@ -103,31 +113,54 @@ in
       description = "Port in localhost (127.0.0.1) for AppSec";
     };
 
-    mkBouncerRegistrationService = lib.mkOption {
-      type = lib.types.functionTo lib.types.attrs;
-      readOnly = true;
-      default = mkBouncerRegistrationService;
+    bouncers = lib.mkOption {
+      type = lib.types.listOf lib.types.str;
+      default = [ ];
       description = ''
-        Generates the attribute set for configuring a systemd service registering
-        a CrowdSec bouncer through a name and an environment variable file path.
+        Names of bouncers to add to CrowdSec. Their API keys must be configured
+        in the repository secrets.
       '';
     };
   };
 
-  config = lib.mkIf cfg.enable {
-    sops.secrets."crowdsec/enroll_key" = { };
+  config = lib.mkIf cfg.enable (
+    lib.mkMerge [
+      {
+        services.crowdsec = {
+          enable = true;
+          autoUpdateService = true;
 
-    services.crowdsec = {
-      enable = true;
-      autoUpdateService = true;
+          settings.general = {
+            api.server.listen_uri = "127.0.0.1:${cfg.lapiPort}";
+          };
+          hub.collections = collections;
+          localConfig.acquisitions = acquisitions;
+        };
 
-      settings.general = {
-        api.server.listen_uri = "127.0.0.1:${cfg.lapiPort}";
-      };
-      hub.collections = collections;
-      localConfig.acquisitions = acquisitions;
-    };
+        environment.systemPackages = [ pkgs.crowdsec-firewall-bouncer ];
 
-    environment.systemPackages = [ pkgs.crowdsec-firewall-bouncer ];
-  };
+        sops.secrets."crowdsec/enroll_key" = { };
+        sops.templates."crowdsec/console-enroll-env".content = ''
+          ENROLL_KEY=${config.sops.placeholder."crowdsec/enroll_key"}
+        '';
+
+        systemd.services."enroll_crowdsec_console" = {
+          description = "Enrolls the engine at app.crowdsec.net";
+          after = [ "crowdsec.service" ];
+          wants = [ "crowdsec.service" ];
+          wantedBy = [ "multi-user.target" ];
+          serviceConfig = {
+            Type = "oneshot";
+            EnvironmentFile = config.sops.templates."crowdsec/console-enroll-env".path;
+          };
+          script = ''
+            set -euo pipefail
+
+            ${pkgs.crowdsec}/bin/cscli console enroll "$ENROLL_KEY"
+          '';
+        };
+      }
+    ]
+    ++ (map mkBouncer cfg.bouncers)
+  );
 }
