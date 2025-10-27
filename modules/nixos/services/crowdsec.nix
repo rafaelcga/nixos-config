@@ -96,6 +96,8 @@ let
         };
       };
     };
+
+  bouncerConfigList = map mkBouncer cfg.bouncers;
 in
 {
   options.modules.nixos.crowdsec = {
@@ -161,6 +163,6 @@ in
         };
       }
     ]
-    ++ (map mkBouncer cfg.bouncers)
+    ++ bouncerConfigList
   );
 }
