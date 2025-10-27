@@ -6,7 +6,6 @@
     plasma-manager.enable = true;
 
     ghostty.enable = true;
-    lutris.enable = true;
     zed-editor.enable = true;
   };
 
@@ -20,6 +19,10 @@
 
   home.packages = with pkgs; [
     tor-browser
+
     telegram-desktop
+
+    umu-launcher
+    heroic
   ];
 }
