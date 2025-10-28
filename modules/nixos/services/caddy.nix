@@ -154,7 +154,7 @@ in
           inherit globalConfig;
           enable = true;
           environmentFile = config.sops.templates."caddy-env".path;
-          package = pkgs.local.caddy;
+          package = pkgs.local.caddy-with-plugins;
           virtualHosts = lib.mkMerge (map mkVirtualHost cfg.virtualHosts);
         };
 
