@@ -7,8 +7,9 @@
 
   modules.nixos = {
     boot.loader = "limine";
-    zram.enable = true;
+    fonts.enable = true;
     ssh.enable = true;
+    zram.enable = true;
 
     audio.enable = true;
     graphics = {
@@ -20,11 +21,13 @@
       ];
     };
 
-    plasma.enable = true;
     catppuccin.enable = true;
+
+    plasma.enable = true;
 
     cachyos-settings.enable = true;
     flatpak.enable = true;
+
     steam.enable = true;
     virt-manager.enable = true;
   };

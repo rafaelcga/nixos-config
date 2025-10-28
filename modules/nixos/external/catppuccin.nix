@@ -27,7 +27,7 @@ let
       fontSize = "12";
       background = "${inputs.self}/resources/wallpapers/blank_wall.png";
     };
-    environment.systemPackages = [ pkgs.nerd-fonts.jetbrains-mono ];
+    fonts.packages = [ pkgs.nerd-fonts.jetbrains-mono ];
   };
 
   papirusConfig = lib.mkIf papirus.enable {
