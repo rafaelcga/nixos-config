@@ -12,6 +12,7 @@
       vendors = [ "intel" ];
     };
 
+    caddy.enable = true;
     crowdsec.enable = true;
   };
 }

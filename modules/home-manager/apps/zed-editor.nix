@@ -59,6 +59,19 @@ let
           };
         };
       };
+      Caddyfile = {
+        format_on_save = "on";
+        formatter = {
+          external = {
+            command = "caddy";
+            arguments = [
+              "fmt"
+              "-c"
+              "-"
+            ];
+          };
+        };
+      };
     };
     # Language-servers
     lsp = {

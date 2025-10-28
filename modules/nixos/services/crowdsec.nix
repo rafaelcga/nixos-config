@@ -42,7 +42,7 @@ let
     }
     {
       source = "appsec";
-      listen_addr = "127.0.0.1:${builtins.toString cfg.appsecPort}";
+      listen_addr = "127.0.0.1:${cfg.appsecPort}";
       appsec_configs = [ "crowdsecurity/appsec-default" ];
       labels = {
         type = "appsec";
@@ -85,17 +85,19 @@ let
 in
 {
   options.modules.nixos.crowdsec = {
-    enable = lib.mkEnableOption "CrowdSec configuration";
+    enable = lib.mkEnableOption "Enable CrowdSec";
 
     lapiPort = lib.mkOption {
       default = 8080;
       type = lib.types.ints.unsigned;
+      apply = builtins.toString;
       description = "Port in localhost (127.0.0.1) for CrowdSec's LAPI";
     };
 
     appsecPort = lib.mkOption {
       default = 7422;
       type = lib.types.ints.unsigned;
+      apply = builtins.toString;
       description = "Port in localhost (127.0.0.1) for AppSec";
     };
 
@@ -117,7 +119,7 @@ in
           autoUpdateService = true;
 
           settings.general = {
-            api.server.listen_uri = "127.0.0.1:${builtins.toString cfg.lapiPort}";
+            api.server.listen_uri = "127.0.0.1:${cfg.lapiPort}";
           };
           hub.collections = collections;
           localConfig.acquisitions = acquisitions;

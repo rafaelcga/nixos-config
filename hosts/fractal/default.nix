@@ -27,8 +27,6 @@
     flatpak.enable = true;
     steam.enable = true;
     virt-manager.enable = true;
-
-    crowdsec.enable = true;
   };
 
   environment.sessionVariables = {
