@@ -1,13 +1,10 @@
 { caddy }:
 let
-  porkbunVersion = "v0.3.1";
-  bouncerVersion = "v0.9.2";
-
   plugins = [
-    "github.com/caddy-dns/porkbun@${porkbunVersion}"
-    "github.com/hslatman/caddy-crowdsec-bouncer/http@${bouncerVersion}"
-    "github.com/hslatman/caddy-crowdsec-bouncer/appsec@${bouncerVersion}"
-    "github.com/hslatman/caddy-crowdsec-bouncer/layer4@${bouncerVersion}"
+    "github.com/caddy-dns/porkbun@v0.3.1"
+    "github.com/hslatman/caddy-crowdsec-bouncer/http@v0.9.2"
+    "github.com/hslatman/caddy-crowdsec-bouncer/appsec@v0.9.2"
+    "github.com/hslatman/caddy-crowdsec-bouncer/layer4@v0.9.2"
   ];
 in
 caddy.withPlugins {
