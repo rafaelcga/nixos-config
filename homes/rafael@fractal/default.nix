@@ -1,10 +1,11 @@
 { pkgs, ... }:
 {
   modules.home-manager = {
+    # Theming
     cursor.enable = true;
     papirus.enable = true;
     plasma-manager.enable = true;
-
+    # Apps
     ghostty.enable = true;
     zed-editor.enable = true;
   };
@@ -18,10 +19,9 @@
   };
 
   home.packages = with pkgs; [
-    tor-browser
-
+    # General apps
     telegram-desktop
-
+    # Gaming
     umu-launcher
     heroic
   ];

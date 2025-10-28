@@ -6,11 +6,12 @@
   ];
 
   modules.nixos = {
+    # System
     boot.loader = "limine";
     fonts.enable = true;
     ssh.enable = true;
     zram.enable = true;
-
+    # Hardware
     audio.enable = true;
     graphics = {
       enable = true;
@@ -20,14 +21,14 @@
         "nvidia"
       ];
     };
-
+    # External modules
     catppuccin.enable = true;
-
+    # Desktop
     plasma.enable = true;
-
+    # Features
     cachyos-settings.enable = true;
     flatpak.enable = true;
-
+    # Apps
     steam.enable = true;
     virt-manager.enable = true;
   };
