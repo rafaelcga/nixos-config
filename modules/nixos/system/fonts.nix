@@ -5,7 +5,6 @@
   ...
 }:
 let
-  inherit (config.modules.nixos) user;
   cfg = config.modules.nixos.fonts;
 
   fontDir = "/run/current-system/sw/share/X11/fonts";
@@ -35,8 +34,6 @@ in
       wantedBy = [ "multi-user.target" ];
       serviceConfig = {
         Type = "oneshot";
-        User = user.name;
-        Group = user.group;
       };
       script = ''
         set -euo pipefail
