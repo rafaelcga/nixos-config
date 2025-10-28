@@ -5,9 +5,8 @@
   ...
 }:
 let
+  inherit (config.modules.nixos) user;
   cfg = config.modules.nixos.fonts;
-
-  fontDir = "/run/current-system/sw/share/X11/fonts";
 in
 {
   options.modules.nixos.fonts = {
@@ -34,12 +33,14 @@ in
       wantedBy = [ "multi-user.target" ];
       serviceConfig = {
         Type = "oneshot";
+        User = user.name;
+        Group = user.group;
       };
       script = ''
         set -euo pipefail
 
-        mkdir -p "$XDG_DATA_HOME"
-        ln -s "${fontDir}" "$XDG_DATA_HOME/fonts"
+        mkdir -p "$HOME/.local/share"
+        ln -s "/run/current-system/sw/share/X11/fonts" "$HOME/.local/share/fonts"
       '';
     };
   };
