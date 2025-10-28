@@ -61,7 +61,7 @@ let
   };
   # https://github.com/crowdsecurity/crowdsec/blob/master/docker/docker_start.sh
   mkBouncerService = name: {
-    "register_crowdsec_${name}_bouncer" = {
+    "register-crowdsec-${name}-bouncer" = {
       description = "Registers idempotently ${name} CrowdSec bouncer";
       after = [ "crowdsec.service" ];
       wants = [ "crowdsec.service" ];
@@ -133,7 +133,7 @@ in
             ENROLL_KEY=${config.sops.placeholder."crowdsec/enroll_key"}
           '';
         };
-        systemd.services."enroll_crowdsec_console" = {
+        systemd.services.enroll-crowdsec-console = {
           description = "Enrolls the engine at app.crowdsec.net";
           after = [ "crowdsec.service" ];
           wants = [ "crowdsec.service" ];
