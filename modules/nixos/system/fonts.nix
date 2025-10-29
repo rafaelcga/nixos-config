@@ -39,8 +39,14 @@ in
       script = ''
         set -euo pipefail
 
+        font_dir="$HOME/.local/share/fonts"
+
+        if [[ -d "$font_dir" ]] && [[ ! -L "$font_dir" ]]; then
+          rm -rf "$font_dir"
+        fi
+
         mkdir -p "$HOME/.local/share"
-        ln -sf "/run/current-system/sw/share/X11/fonts" "$HOME/.local/share/fonts"
+        ln -snf "/run/current-system/sw/share/X11/fonts" "$font_dir"
       '';
     };
   };
