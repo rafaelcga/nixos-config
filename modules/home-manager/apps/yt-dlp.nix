@@ -17,7 +17,7 @@ let
     extractor-args = "youtube:lang=en";
     # Download options
     throttled-rate = "1M";
-    cookies-from-browser = "firefox";
+    # cookies-from-browser = "firefox";
     # Playlist options
     ignore-errors = true;
     continue = true;
