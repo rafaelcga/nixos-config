@@ -13,7 +13,7 @@ let
     output = "${user.home}/Videos/%(playlist)s/%(title)s.%(ext)s";
     # Format
     format = "bv*+ba";
-    format-sort = "lang,res,quality,+vcodec:av1,acodec";
+    format-sort = "lang,res,quality,codec";
     extractor-args = "youtube:lang=en";
     # Download options
     concurrent-fragments = 8;
