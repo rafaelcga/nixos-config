@@ -9,8 +9,6 @@ let
   cfg = config.modules.nixos.cachyos-settings;
 in
 {
-  imports = [ ];
-
   options.modules.nixos.cachyos-settings = {
     enable = lib.mkEnableOption "Enable CachyOS optimizations";
   };

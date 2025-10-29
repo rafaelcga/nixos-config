@@ -8,8 +8,6 @@ let
   cfg = config.modules.home-manager.papirus;
 in
 {
-  imports = [ ];
-
   options.modules.home-manager.papirus = {
     enable = lib.mkEnableOption "Enable Papirus Icon Theme";
 

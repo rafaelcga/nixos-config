@@ -8,8 +8,6 @@ let
   cfg = config.modules.nixos.cosmic;
 in
 {
-  imports = [ ];
-
   options.modules.nixos.cosmic = {
     enable = lib.mkEnableOption "Enable COSMIC Desktop Environment";
   };
