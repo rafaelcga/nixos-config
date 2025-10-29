@@ -14,7 +14,7 @@ let
     # Format
     format = "bv*+ba";
     format-sort = "lang,res,quality,+vcodec:av1,acodec";
-    extractor-args = "youtube:lang=en;player_client=tv,web_creator,web_safari,web";
+    extractor-args = "youtube:lang=en;player_client=web_creator,web_safari,web";
     # Download options
     throttled-rate = "1M";
     cookies-from-browser = "firefox";
