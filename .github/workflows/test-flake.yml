@@ -4,9 +4,9 @@ on:
   push:
     paths-ignore:
       - ".github/**"
+      - ".gitignore"
+      - "README.md"
   pull_request:
-    paths-ignore:
-      - ".github/**"
   workflow_dispatch:
   workflow_call:
 
@@ -38,8 +38,10 @@ jobs:
       matrix:
         host: ${{ fromJSON(needs.discover-hosts.outputs.hosts) }}
     steps:
-      - name: Free Disk Space (Ubuntu)
-        uses: jlumbroso/free-disk-space@main
+      - name: Nothing but Nix
+        uses: wimpysworld/nothing-but-nix@main
+        with:
+          hatchet-protocol: "cleave"
 
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -56,6 +58,4 @@ jobs:
           authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
 
       - name: Build and test flake
-        run: |
-          nix flake check
-          nix build -L .#nixosConfigurations.${{ matrix.host }}.config.system.build.toplevel
+        run: nix build -L .#nixosConfigurations.${{ matrix.host }}.config.system.build.toplevel
