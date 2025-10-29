@@ -50,11 +50,14 @@ let
         formatter = {
           external = {
             command = "shfmt";
+            # Google style shell formatting
             arguments = [
               "--filename"
               "{buffer_path}"
               "--indent"
               "2"
+              "--case-indent"
+              "--binary-next-line"
             ];
           };
         };
