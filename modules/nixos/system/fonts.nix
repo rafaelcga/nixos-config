@@ -40,7 +40,7 @@ in
         set -euo pipefail
 
         mkdir -p "$HOME/.local/share"
-        ln -s "/run/current-system/sw/share/X11/fonts" "$HOME/.local/share/fonts"
+        ln -sf "/run/current-system/sw/share/X11/fonts" "$HOME/.local/share/fonts"
       '';
     };
   };
