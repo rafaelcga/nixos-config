@@ -73,11 +73,11 @@ let
       script = ''
         set -euo pipefail
 
-        if ! ${pkgs.crowdsec}/bin/cscli bouncers list -o json |
-            ${pkgs.jq}/bin/jq -r ".[].name" |
-            ${pkgs.coreutils}/bin/tr "[:upper:]" "[:lower:]" |
-            ${pkgs.gnugrep}/bin/grep -q '^${name}$'; then
-            ${pkgs.crowdsec}/bin/cscli bouncers add "${name}" -k "$BOUNCER_KEY"
+        if ! ${pkgs.crowdsec}/bin/cscli bouncers list -o json \
+          | ${pkgs.jq}/bin/jq -r ".[].name" \
+          | ${pkgs.coreutils}/bin/tr "[:upper:]" "[:lower:]" \
+          | ${pkgs.gnugrep}/bin/grep -q '^${name}$'; then
+          ${pkgs.crowdsec}/bin/cscli bouncers add "${name}" -k "$BOUNCER_KEY"
         fi
       '';
     };
