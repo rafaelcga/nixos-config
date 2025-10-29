@@ -4,7 +4,6 @@
     # Theming
     cursor.enable = true;
     papirus.enable = true;
-    plasma-manager.enable = true;
     # Apps
     ghostty.enable = true;
     zed-editor.enable = true;
