@@ -6,13 +6,13 @@ set -euo pipefail
 ROOT_DIR=$(dirname "$0")
 
 update_version() {
-  local updated_plugin=$(sed -E "s/@v[\.0-9]+/@$2/" <<<"$1")
-  echo "$updated_plugin"
+  local updated_plugin=$(sed -E "s|@v[\.0-9]+|@$2|" <<<"$1")
+  sed -i "s|$1|$updated_plugin|" "$ROOT_DIR/package.nix"
 }
 
 update_plugins() {
   for plugin in $(grep -oP "github.com/([a-zA-Z0-9_-]+/?)+@v[\.\d]+" "$ROOT_DIR/package.nix"); do
-    local parts=($(sed "s/[/@]/\n/g" <<<"$plugin"))
+    local parts=($(sed "s|[/@]|\n|g" <<<"$plugin"))
 
     local old_version="${parts[-1]}"
     local new_version=$(
@@ -22,8 +22,6 @@ update_plugins() {
 
     if [[ "$old_version" != "$new_version" ]]; then
       update_version "$plugin" "$new_version"
-    else
-      update_version "$plugin" "v0.0.0" # DEBUG
     fi
   done
 }
