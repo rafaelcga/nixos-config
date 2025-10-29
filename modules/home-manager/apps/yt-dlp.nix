@@ -16,6 +16,7 @@ let
     format-sort = "lang,res,quality,+vcodec:av1,acodec";
     extractor-args = "youtube:lang=en";
     # Download options
+    concurrent-fragments = 8;
     throttled-rate = "1M";
     # cookies-from-browser = "firefox";
     # Playlist options
