@@ -24,7 +24,7 @@
     # External modules
     catppuccin.enable = true;
     # Desktop
-    plasma.enable = true;
+    cosmic.enable = true;
     # Features
     cachyos-settings.enable = true;
     flatpak.enable = true;
