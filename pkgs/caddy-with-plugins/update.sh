@@ -3,7 +3,7 @@
 
 set -euo pipefail
 
-ROOT_DIR="$(dirname "$(readlink -f "$0")")"
+ROOT_DIR="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
 
 echo "Checking for Caddy plugin updates..."
 

@@ -3,7 +3,7 @@
 
 set -euo pipefail
 
-REPO_DIR="$(dirname "$(dirname "$(readlink -f "$0")")")"
+REPO_DIR="$(dirname "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")")"
 PKGS_DIR="$REPO_DIR/pkgs"
 
 tput bold
