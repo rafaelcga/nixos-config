@@ -1,8 +1,8 @@
 { inputs, ... }:
 {
   perSystem =
-    { lib, pkgs, ... }:
+    { pkgs, ... }:
     {
-      packages = import "${inputs.self}/pkgs" { inherit lib pkgs; };
+      packages = import "${inputs.self}/pkgs" { inherit pkgs; };
     };
 }
