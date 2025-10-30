@@ -11,8 +11,12 @@ update_version() {
 }
 
 update_plugins() {
+  echo "Checking for Caddy plugin updates..."
+
   for plugin in $(grep -oP "github.com/([a-zA-Z0-9_-]+/?)+@v[\.\d]+" "$ROOT_DIR/package.nix"); do
     local parts=($(sed "s|[/@]|\n|g" <<<"$plugin"))
+    local plugin_name=$(grep -oP "(?<=github.com/)([a-zA-Z0-9_-]+/?)+(?=@v[\.\d]+)" <<<"$plugin")
+    printf "* Checking %s... " "$plugin_name"
 
     local old_version="${parts[-1]}"
     local new_version=$(
@@ -20,16 +24,27 @@ update_plugins() {
         | jq -r ".tag_name"
     )
 
+    if [[ -z "$new_version" ]]; then
+      echo "[!] ERROR: Could not find latest version."
+      continue
+    fi
+
     if [[ "$old_version" != "$new_version" ]]; then
       update_version "$plugin" "$new_version"
+      echo "[✔] UPDATE APPLIED: $old_version -> $new_version"
+    else
+      echo "[✔] UP-TO-DATE"
     fi
   done
 }
 
 update_hash() {
+  echo "Updating derivation hash..."
+
   # Replace non-valid strings by a fake hash
   fake_hash="sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
   if ! grep -qP "hash\s*=\s*\"sha256-[A-Za-z0-9\+\/]+=\"" "$ROOT_DIR/package.nix"; then
+    echo "[!] WARNING: Non-valid string found in hash, replacing with fake hash \"$fake_hash\"."
     sed -i "s|\(hash\s*=\s*\"\).*\(\";\)|\1$fake_hash\2|" "$ROOT_DIR/package.nix"
   fi
 
@@ -51,8 +66,18 @@ update_hash() {
         | sed -E "s|^got:\s*||"
     )
     sed -i "s|$old_hash|$new_hash|" "$ROOT_DIR/package.nix"
+    echo "[✔] UPDATED HASH:"
+    echo "  - $old_hash"
+    echo "  + $new_hash"
+  else
+    echo "[✔] HASH ALREADY UP-TO-DATE"
   fi
 }
 
 update_plugins
+
+echo ""
+echo "--------------------------------------------------"
+echo ""
+
 update_hash
