@@ -6,6 +6,7 @@ words = [
     "gnused",
     "mkdir",
     "nixos",
+    "nixpkgs",
     "pkgs",
     "rafaelcga",
 ]

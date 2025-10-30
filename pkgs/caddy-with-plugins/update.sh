@@ -27,7 +27,32 @@ update_plugins() {
 }
 
 update_hash() {
-  echo
+  # Replace non-valid strings by a fake hash
+  fake_hash="sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+  if ! grep -qP "hash\s*=\s*\"sha256-[A-Za-z0-9\+\/]+=\"" "$ROOT_DIR/package.nix"; then
+    sed -i "s|\(hash\s*=\s*\"\).*\(\";\)|\1$fake_hash\2|" "$ROOT_DIR/package.nix"
+  fi
+
+  set +e
+  local output
+  output=$(nix-build -E \
+    "with import <nixpkgs> {}; callPackage $ROOT_DIR/package.nix {}" 2>&1)
+
+  if [[ $? -ne 0 ]]; then
+    set -e
+    old_hash=$(
+      echo "$output" \
+        | grep -oP "specified:\s*sha256-[A-Za-z0-9\+\/]+=" \
+        | sed -E "s|^specified:\s*||"
+    )
+    new_hash=$(
+      echo "$output" \
+        | grep -oP "got:\s*sha256-[A-Za-z0-9\+\/]+=" \
+        | sed -E "s|^got:\s*||"
+    )
+    sed -i "s|$old_hash|$new_hash|" "$ROOT_DIR/package.nix"
+  fi
 }
 
 update_plugins
+update_hash
