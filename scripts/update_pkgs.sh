@@ -18,7 +18,7 @@ grep -P "(pkgs\.)?callPackage" "$PKGS_DIR/default.nix" \
     pkg_dir="$(dirname "$abs_path")"
 
     tput bold
-    printf "* %s " "$pkg_name"
+    printf "❖ %s " "$pkg_name"
     tput sgr0
     if [[ "$(basename "$abs_path")" == "package.nix" ]] \
       && [[ -f "$pkg_dir/update.sh" ]]; then

@@ -38,7 +38,7 @@ echo "Updating derivation hash..."
 # Replace non-valid strings by a fake hash
 fake_hash="sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
 if ! grep -qP "hash\s*=\s*\"sha256-[A-Za-z0-9\+\/]+=\"" "$ROOT_DIR/package.nix"; then
-  echo "[❗] WARNING: Non-valid string found in hash, replacing with fake hash \"$fake_hash\"."
+  echo " [❗] Warning: Non-valid string found in hash, replacing with fake hash \"$fake_hash\"."
   sed -i "s|\(hash\s*=\s*\"\).*\(\";\)|\1$fake_hash\2|" "$ROOT_DIR/package.nix"
 fi
 
