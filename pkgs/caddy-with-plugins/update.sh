@@ -5,18 +5,13 @@ set -euo pipefail
 
 ROOT_DIR=$(dirname "$0")
 
-update_version() {
-  local updated_plugin=$(sed -E "s|@v[\.0-9]+|@$2|" <<<"$1")
-  sed -i "s|$1|$updated_plugin|" "$ROOT_DIR/package.nix"
-}
-
 update_plugins() {
   echo "Checking for Caddy plugin updates..."
 
-  for plugin in $(grep -oP "github.com/([a-zA-Z0-9_-]+/?)+@v[\.\d]+" "$ROOT_DIR/package.nix"); do
+  for plugin in $(grep -oP "github.com/([a-zA-Z0-9_-]+/?)+@[^\"]+" "$ROOT_DIR/package.nix"); do
     local parts=($(sed "s|[/@]|\n|g" <<<"$plugin"))
-    local plugin_name=$(grep -oP "(?<=github.com/)([a-zA-Z0-9_-]+/?)+(?=@v[\.\d]+)" <<<"$plugin")
-    printf "* Checking %s... " "$plugin_name"
+    local plugin_name=$(grep -oP "(?<=github.com/)([a-zA-Z0-9_-]+/?)+(?=@.+)" <<<"$plugin")
+    printf "* %s... " "$plugin_name"
 
     local old_version="${parts[-1]}"
     local new_version=$(
@@ -30,7 +25,8 @@ update_plugins() {
     fi
 
     if [[ "$old_version" != "$new_version" ]]; then
-      update_version "$plugin" "$new_version"
+      local updated_plugin=$(sed -E "s|$old_version|$new_version|" <<<"$plugin")
+      sed -i "s|$plugin|$updated_plugin|" "$ROOT_DIR/package.nix"
       echo "[✔] UPDATE APPLIED: $old_version -> $new_version"
     else
       echo "[✔] UP-TO-DATE"
