@@ -16,6 +16,8 @@ in
   config = lib.mkIf cfg.enable {
     services.flatpak.enable = true;
 
+    environment.sessionVariables.GSK_RENDERER = "gl"; # fixes graphical flatpak bug under Wayland
+
     systemd.services.add-flathub-repo = {
       description = "Adds Flathub repository";
       after = [ "network-online.target" ];

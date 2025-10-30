@@ -27,11 +27,18 @@ in
       };
     };
 
-    environment.etc = {
-      "sysctl.d/99-cachyos-settings.conf".source =
-        "${cachyos-settings}/usr/lib/sysctl.d/99-cachyos-settings.conf";
-      "security/limits.d/20-audio.conf".source =
-        "${cachyos-settings}/etc/security/limits.d/20-audio.conf";
+    environment = {
+      etc = {
+        "sysctl.d/99-cachyos-settings.conf".source =
+          "${cachyos-settings}/usr/lib/sysctl.d/99-cachyos-settings.conf";
+        "security/limits.d/20-audio.conf".source =
+          "${cachyos-settings}/etc/security/limits.d/20-audio.conf";
+      };
+
+      sessionVariables = {
+        __GL_SHADER_DISK_CACHE_SIZE = "12000000000"; # NVIDIA GPU cache
+        MESA_SHADER_CACHE_MAX_SIZE = "12G"; # AMD GPU cache
+      };
     };
   };
 }
