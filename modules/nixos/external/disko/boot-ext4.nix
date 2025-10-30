@@ -1,6 +1,6 @@
 { name, device }:
 {
-  disko.devices.disk."${name}" = {
+  "${name}" = {
     inherit device;
     type = "disk";
     content = {

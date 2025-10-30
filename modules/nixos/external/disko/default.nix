@@ -37,5 +37,7 @@ in
     };
   };
 
-  config = lib.mkMerge (map mkDisk cfg.disks);
+  config = {
+    disko.devices.disk = lib.mkMerge (map mkDisk cfg.disks);
+  };
 }
