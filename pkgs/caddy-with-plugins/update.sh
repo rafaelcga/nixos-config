@@ -3,35 +3,36 @@
 
 set -euo pipefail
 
-ROOT_DIR=$(dirname "$0")
+ROOT_DIR="$(dirname "$(readlink -f "$0")")"
 
 update_plugins() {
   echo "Checking for Caddy plugin updates..."
 
-  for plugin in $(grep -oP "github.com/([a-zA-Z0-9_-]+/?)+@[^\"]+" "$ROOT_DIR/package.nix"); do
-    local parts=($(sed "s|[/@]|\n|g" <<<"$plugin"))
-    local plugin_name=$(grep -oP "(?<=github.com/)([a-zA-Z0-9_-]+/?)+(?=@.+)" <<<"$plugin")
-    printf "* %s... " "$plugin_name"
+  grep -oP "github.com/([a-zA-Z0-9_\-]+/?)+@[^\"]+" "$ROOT_DIR/package.nix" \
+    | while read plugin; do
+      local parts=($(sed "s|[/@]|\n|g" <<<"$plugin"))
+      local plugin_name=$(grep -oP "(?<=github.com/)([a-zA-Z0-9_\-]+/?)+(?=@.+)" <<<"$plugin")
+      printf "* %s... " "$plugin_name"
 
-    local old_version="${parts[-1]}"
-    local new_version=$(
-      curl -sL "https://api.github.com/repos/${parts[1]}/${parts[2]}/releases/latest" \
-        | jq -r ".tag_name"
-    )
+      local old_version="${parts[-1]}"
+      local new_version=$(
+        curl -sL "https://api.github.com/repos/${parts[1]}/${parts[2]}/releases/latest" \
+          | jq -r ".tag_name"
+      )
 
-    if [[ -z "$new_version" ]]; then
-      echo "[!] ERROR: Could not find latest version."
-      continue
-    fi
+      if [[ -z "$new_version" ]]; then
+        echo "[!] ERROR: Could not find latest version."
+        continue
+      fi
 
-    if [[ "$old_version" != "$new_version" ]]; then
-      local updated_plugin=$(sed -E "s|$old_version|$new_version|" <<<"$plugin")
-      sed -i "s|$plugin|$updated_plugin|" "$ROOT_DIR/package.nix"
-      echo "[✔] UPDATE APPLIED: $old_version -> $new_version"
-    else
-      echo "[✔] UP-TO-DATE"
-    fi
-  done
+      if [[ "$old_version" != "$new_version" ]]; then
+        local updated_plugin=$(sed -E "s|$old_version|$new_version|" <<<"$plugin")
+        sed -i "s|$plugin|$updated_plugin|" "$ROOT_DIR/package.nix"
+        echo "[✔] UPDATE APPLIED: $old_version -> $new_version"
+      else
+        echo "[✔] UP-TO-DATE"
+      fi
+    done
 }
 
 update_hash() {
