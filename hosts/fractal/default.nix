@@ -1,9 +1,6 @@
 { config, lib, ... }:
 {
-  imports = [
-    ./disko.nix
-    ./hardware-configuration.nix
-  ];
+  imports = [ ./hardware-configuration.nix ];
 
   modules.nixos = {
     # System
@@ -22,6 +19,13 @@
       ];
     };
     # External modules
+    disko.disks = [
+      {
+        name = "main";
+        device = "/dev/disk/by-id/nvme-KIOXIA-EXCERIA_PLUS_G3_SSD_4EAKF0X9Z0EA";
+        type = "boot-ext4";
+      }
+    ];
     catppuccin.enable = true;
     # Desktop
     cosmic.enable = true;
