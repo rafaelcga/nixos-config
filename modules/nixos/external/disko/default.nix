@@ -7,7 +7,7 @@
 let
   cfg = config.modules.nixos.disko;
 
-  mkDisk = disk: import "./${disk.type}.nix" { inherit (disk) name device; };
+  mkDisk = disk: import ./${disk.type}.nix { inherit (disk) name device; };
 in
 {
   imports = [ inputs.disko.nixosModules.disko ];
