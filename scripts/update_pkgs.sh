@@ -1,6 +1,8 @@
 #!/usr/bin/env nix-shell
 #!nix-shell --quiet -i bash -p nix-update
 
+set -euo pipefail
+
 # Set TERM for tput, if not already set
 export TERM="${TERM:-xterm}"
 
@@ -22,6 +24,7 @@ grep -P "(pkgs\.)?callPackage" "$PKGS_DIR/default.nix" \
     abs_path="$(readlink -m "$PKGS_DIR/$rel_path")"
     pkg_dir="$(dirname "$abs_path")"
 
+    set +e
     if [[ "$(basename "$abs_path")" == "package.nix" ]] \
       && [[ -f "$pkg_dir/update.sh" ]]; then
       echo "through custom script..."
@@ -29,16 +32,20 @@ grep -P "(pkgs\.)?callPackage" "$PKGS_DIR/default.nix" \
     else
       (
         cd "$REPO_DIR" # nix-update needs to be launched on the flake's directory
-        update_line="$(
-          nix-update "$pkg_name" --flake 2>&1 \
-            | grep -oP "Update \K\S+ -> \S+(?= in $abs_path)"
-        )"
 
-        if [[ -z $update_line ]]; then
+        output="$(nix-update "$pkg_name" --flake 2>&1)"
+        status=$?
+
+        update_line="$(grep -oP "Update \K\S+ -> \S+(?= in $abs_path)" <<<"$output")"
+
+        if [[ $status -eq 0 ]] && [[ -z $update_line ]]; then
           echo "[✔️️] up-to-date"
-        else
+        elif [[ $status -eq 0 ]]; then
           echo "[✔️️] updated: $update_line"
+        else
+          echo "[❌] update failed"
         fi
       )
     fi
+    set -e
   done
