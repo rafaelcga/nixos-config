@@ -33,7 +33,7 @@ echo "Cloning configuration repo..."
 git clone "$REPO_URL"
 
 echo "--------------------------------------------------"
-(cd $ROOT_DIR && ./generate_hwcfg.sh -n "$hostname")
+(cd $ROOT_DIR && ./generate_hardware.sh -n "$hostname")
 (cd $repo_dir && git add "$repo_dir/hosts/$hostname/hardware-configuration.nix")
 
 echo "--------------------------------------------------"
