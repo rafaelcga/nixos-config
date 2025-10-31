@@ -3,6 +3,9 @@
 
 set -euo pipefail
 
+# Set TERM for tput, if not already set
+export TERM="${TERM:-xterm}"
+
 REPO_DIR="$(dirname "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")")"
 PKGS_DIR="$REPO_DIR/pkgs"
 
