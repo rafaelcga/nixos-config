@@ -28,7 +28,7 @@ There are two ways to easily bootstrap an install of a system: using `disko` +
 
 Use `scripts/local_install.sh`, passing `-n <hostname> -k <ssh_key_path>`. Then reboot.
 
-Don't forget to regenerate the hardware-configuration.nix once you boot into the system
+Don't forget to regenerate the `hardware-configuration.nix` once you boot into the system
 and clone the repo again. Use `scripts/generate_hardware.sh`.
 
 ### SSH
