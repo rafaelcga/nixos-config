@@ -34,7 +34,9 @@ jobs:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run update script
-        run: ./scripts/update_pkgs.sh
+        run: |
+          set -x
+          ./scripts/update_pkgs.sh
 
       - name: Create pull request
         uses: peter-evans/create-pull-request@v7
