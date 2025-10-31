@@ -3,6 +3,7 @@
 
 set -euo pipefail
 
+ROOT_DIR="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
 REPO_URL="https://github.com/rafaelcga/nixos-config.git"
 TEMP_SSH="/mnt/tmp/ssh/id_ed25519"
 
@@ -32,9 +33,7 @@ echo "Cloning configuration repo..."
 git clone "$REPO_URL"
 
 echo "--------------------------------------------------"
-echo "Generating hardware configuration..."
-nixos-generate-config --show-hardware-config --no-filesystems \
-  >"$repo_dir/hosts/$hostname/hardware-configuration.nix"
+(cd $ROOT_DIR && ./generate_hwcfg.sh -n "$hostname")
 (cd $repo_dir && git add "$repo_dir/hosts/$hostname/hardware-configuration.nix")
 
 echo "--------------------------------------------------"
