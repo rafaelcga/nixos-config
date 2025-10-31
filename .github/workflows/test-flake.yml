@@ -1,4 +1,4 @@
-name: Test NixOS Configuration
+name: Test NixOS configuration
 
 on:
   push:
