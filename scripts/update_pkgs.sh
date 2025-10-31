@@ -1,25 +1,30 @@
 #!/usr/bin/env nix-shell
 #!nix-shell --quiet -i bash -p nix-update
 
-set -euox pipefail
+set -euo pipefail
 
-# Set TERM for tput, if not already set
-export TERM="${TERM:-xterm}"
+# Define ANSI formatting codes
+# Check if stdout is a terminal (TTY)
+if [[ -t 1 ]]; then
+  BOLD=$'\033[1m'
+  RESET=$'\033[0m'
+else
+  # If not a TTY, disable formatting
+  BOLD=""
+  RESET=""
+fi
 
 REPO_DIR="$(dirname "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")")"
 PKGS_DIR="$REPO_DIR/pkgs"
 
-tput bold
-echo "Upgrading local packages..."
-tput sgr0
+echo "${BOLD}Upgrading local packages...${RESET}"
+
 grep -P "(pkgs\.)?callPackage" "$PKGS_DIR/default.nix" \
   | while read line; do
     pkg_name="$(grep -oP "^\s*\K[a-zA-Z0-9_\-]+" <<<"$line")"
     rel_path="$(grep -oP "callPackage\s+\K[a-zA-Z0-9_\-\.\/]+" <<<"$line")"
 
-    tput bold
-    printf "❖ %s " "$pkg_name"
-    tput sgr0
+    printf "%s❖ %s%s " "$BOLD" "$pkg_name" "$RESET"
 
     abs_path="$(readlink -m "$PKGS_DIR/$rel_path")"
     pkg_dir="$(dirname "$abs_path")"
