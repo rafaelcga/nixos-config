@@ -1,8 +1,6 @@
 #!/usr/bin/env nix-shell
 #!nix-shell --quiet -i bash -p nix-update
 
-set -euo pipefail
-
 # Set TERM for tput, if not already set
 export TERM="${TERM:-xterm}"
 
@@ -29,7 +27,6 @@ grep -P "(pkgs\.)?callPackage" "$PKGS_DIR/default.nix" \
       echo "through custom script..."
       (cd "$pkg_dir" && ./update.sh)
     else
-      set +e
       (
         cd "$REPO_DIR" # nix-update needs to be launched on the flake's directory
         update_line="$(
@@ -43,6 +40,5 @@ grep -P "(pkgs\.)?callPackage" "$PKGS_DIR/default.nix" \
           echo "[✔️️] updated: $update_line"
         fi
       )
-      set -e
     fi
   done

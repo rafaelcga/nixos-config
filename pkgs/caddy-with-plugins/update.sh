@@ -1,8 +1,6 @@
 #!/usr/bin/env nix-shell
 #!nix-shell --quiet -i bash -p curl jq
 
-set -euo pipefail
-
 ROOT_DIR="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
 
 echo "Checking for Caddy plugin updates..."
@@ -42,12 +40,10 @@ if ! grep -qP "hash\s*=\s*\"sha256-[A-Za-z0-9\+\/]+=\"" "$ROOT_DIR/package.nix";
   sed -i "s|\(hash\s*=\s*\"\).*\(\";\)|\1$fake_hash\2|" "$ROOT_DIR/package.nix"
 fi
 
-set +e
 output=$(nix-build -E \
   "with import <nixpkgs> {}; callPackage $ROOT_DIR/package.nix {}" 2>&1)
 
 if [[ $? -ne 0 ]]; then
-  set -e
   old_hash=$(
     echo "$output" \
       | grep -oP "specified:\s*sha256-[A-Za-z0-9\+\/]+=" \
