@@ -1,0 +1,41 @@
+name: Update local Nix packages
+
+on:
+  schedule:
+    - cron: "0 10 * * */3"
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Branch to make PR against"
+        required: false
+        type: string
+        default: "main"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-and-pr:
+    name: Update nix files and create PR
+    runs-on: ubuntu-latest
+    env:
+      BRANCH_NAME: ${{ inputs.branch || "main" }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ env.BRANCH_NAME }}
+
+      - name: Run update script
+        run: ./scripts/update_pkgs.sh
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: update local nix packages"
+          title: "Update local Nix packages"
+          body: Automated PR to update local Nix packages.
+          branch: "update-nix-packages"
+          delete-branch: true
