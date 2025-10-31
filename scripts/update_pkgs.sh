@@ -1,7 +1,7 @@
 #!/usr/bin/env nix-shell
 #!nix-shell --quiet -i bash -p nix-update
 
-set -euo pipefail
+set -euox pipefail
 
 # Set TERM for tput, if not already set
 export TERM="${TERM:-xterm}"
