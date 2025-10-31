@@ -20,7 +20,7 @@ jobs:
     name: Update nix files and create PR
     runs-on: ubuntu-latest
     env:
-      BRANCH_NAME: ${{ inputs.branch || "main" }}
+      BRANCH_NAME: ${{ inputs.branch || 'main' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
