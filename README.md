@@ -26,42 +26,7 @@ There are two ways to easily bootstrap an install of a system: using `disko` +
 
 ### Local ISO
 
-0. Setup `hostname` variable to select which system to build.
-```bash
-export hostname="<hostname>"
-```
-
-1. Clone the repo, `cd` into it and update the `hardware-configuration.nix` to
-be that of the target host (omitting disk configuration):
-```bash
-git clone https://github.com/rafaelcga/nixos-config.git
-cd nixos-config
-nixos-generate-config --show-hardware-config --no-filesystems > ./hosts/$hostname/hardware-configuration.nix
-git add . # In case there was no prior configuration
-```
-
-2. Partition the disks with `disko`:
-```bash
-sudo nix --experimental-features "nix-command flakes" \
-    run github:nix-community/disko/latest -- \
-    --mode destroy,format,mount ./hosts/$hostname/config-disk.nix
-```
-
-3. Procure SSH key and copy it to `/mnt/tmp/ssh/id_ed25519` in the live ISO.
-Alternatively, if `nixos-install` and `disko` are mounting the root of the target
-install in a place other than `/mnt`, change the path accordingly.
-```bash
-mkdir -p /mnt/tmp/ssh
-cp <key_path> /mnt/tmp/ssh/id_ed25519
-sudo chown root:root /mnt/tmp/ssh/id_ed25519
-sudo chmod 600 /mnt/tmp/ssh/id_ed25519
-```
-
-4. Perform install with `nixos-install` and reboot:
-```bash
-sudo nixos-install --flake ".#$hostname"
-sudo reboot
-```
+Use `scripts/local_install.sh`, passing `-n <hostname> -k <ssh_key_path>`. Then reboot.
 
 ### SSH
 

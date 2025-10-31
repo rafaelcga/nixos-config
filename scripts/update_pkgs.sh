@@ -3,13 +3,11 @@
 
 set -euo pipefail
 
-# Define ANSI formatting codes
-# Check if stdout is a terminal (TTY)
+# ANSI formatting codes for TTY
 if [[ -t 1 ]]; then
   BOLD=$'\033[1m'
   RESET=$'\033[0m'
 else
-  # If not a TTY, disable formatting
   BOLD=""
   RESET=""
 fi
@@ -27,10 +25,15 @@ grep -P "(pkgs\.)?callPackage" "$PKGS_DIR/default.nix" \
     printf "%s❖ %s%s " "$BOLD" "$pkg_name" "$RESET"
 
     abs_path="$(readlink -m "$PKGS_DIR/$rel_path")"
-    pkg_dir="$(dirname "$abs_path")"
+    if [[ -d $abs_path ]]; then
+      pkg_dir="$abs_path"
+    else
+      pkg_dir="$(dirname "$abs_path")"
+    fi
 
     set +e
-    if [[ "$(basename "$abs_path")" == "package.nix" ]] \
+    if ([[ "$(basename "$abs_path")" == "package.nix" ]] \
+      || [[ -f "$abs_path/default.nix" ]]) \
       && [[ -f "$pkg_dir/update.sh" ]]; then
       echo "through custom script..."
       (cd "$pkg_dir" && ./update.sh)
