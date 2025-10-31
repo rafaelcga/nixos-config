@@ -50,4 +50,4 @@ sudo chmod 600 "$TEMP_SSH"
 
 echo "--------------------------------------------------"
 echo "Performing NixOS install..."
-sudo nixos-install --flake ".#$hostname"
+(cd $repo_dir && sudo nixos-install --flake ".#$hostname")
