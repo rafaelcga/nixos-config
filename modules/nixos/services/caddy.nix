@@ -99,51 +99,43 @@ let
     '';
 
   mkVirtualHost =
-    {
-      subdomain,
-      originHost ? "localhost",
-      originPort,
-    }:
+    name: host:
     let
       domain = config.sops.secrets."web_domain";
-      routeBlock = mkRoute { inherit originHost originPort; };
+      routeBlock = mkRoute { inherit (host) originHost originPort; };
+      hostConfig = {
+        extraConfig = ''
+          ${commonBlock}
+          ${routeBlock}
+        '';
+      };
     in
-    {
-      "${subdomain}.${domain}".extraConfig = ''
-        ${commonBlock}
-        ${routeBlock}
-      '';
+    (lib.nameValuePair "${name}.${domain}" hostConfig);
+
+  virtualHostOpts = {
+    options = {
+      originHost = lib.mkOption {
+        type = lib.types.str;
+        default = "localhost";
+        description = "Host to which traffic is routed";
+      };
+
+      originPort = lib.mkOption {
+        type = lib.types.ints.unsigned;
+        apply = builtins.toString;
+        description = "Port at the origin host to which traffic is routed";
+      };
     };
+  };
 in
 {
   options.modules.nixos.caddy = {
     enable = lib.mkEnableOption "Enable Caddy web server";
 
     virtualHosts = lib.mkOption {
-      type = lib.types.listOf (
-        lib.types.submodule {
-          options = {
-            subdomain = lib.mkOption {
-              type = lib.types.str;
-              description = "Subdomain within the web domain";
-            };
-
-            originHost = lib.mkOption {
-              type = lib.types.str;
-              default = "localhost";
-              description = "Host to which traffic is routed";
-            };
-
-            originPort = lib.mkOption {
-              type = lib.types.ints.unsigned;
-              apply = builtins.toString;
-              description = "Port at the origin host to which traffic is routed";
-            };
-          };
-        }
-      );
-      default = [ ];
-      description = "List of virtual hosts to route";
+      type = lib.types.attrsOf (lib.types.submodule virtualHostOpts);
+      default = { };
+      description = "Attribute set with virtual hosts to route";
     };
   };
 
@@ -155,7 +147,7 @@ in
           enable = true;
           environmentFile = config.sops.templates."caddy-env".path;
           package = pkgs.local.caddy-with-plugins;
-          virtualHosts = lib.mkMerge (map mkVirtualHost cfg.virtualHosts);
+          virtualHosts = lib.mapAttrs' mkVirtualHost cfg.virtualHosts;
         };
 
         # HTTP/HTTPS ports

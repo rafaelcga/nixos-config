@@ -50,5 +50,12 @@ in
           modules.nixos.graphics = config.modules.nixos.graphics;
         };
     };
+
+    modules.nixos.caddy = lib.mkIf config.modules.nixos.caddy.enable {
+      virtualHosts.jellyfin = {
+        originHost = cfg.jellyfin.localAddress;
+        originPort = 8096;
+      };
+    };
   };
 }
