@@ -1,6 +1,7 @@
 {
   imports = [
     ./apps
+    ./containers
     ./desktop
     ./external
     ./features

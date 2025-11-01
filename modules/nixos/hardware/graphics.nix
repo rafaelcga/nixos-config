@@ -6,7 +6,9 @@
 }:
 let
   cfg = config.modules.nixos.graphics;
+
   usesNvidia = builtins.elem "nvidia" cfg.vendors;
+  usesIntel = builtins.elem "intel" cfg.vendors;
 
   vendorPackages = with pkgs; {
     "intel" = [
@@ -53,15 +55,22 @@ in
 
   config = lib.mkIf cfg.enable {
     hardware = {
+      enableAllFirmware = true; # Enables all firmware regardless of license
       graphics = {
         inherit (cfg) enable enable32Bit;
         inherit extraPackages;
       };
+
       nvidia = lib.mkIf usesNvidia {
         open = true; # Open-source kernel module
         package = config.boot.kernelPackages.nvidiaPackages.latest;
       };
     };
+
+    environment.sessionVariables = lib.mkIf usesIntel {
+      LIBVA_DRIVER_NAME = "iHD";
+    };
+
     services.xserver = lib.mkIf usesNvidia {
       videoDrivers = [ "nvidia" ];
     };
