@@ -34,6 +34,27 @@
     # Apps
     steam.enable = true;
     virt-manager.enable = true;
+
+    # Containers
+    containers = {
+      externalInterface = "enp1s0";
+      hostAddress = "172.22.0.1";
+      hostAddress6 = "fc00::1";
+
+      instances = {
+        adguardhome = {
+          enable = true;
+          localAddress = "172.22.0.2";
+          localAddress6 = "fc00::2";
+          webPort = 10100;
+        };
+        jellyfin = {
+          enable = true;
+          localAddress = "172.22.0.3";
+          localAddress6 = "fc00::3";
+        };
+      };
+    };
   };
 
   environment.sessionVariables.GDK_SCALE = "1.25"; # sets XWayland render scale

@@ -6,6 +6,8 @@
 }:
 let
   cfg = config.modules.nixos.containers.instances;
+
+  containerWebPort = 8096;
 in
 {
   config = lib.mkIf (cfg ? "jellyfin" && cfg.jellyfin.enable) {
@@ -54,7 +56,7 @@ in
     modules.nixos.caddy = lib.mkIf config.modules.nixos.caddy.enable {
       virtualHosts.jellyfin = {
         originHost = cfg.jellyfin.localAddress;
-        originPort = 8096;
+        originPort = containerWebPort;
       };
     };
   };

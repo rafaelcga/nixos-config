@@ -29,10 +29,22 @@ let
           type = lib.types.str;
           description = "Container local IPv6 address";
         };
+
+        webPort = lib.mkOption {
+          type = lib.types.nullOr lib.types.ints.unsigned;
+          default = null;
+          description = "Host port for the container's web interface";
+        };
       };
     };
 
   internalInterface = if config.networking.nftables.enable then "ve-*" else "ve-+";
+
+  webPorts =
+    let
+      allWebPorts = map (instance: instance.webPort) (lib.attrValues cfg.instances);
+    in
+    lib.filter (port: port != null) allWebPorts;
 in
 {
   options.modules.nixos.containers = {
@@ -68,6 +80,8 @@ in
         inherit (cfg) externalInterface;
         enableIPv6 = true;
       };
+
+      firewall.allowedTCPPorts = webPorts;
 
       # Prevent NetworkManager from managing container interfaces
       # https://nixos.org/manual/nixos/stable/#sec-container-networking
