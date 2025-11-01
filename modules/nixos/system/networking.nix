@@ -20,11 +20,9 @@ in
         };
       };
     };
-  };
-  users.users.${user.name}.extraGroups = [ "networkmanager" ];
 
-  networking = {
     nftables.enable = true;
     firewall.enable = true;
   };
+  users.users.${user.name}.extraGroups = [ "networkmanager" ];
 }

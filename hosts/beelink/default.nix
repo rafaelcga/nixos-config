@@ -27,10 +27,15 @@
       hostAddress6 = "fc00::1";
 
       instances = {
-        jellyfin = {
+        adguardhome = {
           enable = true;
           localAddress = "172.22.0.2";
           localAddress6 = "fc00::2";
+        };
+        jellyfin = {
+          enable = true;
+          localAddress = "172.22.0.3";
+          localAddress6 = "fc00::3";
         };
       };
     };
