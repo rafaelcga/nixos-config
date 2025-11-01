@@ -25,13 +25,13 @@
       externalInterface = "enp1s0";
       hostAddress = "172.22.0.1";
       hostAddress6 = "fc00::1";
-
+      # WebUI port range 8000-8999
       instances = {
         adguardhome = {
           enable = true;
           localAddress = "172.22.0.2";
           localAddress6 = "fc00::2";
-          webPort = 10100;
+          webPort = 8000;
         };
         jellyfin = {
           enable = true;
