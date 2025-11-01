@@ -25,7 +25,7 @@
       externalInterface = "enp1s0";
       hostAddress = "172.22.0.1";
       hostAddress6 = "fc00::1";
-      # Enabled containers
+
       instances = {
         jellyfin = {
           enable = true;
