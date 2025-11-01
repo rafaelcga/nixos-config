@@ -49,6 +49,7 @@ let
 
   envFile = builtins.concatStringsSep "\n" [
     ''
+      DOMAIN=${config.sops.placeholder."web_domain"}
       PORKBUN_API_KEY=${config.sops.placeholder."porkbun/api_key"}
       PORKBUN_API_SECRET_KEY=${config.sops.placeholder."porkbun/api_secret_key"}
     ''
@@ -101,7 +102,6 @@ let
   mkVirtualHost =
     name: host:
     let
-      domain = config.sops.secrets."web_domain";
       routeBlock = mkRoute { inherit (host) originHost originPort; };
       hostConfig = {
         extraConfig = ''
@@ -110,7 +110,7 @@ let
         '';
       };
     in
-    (lib.nameValuePair "${name}.${domain}" hostConfig);
+    (lib.nameValuePair "${name}.{$DOMAIN}" hostConfig);
 
   virtualHostOpts = {
     options = {
