@@ -3,13 +3,13 @@ let
   cfg = config.modules.nixos.containers.instances;
 
   dnsPort = 53;
+  containerWebPort = config.services.adguardhome.port;
 in
 {
   options.modules.nixos.containers.instances.adguardhome = {
-    port = lib.mkOption {
+    webPort = lib.mkOption {
       type = lib.types.ints.unsigned;
-      default = config.services.adguardhome.port;
-      description = "Web interface port";
+      description = "AdguardHome WebUI in the host";
     };
   };
 
@@ -26,27 +26,30 @@ in
           hostPort = dnsPort;
           protocol = "udp";
         }
+        {
+          containerPort = containerWebPort;
+          hostPort = cfg.webPort;
+          protocol = "tcp";
+        }
       ];
 
       config = {
         services.adguardhome = {
-          inherit (cfg.adguardhome) port;
           enable = true;
+          port = containerWebPort;
           openFirewall = true;
         };
       };
     };
 
-    modules.nixos.caddy = lib.mkIf config.modules.nixos.caddy.enable {
-      virtualHosts.adguardhome = {
-        originHost = cfg.adguardhome.localAddress;
-        originPort = cfg.adguardhome.port;
-      };
-    };
-
     networking.firewall = {
-      allowedTCPPorts = [ dnsPort ];
-      allowedUDPPorts = [ dnsPort ];
+      allowedTCPPorts = [
+        dnsPort
+        cfg.webPort
+      ];
+      allowedUDPPorts = [
+        dnsPort
+      ];
     };
   };
 }

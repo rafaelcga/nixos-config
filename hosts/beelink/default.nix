@@ -31,6 +31,7 @@
           enable = true;
           localAddress = "172.22.0.2";
           localAddress6 = "fc00::2";
+          webPort = 10100;
         };
         jellyfin = {
           enable = true;
