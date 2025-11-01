@@ -67,6 +67,8 @@ in
       };
     };
 
+    nixpkgs.config.allowUnfree = lib.mkForce true; # Required for firmware
+
     environment.sessionVariables = lib.mkIf usesIntel {
       LIBVA_DRIVER_NAME = "iHD";
     };
