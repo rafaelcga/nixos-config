@@ -50,38 +50,73 @@ let
     }
   ];
 
-  # Need to split the mkMerge into sublevels to avoid infinite recursion
-  # https://discourse.nixos.org/t/infinite-recursion-in-module-with-mkmerge/10989/13
-  mergeBouncers = fn: lib.mkMerge (map fn cfg.bouncers);
-  mkBouncerSecrets = name: { "crowdsec/${name}_bouncer_key" = { }; };
-  mkBouncerEnvFile = name: {
-    "crowdsec/${name}-env".content = ''
-      BOUNCER_KEY=${config.sops.placeholder."crowdsec/${name}_bouncer_key"}
-    '';
-  };
-  # https://github.com/crowdsecurity/crowdsec/blob/master/docker/docker_start.sh
-  mkBouncerService = name: {
-    "register-crowdsec-${name}-bouncer" = {
-      description = "Registers idempotently ${name} CrowdSec bouncer";
-      after = [ "crowdsec.service" ];
-      wants = [ "crowdsec.service" ];
-      wantedBy = [ "multi-user.target" ];
-      serviceConfig = {
-        Type = "oneshot";
-        EnvironmentFile = config.sops.templates."crowdsec/${name}-env".path;
+  sopsConfig =
+    let
+      enrollSopsConfig = {
+        secrets."crowdsec/enroll_key" = { };
+        templates."crowdsec/console-enroll-env".content = ''
+          ENROLL_KEY=${config.sops.placeholder."crowdsec/enroll_key"}
+        '';
       };
-      script = ''
-        set -euo pipefail
-
-        if ! ${pkgs.crowdsec}/bin/cscli bouncers list -o json \
-          | ${pkgs.jq}/bin/jq -r ".[].name" \
-          | ${pkgs.coreutils}/bin/tr "[:upper:]" "[:lower:]" \
-          | ${pkgs.gnugrep}/bin/grep -q '^${name}$'; then
-          ${pkgs.crowdsec}/bin/cscli bouncers add "${name}" -k "$BOUNCER_KEY"
-        fi
-      '';
+      mkBouncerSopsConfig = name: {
+        secrets."crowdsec/${name}_bouncer_key" = { };
+        templates."crowdsec/${name}-env".content = ''
+          BOUNCER_KEY=${config.sops.placeholder."crowdsec/${name}_bouncer_key"}
+        '';
+      };
+      bouncerSopsList = map mkBouncerSopsConfig cfg.bouncers;
+    in
+    {
+      sops = lib.mkMerge ([ enrollSopsConfig ] ++ bouncerSopsList);
     };
-  };
+
+  systemdConfig =
+    let
+      enrollService = {
+        enroll-crowdsec-console = {
+          description = "Enrolls the engine at app.crowdsec.net";
+          after = [ "crowdsec.service" ];
+          wants = [ "crowdsec.service" ];
+          wantedBy = [ "multi-user.target" ];
+          serviceConfig = {
+            Type = "oneshot";
+            EnvironmentFile = config.sops.templates."crowdsec/console-enroll-env".path;
+          };
+          script = ''
+            set -euo pipefail
+
+            ${pkgs.crowdsec}/bin/cscli console enroll "$ENROLL_KEY"
+          '';
+        };
+      };
+      # https://github.com/crowdsecurity/crowdsec/blob/master/docker/docker_start.sh
+      mkBouncerService = name: {
+        "register-crowdsec-${name}-bouncer" = {
+          description = "Registers idempotently ${name} CrowdSec bouncer";
+          after = [ "crowdsec.service" ];
+          wants = [ "crowdsec.service" ];
+          wantedBy = [ "multi-user.target" ];
+          serviceConfig = {
+            Type = "oneshot";
+            EnvironmentFile = config.sops.templates."crowdsec/${name}-env".path;
+          };
+          script = ''
+            set -euo pipefail
+
+            if ! ${pkgs.crowdsec}/bin/cscli bouncers list -o json \
+              | ${pkgs.jq}/bin/jq -r ".[].name" \
+              | ${pkgs.coreutils}/bin/tr "[:upper:]" "[:lower:]" \
+              | ${pkgs.gnugrep}/bin/grep -q '^${name}$'; then
+              ${pkgs.crowdsec}/bin/cscli bouncers add "${name}" -k "$BOUNCER_KEY"
+            fi
+          '';
+        };
+      };
+      bouncerServiceList = map mkBouncerService cfg.bouncers;
+    in
+    {
+      systemd.services = lib.mkMerge ([ enrollService ] ++ bouncerServiceList);
+    };
 in
 {
   options.modules.nixos.crowdsec = {
@@ -126,36 +161,9 @@ in
         };
 
         environment.systemPackages = [ pkgs.crowdsec-firewall-bouncer ];
-
-        sops = {
-          secrets."crowdsec/enroll_key" = { };
-          templates."crowdsec/console-enroll-env".content = ''
-            ENROLL_KEY=${config.sops.placeholder."crowdsec/enroll_key"}
-          '';
-        };
-        systemd.services.enroll-crowdsec-console = {
-          description = "Enrolls the engine at app.crowdsec.net";
-          after = [ "crowdsec.service" ];
-          wants = [ "crowdsec.service" ];
-          wantedBy = [ "multi-user.target" ];
-          serviceConfig = {
-            Type = "oneshot";
-            EnvironmentFile = config.sops.templates."crowdsec/console-enroll-env".path;
-          };
-          script = ''
-            set -euo pipefail
-
-            ${pkgs.crowdsec}/bin/cscli console enroll "$ENROLL_KEY"
-          '';
-        };
       }
-      {
-        sops = {
-          secrets = mergeBouncers mkBouncerSecrets;
-          templates = mergeBouncers mkBouncerEnvFile;
-        };
-        systemd.services = mergeBouncers mkBouncerService;
-      }
+      sopsConfig
+      systemdConfig
     ]
   );
 }
