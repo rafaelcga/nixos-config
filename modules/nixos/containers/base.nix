@@ -2,18 +2,17 @@
 let
   cfg = config.modules.nixos.containers;
 
-  enabledContainers = lib.attrNames (lib.filterAttrs (_: instance: instance.enable) cfg.instances);
-  mkBaseConfig = name: {
-    ${name} = {
+  mkBaseConfig =
+    name: instance:
+    lib.mkIf instance.enable {
       autoStart = true;
       privateNetwork = true;
       inherit (cfg) hostAddress hostAddress6;
-      inherit (cfg.instances.${name}) localAddress localAddress6;
+      inherit (instance) localAddress localAddress6;
       config = {
         system.stateVersion = config.system.stateVersion;
       };
     };
-  };
 
   containerOpts =
     { name, ... }:
@@ -77,6 +76,6 @@ in
       };
     };
 
-    containers = lib.mkMerge (map mkBaseConfig enabledContainers);
+    containers = lib.mapAttrs mkBaseConfig cfg.instances;
   };
 }
