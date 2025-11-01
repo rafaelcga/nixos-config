@@ -1,11 +1,11 @@
 { config, lib, ... }:
 let
-  cfg = config.modules.nixos.containers.instances.jellyfin;
+  cfg = config.modules.nixos.containers.instances;
 
   hostGraphicsConfig = config.modules.nixos.graphics;
 in
 {
-  config = lib.mkIf cfg.enable {
+  config = lib.mkIf (cfg ? "jellyfin" && cfg.jellyfin.enable) {
     containers.jellyfin = {
       allowedDevices = [
         {

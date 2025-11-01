@@ -2,36 +2,37 @@
 let
   cfg = config.modules.nixos.containers;
 
-  internalInterface = if config.networking.nftables.enable then "ve-*" else "ve-+";
-  enabledContainers = lib.attrNames (lib.filterAttrs (name: config: config.enable) cfg.instances);
-
-  mkBaseConfig = name: {
-    ${name} = {
+  mkBaseConfig =
+    name: instance:
+    lib.mkIf instance.enable {
       autoStart = true;
       privateNetwork = true;
       inherit (cfg) hostAddress hostAddress6;
-      inherit (cfg.instances.${name}) localAddress localAddress6;
+      inherit (instance) localAddress localAddress6;
       config = {
         system.stateVersion = config.system.stateVersion;
       };
     };
-  };
 
-  containerOpts = {
-    options = {
-      enable = lib.mkEnableOption "Enable container";
+  containerOpts =
+    { name, ... }:
+    {
+      options = {
+        enable = lib.mkEnableOption "Enable the ${name} container";
 
-      localAddress = lib.mkOption {
-        type = lib.types.str;
-        description = "Container local IPv4 address";
-      };
+        localAddress = lib.mkOption {
+          type = lib.types.str;
+          description = "Container local IPv4 address";
+        };
 
-      localAddress6 = lib.mkOption {
-        type = lib.types.str;
-        description = "Container local IPv6 address";
+        localAddress6 = lib.mkOption {
+          type = lib.types.str;
+          description = "Container local IPv6 address";
+        };
       };
     };
-  };
+
+  internalInterface = if config.networking.nftables.enable then "ve-*" else "ve-+";
 in
 {
   options.modules.nixos.containers = {
@@ -59,7 +60,7 @@ in
     };
   };
 
-  config = lib.mkIf (enabledContainers != [ ]) {
+  config = lib.mkIf (cfg.instances != { }) {
     networking = {
       nat = {
         enable = true;
@@ -75,6 +76,6 @@ in
       };
     };
 
-    containers = lib.mkMerge (map mkBaseConfig enabledContainers);
+    containers = lib.mapAttrs mkBaseConfig cfg.instances;
   };
 }

@@ -7,37 +7,33 @@
 let
   cfg = config.modules.nixos.disko;
 
-  mkDisk = disk: import ./${disk.type}.nix { inherit (disk) name device; };
+  diskOpts = {
+    options = {
+      device = lib.mkOption {
+        type = lib.types.str;
+        description = "Disk device identifier";
+      };
+      type = lib.mkOption {
+        type = lib.types.str;
+        description = "Disk type (see other .nix files in this module)";
+      };
+    };
+  };
+
+  mkDiskConfig = name: disk: import ./${disk.type}.nix { inherit (disk) device; };
 in
 {
   imports = [ inputs.disko.nixosModules.disko ];
 
   options.modules.nixos.disko = {
     disks = lib.mkOption {
-      type = lib.types.listOf (
-        lib.types.submodule {
-          options = {
-            name = lib.mkOption {
-              type = lib.types.str;
-              description = "Unique disko name";
-            };
-            device = lib.mkOption {
-              type = lib.types.str;
-              description = "Disk device identifier";
-            };
-            type = lib.mkOption {
-              type = lib.types.str;
-              description = "Disk type (see other .nix files in this module)";
-            };
-          };
-        }
-      );
-      default = [ ];
-      description = "List of attribute sets defining system disks";
+      type = lib.types.attrsOf (lib.types.submodule diskOpts);
+      default = { };
+      description = "Attribute set defining system disks";
     };
   };
 
   config = {
-    disko.devices.disk = lib.mkMerge (map mkDisk cfg.disks);
+    disko.devices.disk = lib.mapAttrs mkDiskConfig cfg.disks;
   };
 }
