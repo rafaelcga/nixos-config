@@ -1,12 +1,12 @@
 { config, lib, ... }:
 let
-  cfg = config.modules.nixos.containers.instances;
+  cfg = config.modules.nixos.containers.instances.adguardhome;
 
   dnsPort = 53;
   containerWebPort = 3000;
 in
 {
-  config = lib.mkIf (cfg ? "adguardhome" && cfg.adguardhome.enable) {
+  config = lib.mkIf cfg.enable {
     containers.adguardhome = {
       forwardPorts = [
         {
@@ -20,10 +20,10 @@ in
           protocol = "udp";
         }
       ]
-      ++ lib.optionals (cfg.adguardhome.webPort != null) [
+      ++ lib.optionals (cfg.webPort != null) [
         {
           containerPort = containerWebPort;
-          hostPort = cfg.adguardhome.webPort;
+          hostPort = cfg.webPort;
           protocol = "tcp";
         }
       ];

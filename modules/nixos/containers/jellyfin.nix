@@ -5,12 +5,12 @@
   ...
 }:
 let
-  cfg = config.modules.nixos.containers.instances;
+  cfg = config.modules.nixos.containers.instances.jellyfin;
 
   containerWebPort = 8096;
 in
 {
-  config = lib.mkIf (cfg ? "jellyfin" && cfg.jellyfin.enable) {
+  config = lib.mkIf cfg.enable {
     containers.jellyfin = {
       config =
         { pkgs, ... }:
@@ -27,13 +27,13 @@ in
             jellyfin-ffmpeg
           ];
 
-          modules.nixos.graphics = lib.mkIf cfg.jellyfin.gpuPassthrough config.modules.nixos.graphics;
+          modules.nixos.graphics = lib.mkIf cfg.gpuPassthrough config.modules.nixos.graphics;
         };
     };
 
     modules.nixos.caddy = lib.mkIf config.modules.nixos.caddy.enable {
       virtualHosts.jellyfin = {
-        originHost = cfg.jellyfin.localAddress;
+        originHost = cfg.localAddress;
         originPort = containerWebPort;
       };
     };
