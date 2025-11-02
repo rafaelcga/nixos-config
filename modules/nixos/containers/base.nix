@@ -2,15 +2,61 @@
 let
   cfg = config.modules.nixos.containers;
 
+  mkCommonConfig = name: instance: {
+    autoStart = true;
+    privateNetwork = true;
+    inherit (cfg) hostAddress hostAddress6;
+    inherit (instance) localAddress localAddress6;
+
+    config = {
+      system.stateVersion = config.system.stateVersion;
+    };
+  };
+
+  mkGpuConfig =
+    name: instance:
+    let
+      mkPath = device: "/dev/dri/${device}";
+      mkAllowedDevice = device: {
+        node = mkPath device;
+        modifier = "rw";
+      };
+      mkGpuBindMount = device: {
+        hostPath = mkPath device;
+        isReadOnly = false;
+      };
+    in
+    lib.mkIf instance.gpuPassthrough {
+      allowedDevices = map mkAllowedDevice instance.gpuDevices;
+      bindMounts = lib.genAttrs' instance.gpuDevices (
+        device: lib.nameValuePair (mkPath device) (mkGpuBindMount device)
+      );
+    };
+
   mkBaseConfig =
     name: instance:
-    lib.mkIf instance.enable {
-      autoStart = true;
-      privateNetwork = true;
-      inherit (cfg) hostAddress hostAddress6;
-      inherit (instance) localAddress localAddress6;
-      config = {
-        system.stateVersion = config.system.stateVersion;
+    lib.mkIf instance.enable (
+      lib.mkMerge [
+        (mkCommonConfig name instance)
+        { inherit (instance) bindMounts; }
+        (mkGpuConfig name instance)
+      ]
+    );
+
+  bindMountOpts =
+    { name, ... }:
+    {
+      options = {
+        hostPath = lib.mkOption {
+          type = lib.types.str;
+          default = name;
+          description = "Location of the host path to be mounted.";
+        };
+        isReadOnly = lib.mkOption {
+          default = true;
+          type = lib.types.bool;
+          description = "Determine whether the mounted path will be accessed in read-only mode.";
+        };
       };
     };
 
@@ -35,6 +81,31 @@ let
           default = null;
           description = "Host port for the container's web interface";
         };
+
+        bindMounts = lib.mkOption {
+          type = lib.types.attrsOf (lib.types.submodule bindMountOpts);
+          default = { };
+          description = "Attribute set of directories to bind to the container";
+        };
+
+        gpuPassthrough = lib.mkOption {
+          type = lib.types.bool;
+          default = false;
+          description = ''
+            Whether to passthrough the host GPU devices to the container. The
+            devices used are defined in
+            `modules.nixos.containers.instances.<name>.gpuDevices`.
+          '';
+        };
+
+        gpuDevices = lib.mkOption {
+          type = lib.types.listOf lib.types.str;
+          default = [
+            "card0"
+            "renderD128"
+          ];
+          description = "Name of GPU devices to passthrough";
+        };
       };
     };
 
@@ -42,7 +113,7 @@ let
 
   webPorts =
     let
-      allWebPorts = map (instance: instance.webPort) (lib.attrValues cfg.instances);
+      allWebPorts = lib.mapAttrsToList (_: instance: instance.webPort) cfg.instances;
     in
     lib.filter (port: port != null) allWebPorts;
 in

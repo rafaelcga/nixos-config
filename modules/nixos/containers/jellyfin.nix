@@ -12,28 +12,6 @@ in
 {
   config = lib.mkIf (cfg ? "jellyfin" && cfg.jellyfin.enable) {
     containers.jellyfin = {
-      allowedDevices = [
-        {
-          node = "/dev/dri/card0";
-          modifier = "rw";
-        }
-        {
-          node = "/dev/dri/renderD128";
-          modifier = "rw";
-        }
-      ];
-
-      bindMounts = {
-        "/dev/dri/card0" = {
-          hostPath = "/dev/dri/card0";
-          isReadOnly = false;
-        };
-        "/dev/dri/renderD128" = {
-          hostPath = "/dev/dri/renderD128";
-          isReadOnly = false;
-        };
-      };
-
       config =
         { pkgs, ... }:
         {
@@ -49,7 +27,7 @@ in
             jellyfin-ffmpeg
           ];
 
-          modules.nixos.graphics = config.modules.nixos.graphics;
+          modules.nixos.graphics = lib.mkIf cfg.jellyfin.gpuPassthrough config.modules.nixos.graphics;
         };
     };
 

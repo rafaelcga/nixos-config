@@ -37,6 +37,7 @@
           enable = true;
           localAddress = "172.22.0.3";
           localAddress6 = "fc00::3";
+          gpuPassthrough = true;
         };
       };
     };
