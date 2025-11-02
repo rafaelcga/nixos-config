@@ -174,7 +174,7 @@ in
       script =
         let
           bindMountsList = lib.mapAttrsToList (_: instance: instance.bindMounts) cfg.instances;
-          getHostPaths = bindMounts: lib.mapAttrsToList (_: bindMount: bindMount.hostPath);
+          getHostPaths = bindMounts: lib.mapAttrsToList (_: bindMount: bindMount.hostPath) bindMounts;
           hostPaths = lib.unique (lib.concatMap getHostPaths bindMountsList);
         in
         ''
