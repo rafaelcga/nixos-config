@@ -24,7 +24,7 @@ let
     modules.nixos.crowdsec.bouncers = [ "caddy" ];
   };
 
-  globalConfig = builtins.concatStringsSep "\n" [
+  globalConfig = lib.concatStringsSep "\n" [
     ''
       acme_dns porkbun {
           api_key {$PORKBUN_API_KEY}
@@ -47,7 +47,7 @@ let
     "crowdsec/caddy_bouncer_key" = lib.mkIf crowdsec.enable { };
   };
 
-  envFile = builtins.concatStringsSep "\n" [
+  envFile = lib.concatStringsSep "\n" [
     ''
       DOMAIN=${config.sops.placeholder."web_domain"}
       PORKBUN_API_KEY=${config.sops.placeholder."porkbun/api_key"}
@@ -82,7 +82,7 @@ let
   mkVirtualHost =
     name: host:
     let
-      preProxyBlock = builtins.concatStringsSep "\n" [
+      preProxyBlock = lib.concatStringsSep "\n" [
         (lib.optionalString crowdsec.enable ''
           crowdsec
           appsec
@@ -110,7 +110,7 @@ let
 
       originPort = lib.mkOption {
         type = lib.types.ints.unsigned;
-        apply = builtins.toString;
+        apply = lib.toString;
         description = "Port at the origin host to which traffic is routed";
       };
     };

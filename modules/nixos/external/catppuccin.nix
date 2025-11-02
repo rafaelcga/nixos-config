@@ -91,7 +91,7 @@ in
 
     colorScheme = lib.mkOption {
       type = lib.types.str;
-      default = builtins.replaceStrings [ "-" ] [ "" ] cfg.themeName;
+      default = lib.replaceStrings [ "-" ] [ "" ] cfg.themeName;
       readOnly = true;
     };
   };

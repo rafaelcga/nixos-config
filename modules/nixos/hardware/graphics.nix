@@ -7,8 +7,8 @@
 let
   cfg = config.modules.nixos.graphics;
 
-  usesNvidia = builtins.elem "nvidia" cfg.vendors;
-  usesIntel = builtins.elem "intel" cfg.vendors;
+  usesNvidia = lib.elem "nvidia" cfg.vendors;
+  usesIntel = lib.elem "intel" cfg.vendors;
 
   vendorPackages = with pkgs; {
     "intel" = [
@@ -23,7 +23,7 @@ let
     "amd" = [ ];
     "nvidia" = [ ];
   };
-  extraPackages = builtins.concatMap (vendor: vendorPackages.${vendor}) cfg.vendors;
+  extraPackages = lib.concatMap (vendor: vendorPackages.${vendor}) cfg.vendors;
 in
 {
   options.modules.nixos.graphics = {

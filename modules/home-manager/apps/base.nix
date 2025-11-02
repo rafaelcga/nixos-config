@@ -1,6 +1,11 @@
-{ pkgs, osConfig, ... }:
+{
+  lib,
+  pkgs,
+  osConfig,
+  ...
+}:
 let
-  usesNvidia = builtins.elem "nvidia" osConfig.modules.nixos.graphics.vendors;
+  usesNvidia = lib.elem "nvidia" osConfig.modules.nixos.graphics.vendors;
 in
 {
   programs = {

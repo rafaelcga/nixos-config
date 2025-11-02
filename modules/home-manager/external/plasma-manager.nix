@@ -42,7 +42,7 @@ in
 
     colorScheme = lib.mkOption {
       type = lib.types.str;
-      default = builtins.replaceStrings [ "-" ] [ "" ] cfg.splashTheme;
+      default = lib.replaceStrings [ "-" ] [ "" ] cfg.splashTheme;
       description = "Color scheme";
     };
 

@@ -15,7 +15,7 @@ in
   home-manager = {
     sharedModules = [ "${inputs.self}/modules/home-manager" ];
     users.${user.name} = {
-      imports = lib.optionals (builtins.pathExists userHomeConfig) [ userHomeConfig ];
+      imports = lib.optionals (lib.pathExists userHomeConfig) [ userHomeConfig ];
       home = { inherit (config.system) stateVersion; };
     };
 
