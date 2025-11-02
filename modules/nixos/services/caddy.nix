@@ -79,34 +79,22 @@ let
     }
   '';
 
-  mkRoute =
-    {
-      originHost ? "localhost",
-      originPort,
-    }:
+  mkVirtualHost =
+    name: host:
     let
-      routeBlock = builtins.concatStringsSep "\n" [
+      preProxyBlock = builtins.concatStringsSep "\n" [
         (lib.optionalString crowdsec.enable ''
           crowdsec
           appsec
         '')
       ];
-    in
-    ''
-      route {
-        ${routeBlock}
-        reverse_proxy ${originHost}:${originPort}
-      }
-    '';
-
-  mkVirtualHost =
-    name: host:
-    let
-      routeBlock = mkRoute { inherit (host) originHost originPort; };
       hostConfig = {
         extraConfig = ''
           ${commonBlock}
-          ${routeBlock}
+          route {
+            ${preProxyBlock}
+            reverse_proxy ${host.originHost}:${host.originPort}
+          }
         '';
       };
     in
