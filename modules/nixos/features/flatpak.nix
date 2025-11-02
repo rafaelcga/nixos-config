@@ -25,10 +25,11 @@ in
       wantedBy = [ "multi-user.target" ];
       serviceConfig = {
         Type = "oneshot";
+        ExecStart = ''
+          ${pkgs.flatpak}/bin/flatpak remote-add --if-not-exists \
+            flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+        '';
       };
-      script = ''
-        ${pkgs.flatpak}/bin/flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
-      '';
     };
 
     systemd.services.user-icons-fonts-flatpak = {
