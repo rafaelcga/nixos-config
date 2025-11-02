@@ -111,13 +111,54 @@ let
       };
     };
 
+  hostPathServiceName = "create-container-directories";
+
+  mkServiceOverride =
+    name: instance:
+    let
+      serviceConfig = lib.mkIf instance.enable {
+        after = [ "${hostPathServiceName}@${name}.service" ];
+        requires = [ "${hostPathServiceName}@${name}.service" ];
+      };
+    in
+    lib.nameValuePair "container@${name}" serviceConfig;
+
+  mkHostPathService =
+    name: instance:
+    let
+      hostPaths = lib.unique (lib.mapAttrsToList (_: bindMount: bindMount.hostPath) instance.bindMounts);
+      serviceConfig = lib.mkIf instance.enable {
+        description = "Create necessary host directories for container@${name}";
+        partOf = [ "container@${name}.service" ];
+        serviceConfig = {
+          Type = "oneshot";
+        };
+        script = ''
+          set -euo pipefail
+
+          printf "${lib.concatStringsSep "\n" hostPaths}" \
+            | while read path; do
+              if ! [[ -f "$path" ]]; then
+                mkdir -p "$path"
+                if [[ "$path" == "${user.home}"* ]]; then
+                  chown -R "${user.name}:${user.group}" "$path"
+                fi
+              fi
+            done
+        '';
+      };
+    in
+    lib.nameValuePair "${hostPathServiceName}@${name}" serviceConfig;
+
   internalInterface = if config.networking.nftables.enable then "ve-*" else "ve-+";
 
   webPorts =
     let
-      allWebPorts = lib.mapAttrsToList (_: instance: instance.webPort) cfg.instances;
+      instancesWithWebPorts = lib.filterAttrs (
+        _: instance: instance.enable && (instance.webPort != null)
+      ) cfg.instances;
     in
-    lib.filter (port: port != null) allWebPorts;
+    lib.mapAttrsToList (_: instance: instance.webPort) instancesWithWebPorts;
 in
 {
   options.modules.nixos.containers = {
@@ -165,31 +206,9 @@ in
 
     containers = lib.mapAttrs mkBaseConfig cfg.instances;
 
-    systemd.services.create-container-directories = {
-      description = "Create necessary host directories for container mounted paths";
-      wantedBy = [ "multi-user.target" ];
-      serviceConfig = {
-        Type = "oneshot";
-      };
-      script =
-        let
-          bindMountsList = lib.mapAttrsToList (_: instance: instance.bindMounts) cfg.instances;
-          getHostPaths = bindMounts: lib.mapAttrsToList (_: bindMount: bindMount.hostPath) bindMounts;
-          hostPaths = lib.unique (lib.concatMap getHostPaths bindMountsList);
-        in
-        ''
-          set -euo pipefail
-
-          printf "${lib.concatStringsSep "\n" hostPaths}" \
-            | while read path; do
-              if ! [[ -f "$path" ]]; then
-                mkdir -p "$path"
-                if [[ "$path" == "${user.home}"* ]]; then
-                  chown -R "${user.name}:${user.group}" "$path"
-                fi
-              fi
-            done
-        '';
-    };
+    systemd.services = lib.mkMerge [
+      (lib.mapAttrs' mkServiceOverride cfg.instances)
+      (lib.mapAttrs' mkHostPathService cfg.instances)
+    ];
   };
 }

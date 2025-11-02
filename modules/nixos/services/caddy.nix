@@ -110,7 +110,7 @@ let
         '';
       };
     in
-    (lib.nameValuePair "${name}.{$DOMAIN}" hostConfig);
+    lib.nameValuePair "${name}.{$DOMAIN}" hostConfig;
 
   virtualHostOpts = {
     options = {
