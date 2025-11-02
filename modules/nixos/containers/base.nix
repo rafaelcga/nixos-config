@@ -180,7 +180,7 @@ in
         ''
           set -euo pipefail
 
-          ${lib.concatStringsSep "\n" hostPaths} \
+          echo "${lib.concatStringsSep "\n" hostPaths}" \
             | while read path; do
               if ! [[ -f "$path" ]]; then
                 mkdir -p "$path"
