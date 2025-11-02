@@ -1,5 +1,6 @@
 { config, lib, ... }:
 let
+  inherit (config.modules.nixos) user;
   cfg = config.modules.nixos.containers;
 
   mkCommonConfig = name: instance: {
@@ -52,6 +53,7 @@ let
           default = name;
           description = "Location of the host path to be mounted.";
         };
+
         isReadOnly = lib.mkOption {
           default = true;
           type = lib.types.bool;
@@ -162,5 +164,32 @@ in
     };
 
     containers = lib.mapAttrs mkBaseConfig cfg.instances;
+
+    systemd.services.create-container-directories = {
+      description = "Create necessary host directories for container mounted paths";
+      wantedBy = [ "multi-user.target" ];
+      serviceConfig = {
+        Type = "oneshot";
+      };
+      script =
+        let
+          bindMountsList = lib.mapAttrsToList (_: instance: instance.bindMounts) cfg.instances;
+          getHostPaths = bindMounts: lib.mapAttrsToList (_: bindMount: bindMount.hostPath);
+          hostPaths = lib.unique (lib.concatMap getHostPaths bindMountsList);
+        in
+        ''
+          set -euo pipefail
+
+          ${lib.concatStringsSep "\n" hostPaths} \
+            | while read path; do
+              if ! [[ -f "$path" ]]; then
+                mkdir -p "$path"
+                if [[ "$path" == "${user.home}"* ]]; then
+                  chown -R "${user.name}:${user.group}" "$path"
+                fi
+              fi
+            done
+        '';
+    };
   };
 }
