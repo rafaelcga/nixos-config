@@ -92,8 +92,8 @@ let
         extraConfig = ''
           ${commonBlock}
           route {
-            ${preProxyBlock}
-            reverse_proxy ${host.originHost}:${host.originPort}
+              ${preProxyBlock}
+              reverse_proxy ${host.originHost}:${host.originPort}
           }
         '';
       };
