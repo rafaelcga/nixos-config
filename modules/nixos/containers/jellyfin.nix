@@ -5,7 +5,7 @@
   ...
 }:
 let
-  cfg = config.modules.nixos.containers.instances.jellyfin;
+  cfg = config.modules.nixos.containers.instances.jellyfin or { enable = false; };
 
   containerWebPort = 8096;
 in

@@ -1,6 +1,6 @@
 { config, lib, ... }:
 let
-  cfg = config.modules.nixos.containers.instances.adguardhome;
+  cfg = config.modules.nixos.containers.instances.adguardhome or { enable = false; };
 
   dnsPort = 53;
   containerWebPort = 3000;
