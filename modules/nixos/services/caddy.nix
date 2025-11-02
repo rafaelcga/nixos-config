@@ -110,7 +110,7 @@ let
 
       originPort = lib.mkOption {
         type = lib.types.ints.unsigned;
-        apply = lib.toString;
+        apply = builtins.toString;
         description = "Port at the origin host to which traffic is routed";
       };
     };
