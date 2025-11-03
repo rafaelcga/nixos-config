@@ -7,11 +7,19 @@
 let
   cfg = config.modules.nixos.containers.instances.jellyfin or { enable = false; };
 
+  dataDir = "/var/lib/jellyfin";
   containerWebPort = 8096;
 in
 {
   config = lib.mkIf cfg.enable {
     containers.jellyfin = {
+      bindMounts = {
+        "${dataDir}" = {
+          hostPath = "/srv/containers/jellyfin";
+          isReadOnly = false;
+        };
+      };
+
       config =
         { pkgs, ... }:
         {
@@ -20,7 +28,13 @@ in
           services.jellyfin = {
             enable = true;
             openFirewall = true;
+
+            inherit dataDir;
+            configDir = "${dataDir}/config";
+            cacheDir = "${dataDir}/cache";
+            logDir = "${dataDir}/log";
           };
+
           environment.systemPackages = with pkgs; [
             jellyfin
             jellyfin-web

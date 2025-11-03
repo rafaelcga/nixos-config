@@ -3,46 +3,87 @@ let
   inherit (config.modules.nixos) user;
   cfg = config.modules.nixos.containers;
 
-  mkCommonConfig = name: instance: {
-    autoStart = true;
-    privateNetwork = true;
-    inherit (cfg) hostAddress hostAddress6;
-    inherit (instance) localAddress localAddress6;
-
-    config = {
-      system.stateVersion = config.system.stateVersion;
-    };
-  };
-
-  mkGpuConfig =
+  mkBaseConfig =
     name: instance:
     let
-      mkPath = device: "/dev/dri/${device}";
+      mkDriPath = device: "/dev/dri/${device}";
       mkAllowedDevice = device: {
-        node = mkPath device;
+        node = mkDriPath device;
         modifier = "rw";
       };
       mkGpuBindMount = device: {
-        hostPath = mkPath device;
+        hostPath = mkDriPath device;
         isReadOnly = false;
       };
-    in
-    lib.mkIf instance.gpuPassthrough {
-      allowedDevices = map mkAllowedDevice instance.gpuDevices;
-      bindMounts = lib.genAttrs' instance.gpuDevices (
-        device: lib.nameValuePair (mkPath device) (mkGpuBindMount device)
-      );
-    };
 
-  mkBaseConfig =
-    name: instance:
+      gpuConfig = lib.mkIf instance.gpuPassthrough {
+        allowedDevices = map mkAllowedDevice instance.gpuDevices;
+        bindMounts = lib.genAttrs' instance.gpuDevices (
+          device: lib.nameValuePair (mkDriPath device) (mkGpuBindMount device)
+        );
+      };
+    in
     lib.mkIf instance.enable (
       lib.mkMerge [
-        (mkCommonConfig name instance)
-        { inherit (instance) bindMounts; }
-        (mkGpuConfig name instance)
+        {
+          inherit (cfg) hostAddress hostAddress6;
+          inherit (instance) localAddress localAddress6 bindMounts;
+
+          autoStart = true;
+          privateNetwork = true;
+
+          config = {
+            system.stateVersion = config.system.stateVersion;
+          };
+        }
+        gpuConfig
       ]
     );
+
+  mkServiceOverrides =
+    name: instance:
+    let
+      containerService = "container@${name}";
+      directoryService = "create-container-directories@${name}";
+      container = config.containers.${name};
+      hostPaths = lib.unique (lib.mapAttrsToList (_: bindMount: bindMount.hostPath) container.bindMounts);
+    in
+    lib.mkIf instance.enable {
+      "${containerService}" = {
+        after = [ "${directoryService}.service" ];
+        requires = [ "${directoryService}.service" ];
+      };
+      "${directoryService}" = {
+        description = "Create necessary host directories for ${containerService}";
+        partOf = [ "${containerService}.service" ];
+        serviceConfig = {
+          Type = "oneshot";
+        };
+        script = ''
+          set -euo pipefail
+
+          printf "${lib.concatStringsSep "\n" hostPaths}" \
+            | while read path; do
+              if [[ ! -f "$path" ]]; then
+                mkdir -p "$path"
+                if [[ "$path" == "${user.home}"* ]]; then
+                  chown -R "${user.name}:${user.group}" "$path"
+                fi
+              fi
+            done
+        '';
+      };
+    };
+
+  internalInterface = if config.networking.nftables.enable then "ve-*" else "ve-+";
+
+  webPorts =
+    let
+      instancesWithWebPorts = lib.filterAttrs (
+        _: instance: instance.enable && (instance.webPort != null)
+      ) cfg.instances;
+    in
+    lib.mapAttrsToList (_: instance: instance.webPort) instancesWithWebPorts;
 
   bindMountOpts =
     { name, ... }:
@@ -110,55 +151,6 @@ let
         };
       };
     };
-
-  hostPathServiceName = "create-container-directories";
-
-  mkServiceOverride =
-    name: instance:
-    let
-      serviceConfig = lib.mkIf instance.enable {
-        after = [ "${hostPathServiceName}@${name}.service" ];
-        requires = [ "${hostPathServiceName}@${name}.service" ];
-      };
-    in
-    lib.nameValuePair "container@${name}" serviceConfig;
-
-  mkHostPathService =
-    name: instance:
-    let
-      hostPaths = lib.unique (lib.mapAttrsToList (_: bindMount: bindMount.hostPath) instance.bindMounts);
-      serviceConfig = lib.mkIf instance.enable {
-        description = "Create necessary host directories for container@${name}";
-        partOf = [ "container@${name}.service" ];
-        serviceConfig = {
-          Type = "oneshot";
-        };
-        script = ''
-          set -euo pipefail
-
-          printf "${lib.concatStringsSep "\n" hostPaths}" \
-            | while read path; do
-              if [[ ! -f "$path" ]]; then
-                mkdir -p "$path"
-                if [[ "$path" == "${user.home}"* ]]; then
-                  chown -R "${user.name}:${user.group}" "$path"
-                fi
-              fi
-            done
-        '';
-      };
-    in
-    lib.nameValuePair "${hostPathServiceName}@${name}" serviceConfig;
-
-  internalInterface = if config.networking.nftables.enable then "ve-*" else "ve-+";
-
-  webPorts =
-    let
-      instancesWithWebPorts = lib.filterAttrs (
-        _: instance: instance.enable && (instance.webPort != null)
-      ) cfg.instances;
-    in
-    lib.mapAttrsToList (_: instance: instance.webPort) instancesWithWebPorts;
 in
 {
   options.modules.nixos.containers = {
@@ -206,9 +198,6 @@ in
 
     containers = lib.mapAttrs mkBaseConfig cfg.instances;
 
-    systemd.services = lib.mkMerge [
-      (lib.mapAttrs' mkServiceOverride cfg.instances)
-      (lib.mapAttrs' mkHostPathService cfg.instances)
-    ];
+    systemd.services = lib.mkMerge (lib.mapAttrsToList mkServiceOverrides cfg.instances);
   };
 }

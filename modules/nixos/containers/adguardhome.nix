@@ -2,6 +2,7 @@
 let
   cfg = config.modules.nixos.containers.instances.adguardhome or { enable = false; };
 
+  dataDir = "/var/lib/AdGuardHome";
   dnsPort = 53;
   containerWebPort = 3000;
 in
@@ -27,6 +28,13 @@ in
           protocol = "tcp";
         }
       ];
+
+      bindMounts = {
+        "${dataDir}" = {
+          hostPath = "/srv/containers/adguardhome";
+          isReadOnly = false;
+        };
+      };
 
       config = {
         services.adguardhome = {
