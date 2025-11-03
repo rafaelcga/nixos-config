@@ -2,11 +2,8 @@ name: Build NixOS systems
 
 on:
   push:
-    paths-ignore:
-      - ".github/**"
-      - ".gitignore"
-      - "scripts/**"
-      - "README.md"
+    paths:
+      - "**.nix"
   pull_request:
   workflow_dispatch:
   workflow_call:
