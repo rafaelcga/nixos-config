@@ -2,6 +2,8 @@ name: Build NixOS systems
 
 on:
   push:
+    branches:
+      - main
     paths:
       - "**.nix"
   pull_request:
