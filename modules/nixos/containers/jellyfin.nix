@@ -6,6 +6,7 @@
 }:
 let
   cfg = config.modules.nixos.containers.instances.jellyfin or { enable = false; };
+  hostDataDir = config.modules.nixos.containers.dataDir;
 
   dataDir = "/var/lib/jellyfin";
   containerWebPort = 8096;
@@ -15,7 +16,7 @@ in
     containers.jellyfin = {
       bindMounts = {
         "${dataDir}" = {
-          hostPath = "/srv/containers/jellyfin";
+          hostPath = "${hostDataDir}/jellyfin";
           isReadOnly = false;
         };
       };

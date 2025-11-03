@@ -177,6 +177,12 @@ in
       default = { };
       description = "Enabled containers";
     };
+
+    dataDir = lib.mkOption {
+      type = lib.types.str;
+      default = "/srv/containers";
+      description = "Default host directory where container data will be saved";
+    };
   };
 
   config = lib.mkIf (cfg.instances != { }) {
