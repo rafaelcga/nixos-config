@@ -2,11 +2,9 @@ name: Build NixOS systems
 
 on:
   push:
-    branches:
-      - main
     paths:
       - "**.nix"
-  pull_request:
+      - "flake.lock"
   workflow_dispatch:
   workflow_call:
 
