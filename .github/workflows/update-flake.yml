@@ -1,17 +1,20 @@
-name: Update local Nix packages
+name: Update flake.lock
 
 on:
   schedule:
-    - cron: "0 10 * * */3"
+    - cron: "0 10 * * *"
   workflow_dispatch:
 
 jobs:
-  update-and-pr:
-    name: Update nix files and create PR
+  nix-flake-update:
+    name: Update flake.lock and PR
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      id-token: write
+      issues: write
       pull-requests: write
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -24,15 +27,7 @@ jobs:
           nix_path: nixpkgs=channel:nixos-unstable
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Run update script
-        run: ./scripts/update_pkgs.sh
-
-      - name: Create pull request
-        uses: peter-evans/create-pull-request@v7
+      - name: Update flake.lock
+        uses: DeterminateSystems/update-flake-lock@main
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "chore: update local nix packages"
-          title: "Update local Nix packages"
-          body: Automated PR to update local Nix packages.
-          branch: "update-nix-packages"
-          delete-branch: true

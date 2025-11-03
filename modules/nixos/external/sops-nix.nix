@@ -44,12 +44,16 @@ in
         User = user.name;
         Group = user.group;
       };
-      script = ''
-        set -euo pipefail
+      script =
+        let
+          ssh-to-age = "${pkgs.ssh-to-age}/bin/ssh-to-age";
+        in
+        ''
+          set -euo pipefail
 
-        mkdir -p "$(dirname "${cfg.ageKeyFile}")"
-        ${pkgs.ssh-to-age}/bin/ssh-to-age -private-key -i "${user.sshPrivateKey}" > "${cfg.ageKeyFile}"
-      '';
+          mkdir -p "$(dirname "${cfg.ageKeyFile}")"
+          ${ssh-to-age} -private-key -i "${user.sshPrivateKey}" > "${cfg.ageKeyFile}"
+        '';
     };
   };
 }

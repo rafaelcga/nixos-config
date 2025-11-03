@@ -72,6 +72,11 @@ let
 
   systemdConfig =
     let
+      cscli = "${pkgs.crowdsec}/bin/cscli";
+      grep = "${pkgs.gnugrep}/bin/grep";
+      jq = "${pkgs.jq}/bin/jq";
+      tr = "${pkgs.coreutils}/bin/tr";
+
       enrollService = {
         enroll-crowdsec-console = {
           description = "Enrolls the engine at app.crowdsec.net";
@@ -85,7 +90,7 @@ let
           script = ''
             set -euo pipefail
 
-            ${pkgs.crowdsec}/bin/cscli console enroll "$ENROLL_KEY"
+            ${cscli} console enroll "$ENROLL_KEY"
           '';
         };
       };
@@ -103,11 +108,11 @@ let
           script = ''
             set -euo pipefail
 
-            if ! ${pkgs.crowdsec}/bin/cscli bouncers list -o json \
-              | ${pkgs.jq}/bin/jq -r ".[].name" \
-              | ${pkgs.coreutils}/bin/tr "[:upper:]" "[:lower:]" \
-              | ${pkgs.gnugrep}/bin/grep -q '^${name}$'; then
-              ${pkgs.crowdsec}/bin/cscli bouncers add "${name}" -k "$BOUNCER_KEY"
+            if ! ${cscli} bouncers list -o json \
+              | ${jq} -r ".[].name" \
+              | ${tr} "[:upper:]" "[:lower:]" \
+              | ${grep} -q '^${name}$'; then
+              ${cscli} bouncers add "${name}" -k "$BOUNCER_KEY"
             fi
           '';
         };
