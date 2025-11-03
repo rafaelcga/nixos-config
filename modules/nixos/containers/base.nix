@@ -97,8 +97,8 @@ let
         };
 
         isReadOnly = lib.mkOption {
-          default = true;
           type = lib.types.bool;
+          default = true;
           description = "Determine whether the mounted path will be accessed in read-only mode.";
         };
       };
