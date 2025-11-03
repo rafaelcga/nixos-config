@@ -1,59 +1,54 @@
 { inputs, lib, ... }:
 let
-  users = [
-    {
-      name = "rafael";
+  users = {
+    "rafael" = {
       description = "Rafa Giménez";
-    }
-  ];
-  hosts = [
-    {
-      name = "fractal";
+    };
+  };
+  hosts = {
+    "fractal" = {
       user = "rafael";
       system = "x86_64-linux";
       stateVersion = "25.11";
-    }
-    {
-      name = "beelink";
+    };
+    "beelink" = {
       user = "rafael";
       system = "x86_64-linux";
       stateVersion = "25.11";
-    }
-  ];
+    };
+  };
 
   mkNixosSystem =
-    host:
+    host: config:
     let
-      user = lib.findFirst (user: user.name == host.user) null users;
       coreConfig = {
-        networking.hostName = host.name;
-        system.stateVersion = host.stateVersion;
+        networking.hostName = host;
+        system.stateVersion = config.stateVersion;
         nixpkgs = {
-          hostPlatform = host.system;
+          hostPlatform = config.system;
           config.allowUnfree = true;
         };
       };
       userConfig = {
-        modules.nixos.user = lib.mkIf (user != null) {
-          inherit (user) name description;
-        };
+        modules.nixos.user = lib.mkMerge [
+          { name = config.user; }
+          users.${config.user}
+        ];
       };
     in
-    {
-      "${host.name}" = lib.nixosSystem {
-        modules = [
-          coreConfig
-          "${inputs.self}/overlays"
-          "${inputs.self}/modules/nixos"
-          "${inputs.self}/hosts/${host.name}"
-          userConfig
-        ];
-        specialArgs = { inherit inputs; };
-      };
+    lib.nixosSystem {
+      modules = [
+        coreConfig
+        userConfig
+        "${inputs.self}/overlays"
+        "${inputs.self}/modules/nixos"
+        "${inputs.self}/hosts/${host}"
+      ];
+      specialArgs = { inherit inputs; };
     };
 in
 {
   systems = [ "x86_64-linux" ];
 
-  flake.nixosConfigurations = lib.mkMerge (map mkNixosSystem hosts);
+  flake.nixosConfigurations = lib.mapAttrs mkNixosSystem hosts;
 }
