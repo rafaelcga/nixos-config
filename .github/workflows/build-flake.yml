@@ -65,12 +65,12 @@ jobs:
       - name: Build and test flake
         run: nix build -L .#nixosConfigurations.${{ matrix.host }}.config.system.build.toplevel
 
-  build-status:
+  check-builds:
     name: Check builds
     runs-on: ubuntu-latest
     needs: build-hosts
     if: ${{ always() }}
     steps:
-      - name: Check host build status
+      - name: Check status of built hosts
         if: ${{ needs.build-hosts.result != 'success' }}
         run: exit 1
