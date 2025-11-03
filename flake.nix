@@ -45,6 +45,5 @@
         home-manager.follows = "home-manager";
       };
     };
-
   };
 }
