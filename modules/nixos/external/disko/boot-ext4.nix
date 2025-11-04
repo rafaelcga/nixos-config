@@ -1,6 +1,6 @@
 args@{ ... }:
-args
-// {
+{
+  inherit (args) device destroy;
   type = "disk";
   content = {
     type = "gpt";

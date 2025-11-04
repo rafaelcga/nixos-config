@@ -16,6 +16,12 @@
         device = "/dev/disk/by-id/nvme-CT500P3PSSD8_24234937AA27";
         type = "boot-ext4";
       };
+      "media" = {
+        device = "/dev/disk/by-id/nvme-KIOXIA-EXCERIA_PLUS_G3_SSD_XEHKF0CNZ0EA";
+        destroy = false;
+        mountpoint = "/mnt/media";
+        type = "mnt-media-ext4";
+      };
     };
     # Services
     caddy.enable = true;

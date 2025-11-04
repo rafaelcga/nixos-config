@@ -20,6 +20,12 @@ let
         description = "If false, disko will not wipe or destroy this disk's contents during the destroy stage";
       };
 
+      mountpoint = lib.mkOption {
+        type = lib.types.nullOr lib.types.str;
+        default = null;
+        description = "Mountpoint of the main partition in the disk type";
+      };
+
       type = lib.mkOption {
         type = lib.types.str;
         description = "Disk type (see other .nix files in this module)";
@@ -27,12 +33,7 @@ let
     };
   };
 
-  mkDiskConfig =
-    name: disk:
-    let
-      diskArgs = lib.filterAttrs (argName: _: argName != "type") disk;
-    in
-    import ./${disk.type}.nix diskArgs;
+  mkDiskConfig = name: disk: import ./${disk.type}.nix (lib.removeAttrs disk [ "type" ]);
 in
 {
   imports = [ inputs.disko.nixosModules.disko ];
