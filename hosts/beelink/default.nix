@@ -50,6 +50,12 @@
           localAddress = "172.22.0.4";
           localAddress6 = "fc00::4";
           gpuPassthrough = true;
+          bindMounts = {
+            "/media" = {
+              hostPath = "/mnt/media";
+              isReadOnly = true;
+            };
+          };
         };
       };
     };
