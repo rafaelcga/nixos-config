@@ -49,7 +49,7 @@ in
           enable = true;
           environment = {
             CONFIG_FILEPATH = config.sops.templates."ddns-updater/config.json".path;
-            LISTENING_ADDRESS = ":${containerWebPort}";
+            LISTENING_ADDRESS = ":${builtins.toString containerWebPort}";
             TZ = "Europe/Madrid";
           };
         };
