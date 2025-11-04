@@ -45,8 +45,11 @@ let
     let
       containerService = "container@${name}";
       directoryService = "create-container-directories@${name}";
-      getHostPath = mountPoint: bindMount: bindMount.hostPath or mountPoint;
-      hostPaths = lib.unique (lib.mapAttrsToList getHostPath config.containers.${name}.bindMounts);
+
+      getHostPath =
+        mountPoint: bindMount: if bindMount.hostPath == null then mountPoint else bindMount.hostPath;
+      container = config.containers.${name};
+      hostPaths = lib.unique (lib.mapAttrsToList getHostPath container.bindMounts);
     in
     lib.mkIf instance.enable {
       "${containerService}" = {
