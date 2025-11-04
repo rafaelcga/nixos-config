@@ -75,7 +75,6 @@ let
       cscli = "${pkgs.crowdsec}/bin/cscli";
       grep = "${pkgs.gnugrep}/bin/grep";
       jq = "${pkgs.jq}/bin/jq";
-      tr = "${pkgs.coreutils}/bin/tr";
 
       enrollService = {
         enroll-crowdsec-console = {
@@ -110,8 +109,7 @@ let
 
             if ! ${cscli} bouncers list -o json \
               | ${jq} -r ".[].name" \
-              | ${tr} "[:upper:]" "[:lower:]" \
-              | ${grep} -q "^${name}$"; then
+              | ${grep} -qiP "^${name}$"; then
               ${cscli} bouncers add "${name}" -k "$BOUNCER_KEY"
             fi
           '';
