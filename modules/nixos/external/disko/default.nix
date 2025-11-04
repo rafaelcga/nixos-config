@@ -13,6 +13,13 @@ let
         type = lib.types.str;
         description = "Disk device identifier";
       };
+
+      destroy = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = "If false, disko will not wipe or destroy this disk's contents during the destroy stage";
+      };
+
       type = lib.mkOption {
         type = lib.types.str;
         description = "Disk type (see other .nix files in this module)";
@@ -20,7 +27,12 @@ let
     };
   };
 
-  mkDiskConfig = name: disk: import ./${disk.type}.nix { inherit (disk) device; };
+  mkDiskConfig =
+    name: disk:
+    let
+      diskArgs = lib.filterAttrs (argName: _: argName != "type") disk;
+    in
+    import ./${disk.type}.nix diskArgs;
 in
 {
   imports = [ inputs.disko.nixosModules.disko ];

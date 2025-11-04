@@ -1,6 +1,6 @@
-{ device }:
-{
-  inherit device;
+args@{ ... }:
+args
+// {
   type = "disk";
   content = {
     type = "gpt";
