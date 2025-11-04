@@ -38,6 +38,12 @@ in
         }
       ];
 
+      bindMounts = {
+        "${config.sops.templates."ddns-updater/config.json".path}" = {
+          isReadOnly = true;
+        };
+      };
+
       config = {
         services.ddns-updater = {
           enable = true;
