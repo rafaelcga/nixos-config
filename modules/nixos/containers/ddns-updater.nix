@@ -9,6 +9,7 @@ let
     "porkbun/api_key" = { };
     "porkbun/api_secret_key" = { };
   };
+  # https://github.com/qdm12/ddns-updater/blob/master/docs/porkbun.md
   jsonConfig = ''
     {
       "settings": [
