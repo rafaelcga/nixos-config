@@ -45,8 +45,8 @@ let
     let
       containerService = "container@${name}";
       directoryService = "create-container-directories@${name}";
-      container = config.containers.${name};
-      hostPaths = lib.unique (lib.mapAttrsToList (_: bindMount: bindMount.hostPath) container.bindMounts);
+      getHostPath = mountPoint: bindMount: bindMount.hostPath or mountPoint;
+      hostPaths = lib.unique (lib.mapAttrsToList getHostPath config.containers.${name}.bindMounts);
     in
     lib.mkIf instance.enable {
       "${containerService}" = {
@@ -86,23 +86,21 @@ let
     in
     lib.mapAttrsToList (_: instance: instance.webPort) instancesWithWebPorts;
 
-  bindMountOpts =
-    { name, ... }:
-    {
-      options = {
-        hostPath = lib.mkOption {
-          type = lib.types.str;
-          default = name;
-          description = "Location of the host path to be mounted.";
-        };
+  bindMountOpts = {
+    options = {
+      hostPath = lib.mkOption {
+        type = lib.types.nullOr lib.types.str;
+        default = null;
+        description = "Location of the host path to be mounted.";
+      };
 
-        isReadOnly = lib.mkOption {
-          type = lib.types.bool;
-          default = true;
-          description = "Determine whether the mounted path will be accessed in read-only mode.";
-        };
+      isReadOnly = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = "Determine whether the mounted path will be accessed in read-only mode.";
       };
     };
+  };
 
   containerOpts =
     { name, ... }:
