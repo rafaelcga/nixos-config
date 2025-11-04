@@ -111,7 +111,7 @@ let
             if ! ${cscli} bouncers list -o json \
               | ${jq} -r ".[].name" \
               | ${tr} "[:upper:]" "[:lower:]" \
-              | ${grep} -q '^${name}$'; then
+              | ${grep} -q "^${name}$"; then
               ${cscli} bouncers add "${name}" -k "$BOUNCER_KEY"
             fi
           '';
