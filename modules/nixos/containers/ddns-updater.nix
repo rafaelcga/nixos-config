@@ -1,0 +1,53 @@
+{ config, lib, ... }:
+let
+  cfg = config.modules.nixos.containers.instances.ddns-updater or { enable = false; };
+
+  containerWebPort = 8000;
+
+  secrets = {
+    "web_domain" = { };
+    "porkbun/api_key" = { };
+    "porkbun/api_secret_key" = { };
+  };
+  jsonConfig = ''
+    {
+      "settings": [
+        {
+          "provider": "porkbun",
+          "domain": "*.${config.sops.placeholder."web_domain"}",
+          "api_key": "${config.sops.placeholder."porkbun/api_key"}",
+          "secret_api_key": "${config.sops.placeholder."porkbun/api_secret_key"}"
+        }
+      ]
+    }
+  '';
+in
+{
+  config = lib.mkIf cfg.enable {
+    sops = {
+      inherit secrets;
+      templates."ddns-updater/config.json".content = jsonConfig;
+    };
+
+    containers.ddns-updater = {
+      forwardPorts = lib.optionals (cfg.webPort != null) [
+        {
+          containerPort = containerWebPort;
+          hostPort = cfg.webPort;
+          protocol = "tcp";
+        }
+      ];
+
+      config = {
+        services.ddns-updater = {
+          enable = true;
+          environment = {
+            CONFIG_FILEPATH = config.sops.templates."ddns-updater/config.json".path;
+            LISTENING_ADDRESS = ":${containerWebPort}";
+            TZ = "Europe/Madrid";
+          };
+        };
+      };
+    };
+  };
+}

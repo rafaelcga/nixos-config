@@ -33,10 +33,16 @@
           localAddress6 = "fc00::2";
           webPort = 8000;
         };
-        jellyfin = {
+        ddns-updater = {
           enable = true;
           localAddress = "172.22.0.3";
           localAddress6 = "fc00::3";
+          webPort = 8001;
+        };
+        jellyfin = {
+          enable = true;
+          localAddress = "172.22.0.4";
+          localAddress6 = "fc00::4";
           gpuPassthrough = true;
         };
       };
