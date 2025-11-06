@@ -1,6 +1,13 @@
 {
   imports = [ ];
 
+  networking.interfaces.enp1s0.ipv4.addresses = [
+    {
+      address = "192.168.1.2";
+      prefixLength = 24;
+    }
+  ];
+
   modules.nixos = {
     # System
     zram.enable = true;
@@ -12,11 +19,11 @@
     };
     # External
     disko.disks = {
-      "main" = {
+      main = {
         device = "/dev/disk/by-id/nvme-CT500P3PSSD8_24234937AA27";
         type = "boot-ext4";
       };
-      "media" = {
+      media = {
         device = "/dev/disk/by-id/nvme-KIOXIA-EXCERIA_PLUS_G3_SSD_XEHKF0CNZ0EA";
         destroy = false;
         mountpoint = "/mnt/media";
