@@ -7,12 +7,24 @@
 let
   cfg = config.modules.nixos.proton-vpn;
 
+  iptables = "${pkgs.iptables}/bin/iptables";
+  ip6tables = "${pkgs.iptables}/bin/ip6tables";
+  nft = "${pkgs.nftables}/bin/nft";
+  wg = "${pkgs.wireguard-tools}/bin/wg";
+
   postUpScript =
-    let
-      wg = "${pkgs.wireguard-tools}/bin/wg";
-    in
     if config.networking.nftables.enable then
-      ''''
+      ''
+        #!/bin/bash
+
+        set -euo pipefail
+
+        ${nft} insert rule inet filter output \
+          oifname != "%i" \
+          mark != $(${wg} show %i fwmark) \
+          fib daddr type != local \
+          counter reject
+      ''
     else
       ''
         #!/bin/bash
@@ -21,12 +33,12 @@ let
 
         # Reject traffic not going through WireGuard interface, non-encrypted
         # or non-local
-        iptables -I OUTPUT \
+        ${iptables} -I OUTPUT \
           ! -o %i \
           -m mark ! --mark $(${wg} show %i fwmark) \
           -m addrtype ! --dst-type LOCAL \
           -j REJECT
-        ip6tables -I OUTPUT \
+        ${ip6tables} -I OUTPUT \
           ! -o %i \
           -m mark ! --mark $(${wg} show %i fwmark) \
           -m addrtype ! --dst-type LOCAL \
@@ -35,11 +47,18 @@ let
   killSwitchPostUp = pkgs.writeScriptBin "killswitch-up" postUpScript;
 
   PreDownScript =
-    let
-      wg = "${pkgs.wireguard-tools}/bin/wg";
-    in
     if config.networking.nftables.enable then
-      ''''
+      ''
+        #!/bin/bash
+
+        set -euo pipefail
+
+        ${nft} delete rule inet filter output \
+          oifname != "%i" \
+          mark != $(${wg} show %i fwmark) \
+          fib daddr type != local \
+          counter reject
+      ''
     else
       ''
         #!/bin/bash
@@ -47,12 +66,12 @@ let
         set -euo pipefail
 
         # Delete post-up rule
-        iptables -D OUTPUT \
+        ${iptables} -D OUTPUT \
           ! -o %i \
           -m mark ! --mark $(${wg} show %i fwmark) \
           -m addrtype ! --dst-type LOCAL \
           -j REJECT
-        ip6tables -D OUTPUT \
+        ${ip6tables} -D OUTPUT \
           ! -o %i \
           -m mark ! --mark $(${wg} show %i fwmark) \
           -m addrtype ! --dst-type LOCAL \
