@@ -1,7 +1,10 @@
+let
+  ethernetInterface = "enp1s0";
+in
 {
   imports = [ ];
 
-  networking.interfaces.enp1s0.ipv4.addresses = [
+  networking.interfaces."${ethernetInterface}".ipv4.addresses = [
     {
       address = "192.168.1.2";
       prefixLength = 24;
@@ -35,7 +38,7 @@
     crowdsec.enable = true;
     # Containers
     containers = {
-      externalInterface = "enp1s0";
+      externalInterface = ethernetInterface;
       hostAddress = "172.22.0.1";
       hostAddress6 = "fc00::1";
       # WebUI port range 8000-8999
