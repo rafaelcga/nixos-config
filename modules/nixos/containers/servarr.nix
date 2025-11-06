@@ -12,6 +12,7 @@ in
     containers.servarr = {
       enableTun = true;
 
+      # TODO: Finish and implement option (visibile false) for data directory
       config = {
         imports = [ "${inputs.self}/modules/nixos" ];
 
