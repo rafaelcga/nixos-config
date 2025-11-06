@@ -112,7 +112,7 @@ in
 
     networking.wg-quick.interfaces = {
       "${cfg.interfaceName}" = {
-        configFile = config.templates."${cfg.interfaceName}.conf".path;
+        configFile = config.sops.templates."${cfg.interfaceName}.conf".path;
         postUp = "${killSwitchPostUp}/bin/killswitch-up";
         preDown = "${killSwitchPreDown}/bin/killswitch-down";
       };
