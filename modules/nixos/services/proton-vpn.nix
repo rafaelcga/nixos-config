@@ -1,10 +1,74 @@
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 let
   cfg = config.modules.nixos.proton-vpn;
+
+  postUpScript =
+    let
+      wg = "${pkgs.wireguard-tools}/bin/wg";
+    in
+    if config.networking.nftables.enable then
+      ''''
+    else
+      ''
+        #!/bin/bash
+
+        set -euo pipefail
+
+        # Reject traffic not going through WireGuard interface, non-encrypted
+        # or non-local
+        iptables -I OUTPUT \
+          ! -o %i \
+          -m mark ! --mark $(${wg} show %i fwmark) \
+          -m addrtype ! --dst-type LOCAL \
+          -j REJECT
+        ip6tables -I OUTPUT \
+          ! -o %i \
+          -m mark ! --mark $(${wg} show %i fwmark) \
+          -m addrtype ! --dst-type LOCAL \
+          -j REJECT
+      '';
+  killSwitchPostUp = pkgs.writeScriptBin "killswitch-up" postUpScript;
+
+  PreDownScript =
+    let
+      wg = "${pkgs.wireguard-tools}/bin/wg";
+    in
+    if config.networking.nftables.enable then
+      ''''
+    else
+      ''
+        #!/bin/bash
+
+        set -euo pipefail
+
+        # Delete post-up rule
+        iptables -D OUTPUT \
+          ! -o %i \
+          -m mark ! --mark $(${wg} show %i fwmark) \
+          -m addrtype ! --dst-type LOCAL \
+          -j REJECT
+        ip6tables -D OUTPUT \
+          ! -o %i \
+          -m mark ! --mark $(${wg} show %i fwmark) \
+          -m addrtype ! --dst-type LOCAL \
+          -j REJECT
+      '';
+  killSwitchPreDown = pkgs.writeScriptBin "killswitch-down" PreDownScript;
 in
 {
   options.modules.nixos.proton-vpn = {
     enable = lib.mkEnableOption "Enables Proton VPN through WireGuard";
+
+    interfaceName = lib.mkOption {
+      type = lib.types.str;
+      default = "wg0";
+      description = "Name of the WireGuard interface";
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -14,7 +78,7 @@ in
         "proton/wireguard/private_key" = { };
         "proton/wireguard/endpoint" = { };
       };
-      templates."wg0.conf".content = ''
+      templates."${cfg.interfaceName}.conf".content = ''
         [Interface]
         PrivateKey = ${config.sops.placeholder."proton/wireguard/private_key"}
         Address = 10.2.0.2/32
@@ -28,8 +92,10 @@ in
     };
 
     networking.wg-quick.interfaces = {
-      wg0 = {
-        configFile = config.templates."wg0.conf".path;
+      "${cfg.interfaceName}" = {
+        configFile = config.templates."${cfg.interfaceName}.conf".path;
+        postUp = "${killSwitchPostUp}/bin/killswitch-up";
+        preDown = "${killSwitchPreDown}/bin/killswitch-down";
       };
     };
   };
