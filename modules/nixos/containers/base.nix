@@ -3,6 +3,17 @@ let
   inherit (config.modules.nixos) user;
   cfg = config.modules.nixos.containers;
 
+  mappedHostPortsByInstance =
+    let
+      mkMappedPorts =
+        name: instance:
+        let
+          commonPorts = lib.intersectAttrs instance.containerPorts instance.hostPorts;
+        in
+        if instance.enable then lib.filterAttrs (_: port: port != null) commonPorts else { };
+    in
+    lib.mapAttrs mkMappedPorts cfg.instances;
+
   mkBaseConfig =
     name: instance:
     let
@@ -22,10 +33,21 @@ let
           device: lib.nameValuePair (mkDriPath device) (mkGpuBindMount device)
         );
       };
+
+      forwardPorts =
+        let
+          mkForwardPort = service: hostPort: {
+            containerPort = instance.containerPorts.${service};
+            inherit hostPort;
+            protocol = "tcp";
+          };
+        in
+        lib.mapAttrsToList mkForwardPort mappedHostPortsByInstance.${name};
     in
     lib.mkIf instance.enable (
       lib.mkMerge [
         {
+          inherit forwardPorts;
           inherit (cfg) hostAddress hostAddress6;
           inherit (instance) localAddress localAddress6 bindMounts;
 
@@ -81,13 +103,11 @@ let
 
   internalInterface = if config.networking.nftables.enable then "ve-*" else "ve-+";
 
-  webPorts =
-    let
-      instancesWithWebPorts = lib.filterAttrs (
-        _: instance: instance.enable && (instance.webPort != null)
-      ) cfg.instances;
-    in
-    lib.mapAttrsToList (_: instance: instance.webPort) instancesWithWebPorts;
+  mappedHostPorts = lib.unique (
+    lib.concatLists (
+      lib.mapAttrsToList (_: hostPorts: lib.attrValues hostPorts) mappedHostPortsByInstance
+    )
+  );
 
   bindMountOpts = {
     options = {
@@ -108,7 +128,7 @@ let
   containerOpts =
     { name, ... }:
     {
-      options = {
+      options = rec {
         enable = lib.mkEnableOption "Enable the ${name} container";
 
         localAddress = lib.mkOption {
@@ -121,10 +141,32 @@ let
           description = "Container local IPv6 address";
         };
 
-        webPort = lib.mkOption {
+        hostPort = lib.mkOption {
           type = lib.types.nullOr lib.types.ints.unsigned;
           default = null;
-          description = "Host port for the container's web interface";
+          description = "Host port to map to exposed container port";
+        };
+
+        hostPorts = lib.mkOption {
+          type = lib.types.attrsOf (lib.types.nullOr lib.types.ints.unsigned);
+          default = { };
+          apply = opt: { _default = hostPort; } // opt;
+          description = "Host ports to map to exposed services in the container";
+        };
+
+        containerPort = lib.mkOption {
+          type = lib.types.nullOr lib.types.ints.unsigned;
+          default = null;
+          visible = false;
+          description = "Exposed container port";
+        };
+
+        containerPorts = lib.mkOption {
+          type = lib.types.attrsOf (lib.types.nullOr lib.types.ints.unsigned);
+          default = { };
+          visible = false;
+          apply = opt: { _default = containerPort; } // opt;
+          description = "Exposed container services mapped to their ports";
         };
 
         bindMounts = lib.mkOption {
@@ -195,7 +237,7 @@ in
         enableIPv6 = true;
       };
 
-      firewall.allowedTCPPorts = webPorts;
+      firewall.allowedTCPPorts = mappedHostPorts;
 
       # Prevent NetworkManager from managing container interfaces
       # https://nixos.org/manual/nixos/stable/#sec-container-networking

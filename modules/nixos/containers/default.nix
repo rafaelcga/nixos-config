@@ -4,5 +4,6 @@
     ./base.nix
     ./ddns-updater.nix
     ./jellyfin.nix
+    ./servarr.nix
   ];
 }

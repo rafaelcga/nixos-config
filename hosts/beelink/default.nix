@@ -47,18 +47,19 @@ in
           enable = true;
           localAddress = "172.22.0.2";
           localAddress6 = "fc00::2";
-          webPort = 8000;
+          hostPort = 8000;
         };
         ddns-updater = {
           enable = true;
           localAddress = "172.22.0.3";
           localAddress6 = "fc00::3";
-          webPort = 8001;
+          hostPort = 8001;
         };
         jellyfin = {
           enable = true;
           localAddress = "172.22.0.4";
           localAddress6 = "fc00::4";
+          hostPort = 8002;
           gpuPassthrough = true;
           bindMounts = {
             "/media" = {

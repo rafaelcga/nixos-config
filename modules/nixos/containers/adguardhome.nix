@@ -5,7 +5,6 @@ let
 
   dataDir = "/var/lib/AdGuardHome";
   dnsPort = 53;
-  containerWebPort = 3000;
 
   settings = {
     log.enabled = true;
@@ -82,6 +81,8 @@ let
 in
 {
   config = lib.mkIf cfg.enable {
+    modules.nixos.containers.instances.adguardhome.containerPort = 3000;
+
     containers.adguardhome = {
       forwardPorts = [
         {
@@ -93,13 +94,6 @@ in
           containerPort = dnsPort;
           hostPort = dnsPort;
           protocol = "udp";
-        }
-      ]
-      ++ lib.optionals (cfg.webPort != null) [
-        {
-          containerPort = containerWebPort;
-          hostPort = cfg.webPort;
-          protocol = "tcp";
         }
       ];
 
@@ -113,7 +107,7 @@ in
       config = {
         services.adguardhome = {
           enable = true;
-          port = containerWebPort;
+          port = cfg.containerPort;
           openFirewall = true;
           inherit settings;
         };

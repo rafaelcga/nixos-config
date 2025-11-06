@@ -9,10 +9,11 @@ let
   hostDataDir = config.modules.nixos.containers.dataDir;
 
   dataDir = "/var/lib/jellyfin";
-  containerWebPort = 8096;
 in
 {
   config = lib.mkIf cfg.enable {
+    modules.nixos.containers.instances.jellyfin.containerPort = 8096;
+
     containers.jellyfin = {
       bindMounts = {
         "${dataDir}" = {
@@ -24,7 +25,7 @@ in
       config =
         { pkgs, ... }:
         {
-          imports = [ "${inputs.self}/modules/nixos/hardware/graphics.nix" ];
+          imports = [ "${inputs.self}/modules/nixos" ];
 
           services.jellyfin = {
             enable = true;
@@ -49,7 +50,7 @@ in
     modules.nixos.caddy = lib.mkIf config.modules.nixos.caddy.enable {
       virtualHosts.jellyfin = {
         originHost = cfg.localAddress;
-        originPort = containerWebPort;
+        originPort = cfg.containerPort;
       };
     };
   };
