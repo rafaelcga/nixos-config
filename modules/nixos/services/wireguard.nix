@@ -5,7 +5,7 @@
   ...
 }:
 let
-  cfg = config.modules.nixos.proton-vpn;
+  cfg = config.modules.nixos.wireguard;
 
   iptables = "${pkgs.iptables}/bin/iptables";
   ip6tables = "${pkgs.iptables}/bin/ip6tables";
@@ -86,7 +86,7 @@ let
     pkgs.writeScriptBin "killswitch-down" PreDownScript;
 in
 {
-  options.modules.nixos.proton-vpn = {
+  options.modules.nixos.wireguard = {
     enable = lib.mkEnableOption "Enables Proton VPN through WireGuard";
 
     interfaceName = lib.mkOption {
@@ -94,31 +94,17 @@ in
       default = "wg0";
       description = "Name of the WireGuard interface";
     };
+
+    configFile = lib.mkOption {
+      type = lib.types.str;
+      description = "Path to the WireGuard configuration file";
+    };
   };
 
   config = lib.mkIf cfg.enable {
-    sops = {
-      secrets = {
-        "proton/wireguard/public_key" = { };
-        "proton/wireguard/private_key" = { };
-        "proton/wireguard/endpoint" = { };
-      };
-      templates."${cfg.interfaceName}.conf".content = ''
-        [Interface]
-        PrivateKey = ${config.sops.placeholder."proton/wireguard/private_key"}
-        Address = 10.2.0.2/32
-        DNS = 10.2.0.1
-
-        [Peer]
-        PublicKey = ${config.sops.placeholder."proton/wireguard/public_key"}
-        AllowedIPs = 0.0.0.0/0, ::/0
-        Endpoint = ${config.sops.placeholder."proton/wireguard/endpoint"}
-      '';
-    };
-
     networking.wg-quick.interfaces = {
       "${cfg.interfaceName}" = {
-        configFile = config.sops.templates."${cfg.interfaceName}.conf".path;
+        inherit (cfg) configFile;
         postUp = "${killSwitchPostUp}/bin/killswitch-up";
         preDown = "${killSwitchPreDown}/bin/killswitch-down";
       };

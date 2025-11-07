@@ -1,4 +1,9 @@
-{ config, lib, ... }:
+{
+  inputs,
+  config,
+  lib,
+  ...
+}:
 let
   inherit (config.modules.nixos) user;
   cfg = config.modules.nixos.containers;
@@ -82,6 +87,25 @@ let
             );
           }
         )
+        (lib.mkIf instance.behindVpn {
+          enableTun = true;
+
+          bindMounts = {
+            "${config.sops.templates."${cfg.wireguardInterface}.conf".path}" = {
+              isReadOnly = true;
+            };
+          };
+
+          config = {
+            imports = [ "${inputs.self}/modules/nixos/services/wireguard.nix" ];
+
+            modules.nixos.wireguard = {
+              enable = true;
+              interfaceName = cfg.wireguardInterface;
+              configFile = config.sops.templates."${cfg.wireguardInterface}.conf".path;
+            };
+          };
+        })
       ]
     );
 
@@ -225,6 +249,12 @@ let
           ];
           description = "Name of GPU devices to passthrough";
         };
+
+        behindVpn = lib.mkOption {
+          type = lib.types.bool;
+          default = false;
+          description = "Whether to protect the container behind a VPN";
+        };
       };
 
       config = lib.mkMerge [
@@ -283,9 +313,36 @@ in
       default = "/srv/containers";
       description = "Default host directory where container data will be saved";
     };
+
+    wireguardInterface = lib.mkOption {
+      type = lib.types.str;
+      default = "wg0";
+      description = ''
+        Name for the WireGuard interface when protecting a container behind a VPN
+      '';
+    };
   };
 
   config = lib.mkIf (cfg.instances != { }) {
+    sops = {
+      secrets = {
+        "proton/wireguard/public_key" = { };
+        "proton/wireguard/private_key" = { };
+        "proton/wireguard/endpoint" = { };
+      };
+      templates."${cfg.wireguardInterface}.conf".content = ''
+        [Interface]
+        PrivateKey = ${config.sops.placeholder."proton/wireguard/private_key"}
+        Address = 10.2.0.2/32
+        DNS = 10.2.0.1
+
+        [Peer]
+        PublicKey = ${config.sops.placeholder."proton/wireguard/public_key"}
+        AllowedIPs = 0.0.0.0/0, ::/0
+        Endpoint = ${config.sops.placeholder."proton/wireguard/endpoint"}
+      '';
+    };
+
     networking = {
       nat = {
         enable = true;
