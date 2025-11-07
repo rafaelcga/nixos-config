@@ -1,6 +1,6 @@
 { config, lib, ... }:
 let
-  cfg = config.modules.nixos.containers.instances.adguardhome or { enable = false; };
+  cfg = config.modules.nixos.containers.instances.adguardhome;
 
   settings = {
     log.enabled = true;
@@ -75,8 +75,8 @@ let
     ];
   };
 in
-{
-  config = lib.mkIf cfg.enable {
+lib.mkMerge [
+  {
     modules.nixos.containers.instances.adguardhome = {
       containerPort = 3000;
       containerDataDir = "/var/lib/AdGuardHome";
@@ -97,7 +97,8 @@ in
           }
         ];
     };
-
+  }
+  (lib.mkIf cfg.enable {
     containers.adguardhome = {
       config = {
         services.adguardhome = {
@@ -108,5 +109,5 @@ in
         };
       };
     };
-  };
-}
+  })
+]

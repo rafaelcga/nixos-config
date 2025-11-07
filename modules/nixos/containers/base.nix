@@ -64,13 +64,13 @@ let
         }
         (
           let
-            driPath = device: "/dev/dri/${device}";
+            nodePath = device: "/dev/dri/${device}";
             mkAllowedDevice = device: {
-              node = driPath device;
+              node = nodePath device;
               modifier = "rw";
             };
             mkBindMount = device: {
-              hostPath = driPath device;
+              hostPath = nodePath device;
               isReadOnly = false;
             };
           in
@@ -78,7 +78,7 @@ let
             allowedDevices = map mkAllowedDevice instance.gpuDevices;
 
             bindMounts = lib.genAttrs' instance.gpuDevices (
-              device: lib.nameValuePair (driPath device) (mkBindMount device)
+              device: lib.nameValuePair (nodePath device) (mkBindMount device)
             );
           }
         )
