@@ -5,24 +5,8 @@
   ...
 }:
 let
-  cfg = config.modules.nixos.caddy;
-
   inherit (config.modules.nixos) crowdsec;
-  crowdsecConfig = lib.mkIf crowdsec.enable {
-    services.crowdsec = {
-      hub.collections = [ "crowdsecurity/caddy" ];
-      localConfig.acquisitions = [
-        {
-          source = "file";
-          filenames = [ "${config.services.caddy.logDir}/*.log" ];
-          labels = {
-            type = "caddy";
-          };
-        }
-      ];
-    };
-    modules.nixos.crowdsec.bouncers = [ "caddy" ];
-  };
+  cfg = config.modules.nixos.caddy;
 
   globalConfig = lib.concatStringsSep "\n" [
     ''
@@ -109,7 +93,7 @@ let
       };
 
       originPort = lib.mkOption {
-        type = lib.types.ints.unsigned;
+        type = lib.types.port;
         apply = builtins.toString;
         description = "Port at the origin host to which traffic is routed";
       };
@@ -149,7 +133,21 @@ in
           templates."caddy-env".content = envFile;
         };
       }
-      crowdsecConfig
+      (lib.mkIf crowdsec.enable {
+        services.crowdsec = {
+          hub.collections = [ "crowdsecurity/caddy" ];
+          localConfig.acquisitions = [
+            {
+              source = "file";
+              filenames = [ "${config.services.caddy.logDir}/*.log" ];
+              labels = {
+                type = "caddy";
+              };
+            }
+          ];
+        };
+        modules.nixos.crowdsec.bouncers = [ "caddy" ];
+      })
     ]
   );
 }

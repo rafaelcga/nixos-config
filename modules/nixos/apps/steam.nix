@@ -8,22 +8,6 @@ let
   inherit (config.modules.nixos) user;
   inherit (config.home-manager.users.${user.name}.home) pointerCursor;
   cfg = config.modules.nixos.steam;
-
-  protonDefaultVars = {
-    # Upscaling
-    PROTON_DLSS_UPGRADE = 1;
-    PROTON_NVIDIA_LIBS = 1;
-    PROTON_FSR4_UPGRADE = 1;
-    PROTON_XESS_UPGRADE = 1;
-    # Compositor
-    PROTON_NO_WM_DECORATION = 1;
-    # CPU
-    PROTON_USE_NTSYNC = 1;
-  };
-
-  protonWaylandVars = lib.mkIf cfg.protonWayland.enable {
-    PROTON_ENABLE_WAYLAND = 1;
-  };
 in
 {
   options.modules.nixos.steam = {
@@ -65,8 +49,20 @@ in
 
     # Proton CachyOS/GE variables
     environment.sessionVariables = lib.mkMerge [
-      protonDefaultVars
-      protonWaylandVars
+      {
+        # Upscaling
+        PROTON_DLSS_UPGRADE = 1;
+        PROTON_NVIDIA_LIBS = 1;
+        PROTON_FSR4_UPGRADE = 1;
+        PROTON_XESS_UPGRADE = 1;
+        # Compositor
+        PROTON_NO_WM_DECORATION = 1;
+        # CPU
+        PROTON_USE_NTSYNC = 1;
+      }
+      (lib.mkIf cfg.protonWayland.enable {
+        PROTON_ENABLE_WAYLAND = 1;
+      })
     ];
   };
 }

@@ -5,36 +5,30 @@
   ...
 }:
 let
-  cfg = config.modules.nixos.containers.instances.jellyfin or { enable = false; };
-  hostDataDir = config.modules.nixos.containers.dataDir;
-
-  dataDir = "/var/lib/jellyfin";
+  cfg = config.modules.nixos.containers.instances.jellyfin;
 in
-{
-  config = lib.mkIf cfg.enable {
-    modules.nixos.containers.instances.jellyfin.containerPort = 8096;
-
+lib.mkMerge [
+  {
+    modules.nixos.containers.instances.jellyfin = {
+      containerPort = 8096;
+      containerDataDir = "/var/lib/jellyfin";
+    };
+  }
+  (lib.mkIf cfg.enable {
     containers.jellyfin = {
-      bindMounts = {
-        "${dataDir}" = {
-          hostPath = "${hostDataDir}/jellyfin";
-          isReadOnly = false;
-        };
-      };
-
       config =
         { pkgs, ... }:
         {
-          imports = [ "${inputs.self}/modules/nixos" ];
+          imports = [ "${inputs.self}/modules/nixos/hardware/graphics.nix" ];
 
           services.jellyfin = {
             enable = true;
             openFirewall = true;
 
-            inherit dataDir;
-            configDir = "${dataDir}/config";
-            cacheDir = "${dataDir}/cache";
-            logDir = "${dataDir}/log";
+            dataDir = cfg.containerDataDir;
+            configDir = "${cfg.containerDataDir}/config";
+            cacheDir = "${cfg.containerDataDir}/cache";
+            logDir = "${cfg.containerDataDir}/log";
           };
 
           environment.systemPackages = with pkgs; [
@@ -53,5 +47,5 @@ in
         originPort = cfg.containerPort;
       };
     };
-  };
-}
+  })
+]

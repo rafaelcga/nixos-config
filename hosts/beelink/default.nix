@@ -24,13 +24,14 @@ in
     disko.disks = {
       main = {
         device = "/dev/disk/by-id/nvme-CT500P3PSSD8_24234937AA27";
-        type = "boot-ext4";
+        format = "ext4";
+        isBootable = true;
       };
       media = {
         device = "/dev/disk/by-id/nvme-KIOXIA-EXCERIA_PLUS_G3_SSD_XEHKF0CNZ0EA";
-        destroy = false;
+        format = "ext4";
         mountpoint = "/mnt/media";
-        type = "mnt-media-ext4";
+        destroy = false;
       };
     };
     # Services
@@ -65,6 +66,23 @@ in
             "/media" = {
               hostPath = "/mnt/media";
               isReadOnly = true;
+            };
+          };
+        };
+        servarr = {
+          enable = true;
+          localAddress = "172.22.0.5";
+          localAddress6 = "fc00::5";
+          hostPorts = {
+            lidarr = 8003;
+            radarr = 8004;
+            sonarr = 8005;
+            prowlarr = 8006;
+          };
+          bindMounts = {
+            "/media" = {
+              hostPath = "/mnt/media";
+              isReadOnly = false;
             };
           };
         };
