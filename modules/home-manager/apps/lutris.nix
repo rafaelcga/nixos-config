@@ -18,9 +18,7 @@ in
     programs.lutris = {
       enable = true;
       steamPackage = lib.mkIf steam.enable steam.package;
-      extraPackages = with pkgs; [
-        umu-launcher
-      ];
+      extraPackages = with pkgs; [ umu-launcher ];
     };
   };
 }

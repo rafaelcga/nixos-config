@@ -7,11 +7,8 @@
 let
   cfg = config.modules.nixos.graphics;
 
-  usesNvidia = lib.elem "nvidia" cfg.vendors;
-  usesIntel = lib.elem "intel" cfg.vendors;
-
   vendorPackages = with pkgs; {
-    "intel" = [
+    intel = [
       intel-ocl
       vpl-gpu-rt
       intel-media-driver
@@ -20,8 +17,8 @@ let
     ++ lib.optionals cfg.enable32Bit [
       driversi686Linux.intel-media-driver
     ];
-    "amd" = [ ];
-    "nvidia" = [ ];
+    amd = [ ];
+    nvidia = [ ];
   };
   extraPackages = lib.concatMap (vendor: vendorPackages.${vendor}) cfg.vendors;
 in
@@ -53,28 +50,28 @@ in
     };
   };
 
-  config = lib.mkIf cfg.enable {
-    hardware = {
-      enableAllFirmware = true; # Enables all firmware regardless of license
-      graphics = {
-        inherit (cfg) enable enable32Bit;
-        inherit extraPackages;
-      };
-
-      nvidia = lib.mkIf usesNvidia {
-        open = true; # Open-source kernel module
-        package = config.boot.kernelPackages.nvidiaPackages.latest;
-      };
-    };
-
-    nixpkgs.config.allowUnfree = lib.mkForce true; # Required for firmware
-
-    environment.sessionVariables = lib.mkIf usesIntel {
-      LIBVA_DRIVER_NAME = "iHD";
-    };
-
-    services.xserver = lib.mkIf usesNvidia {
-      videoDrivers = [ "nvidia" ];
-    };
-  };
+  config = lib.mkIf cfg.enable (
+    lib.mkMerge [
+      {
+        hardware = {
+          enableAllFirmware = true; # Enables all firmware regardless of license
+          graphics = {
+            inherit (cfg) enable enable32Bit;
+            inherit extraPackages;
+          };
+        };
+        nixpkgs.config.allowUnfree = lib.mkForce true; # Required for firmware
+      }
+      (lib.mkIf (lib.elem "nvidia" cfg.vendors) {
+        hardware.nvidia = {
+          open = true; # Open-source kernel module
+          package = config.boot.kernelPackages.nvidiaPackages.latest;
+        };
+        services.xserver.videoDrivers = [ "nvidia" ];
+      })
+      (lib.mkIf (lib.elem "intel" cfg.vendors) {
+        environment.sessionVariables.LIBVA_DRIVER_NAME = "iHD";
+      })
+    ]
+  );
 }

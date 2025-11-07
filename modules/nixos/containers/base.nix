@@ -1,66 +1,12 @@
-{ config, lib, ... }:
+{
+  inputs,
+  config,
+  lib,
+  ...
+}:
 let
   inherit (config.modules.nixos) user;
   cfg = config.modules.nixos.containers;
-
-  mappedHostPortsByInstance =
-    let
-      mkMappedPorts =
-        name: instance:
-        let
-          commonPorts = lib.intersectAttrs instance.containerPorts instance.hostPorts;
-        in
-        if instance.enable then lib.filterAttrs (_: port: port != null) commonPorts else { };
-    in
-    lib.mapAttrs mkMappedPorts cfg.instances;
-
-  mkBaseConfig =
-    name: instance:
-    let
-      mkDriPath = device: "/dev/dri/${device}";
-      mkAllowedDevice = device: {
-        node = mkDriPath device;
-        modifier = "rw";
-      };
-      mkGpuBindMount = device: {
-        hostPath = mkDriPath device;
-        isReadOnly = false;
-      };
-
-      gpuConfig = lib.mkIf instance.gpuPassthrough {
-        allowedDevices = map mkAllowedDevice instance.gpuDevices;
-        bindMounts = lib.genAttrs' instance.gpuDevices (
-          device: lib.nameValuePair (mkDriPath device) (mkGpuBindMount device)
-        );
-      };
-
-      forwardPorts =
-        let
-          mkForwardPort = service: hostPort: {
-            containerPort = instance.containerPorts.${service};
-            inherit hostPort;
-            protocol = "tcp";
-          };
-        in
-        lib.mapAttrsToList mkForwardPort mappedHostPortsByInstance.${name};
-    in
-    lib.mkIf instance.enable (
-      lib.mkMerge [
-        {
-          inherit forwardPorts;
-          inherit (cfg) hostAddress hostAddress6;
-          inherit (instance) localAddress localAddress6 bindMounts;
-
-          autoStart = true;
-          privateNetwork = true;
-
-          config = {
-            system.stateVersion = config.system.stateVersion;
-          };
-        }
-        gpuConfig
-      ]
-    );
 
   mkServiceOverrides =
     name: instance:
@@ -101,34 +47,93 @@ let
       };
     };
 
-  internalInterface = if config.networking.nftables.enable then "ve-*" else "ve-+";
+  mkBaseConfig =
+    name: instance:
+    lib.mkIf instance.enable (
+      lib.mkMerge [
+        {
+          inherit (cfg) hostAddress hostAddress6;
+          inherit (instance)
+            localAddress
+            localAddress6
+            bindMounts
+            forwardPorts
+            ;
 
-  mappedHostPorts = lib.unique (
-    lib.concatLists (
-      lib.mapAttrsToList (_: hostPorts: lib.attrValues hostPorts) mappedHostPortsByInstance
-    )
-  );
+          autoStart = true;
+          privateNetwork = true;
 
-  bindMountOpts = {
+          config = {
+            system.stateVersion = config.system.stateVersion;
+          };
+        }
+        (
+          let
+            nodePath = device: "/dev/dri/${device}";
+            mkAllowedDevice = device: {
+              node = nodePath device;
+              modifier = "rw";
+            };
+            mkBindMount = device: {
+              hostPath = nodePath device;
+              isReadOnly = false;
+            };
+          in
+          lib.mkIf instance.gpuPassthrough {
+            allowedDevices = map mkAllowedDevice instance.gpuDevices;
+
+            bindMounts = lib.genAttrs' instance.gpuDevices (
+              device: lib.nameValuePair (nodePath device) (mkBindMount device)
+            );
+          }
+        )
+        (lib.mkIf instance.behindVpn {
+          enableTun = true;
+
+          bindMounts = {
+            "${config.sops.templates."${cfg.wireguardInterface}.conf".path}" = {
+              isReadOnly = true;
+            };
+          };
+
+          config = {
+            imports = [ "${inputs.self}/modules/nixos/services/wireguard.nix" ];
+
+            modules.nixos.wireguard = {
+              enable = true;
+              interfaceName = cfg.wireguardInterface;
+              configFile = config.sops.templates."${cfg.wireguardInterface}.conf".path;
+            };
+          };
+        })
+      ]
+    );
+
+  portOpts = {
     options = {
-      hostPath = lib.mkOption {
-        type = lib.types.nullOr lib.types.str;
-        default = null;
-        description = "Location of the host path to be mounted.";
+      protocol = lib.mkOption {
+        type = lib.types.str;
+        default = "tcp";
+        description = "The protocol specifier for port forwarding between host and container";
       };
 
-      isReadOnly = lib.mkOption {
-        type = lib.types.bool;
-        default = true;
-        description = "Determine whether the mounted path will be accessed in read-only mode.";
+      hostPort = lib.mkOption {
+        type = lib.types.port;
+        description = "Source port of the external interface on host";
+      };
+
+      containerPort = lib.mkOption {
+        type = lib.types.nullOr lib.types.port;
+        default = null;
+        description = "Target port of container";
       };
     };
   };
 
   containerOpts =
-    { name, ... }:
+    { name, config, ... }:
     {
-      options = rec {
+      options = {
         enable = lib.mkEnableOption "Enable the ${name} container";
 
         localAddress = lib.mkOption {
@@ -142,35 +147,86 @@ let
         };
 
         hostPort = lib.mkOption {
-          type = lib.types.nullOr lib.types.ints.unsigned;
+          type = lib.types.nullOr lib.types.port;
           default = null;
           description = "Host port to map to exposed container port";
         };
 
         hostPorts = lib.mkOption {
-          type = lib.types.attrsOf (lib.types.nullOr lib.types.ints.unsigned);
+          type = lib.types.attrsOf (lib.types.nullOr lib.types.port);
           default = { };
-          apply = opt: { _default = hostPort; } // opt;
           description = "Host ports to map to exposed services in the container";
         };
 
         containerPort = lib.mkOption {
-          type = lib.types.nullOr lib.types.ints.unsigned;
+          type = lib.types.nullOr lib.types.port;
           default = null;
           visible = false;
           description = "Exposed container port";
         };
 
         containerPorts = lib.mkOption {
-          type = lib.types.attrsOf (lib.types.nullOr lib.types.ints.unsigned);
+          type = lib.types.attrsOf (lib.types.nullOr lib.types.port);
           default = { };
           visible = false;
-          apply = opt: { _default = containerPort; } // opt;
           description = "Exposed container services mapped to their ports";
         };
 
+        forwardPorts = lib.mkOption {
+          type = lib.types.listOf (lib.types.submodule portOpts);
+          readOnly = true;
+          internal = true;
+          description = "Services and their respective mapped ports";
+
+          default =
+            let
+              services = lib.attrNames (lib.intersectAttrs config.containerPorts config.hostPorts);
+              getPorts =
+                service:
+                let
+                  hostPort = config.hostPorts.${service};
+                  containerPort = config.containerPorts.${service};
+                  protocol = "tcp";
+                in
+                lib.optionals (hostPort != null && containerPort != null) [
+                  { inherit hostPort containerPort protocol; }
+                ];
+            in
+            (lib.concatMap getPorts services) ++ config.extraForwardPorts;
+        };
+
+        extraForwardPorts = lib.mkOption {
+          type = lib.types.listOf (lib.types.submodule portOpts);
+          default = [ ];
+          visible = false;
+          description = "Extra forward ports for a container";
+        };
+
+        containerDataDir = lib.mkOption {
+          type = lib.types.nullOr lib.types.str;
+          default = null;
+          visible = false;
+          description = "Path of aggregated data from the container to bind to ${cfg.dataDir}";
+        };
+
         bindMounts = lib.mkOption {
-          type = lib.types.attrsOf (lib.types.submodule bindMountOpts);
+          type = lib.types.attrsOf (
+            lib.types.submodule {
+              options = {
+                hostPath = lib.mkOption {
+                  type = lib.types.nullOr lib.types.str;
+                  default = null;
+                  description = "Location of the host path to be mounted.";
+                };
+
+                isReadOnly = lib.mkOption {
+                  type = lib.types.bool;
+                  default = true;
+                  description = "Determine whether the mounted path will be accessed in read-only mode.";
+                };
+              };
+            }
+          );
           default = { };
           description = "Attribute set of directories to bind to the container";
         };
@@ -193,8 +249,41 @@ let
           ];
           description = "Name of GPU devices to passthrough";
         };
+
+        behindVpn = lib.mkOption {
+          type = lib.types.bool;
+          default = false;
+          description = "Whether to protect the container behind a VPN";
+        };
       };
+
+      config = lib.mkMerge [
+        {
+          hostPorts.main = lib.mkDefault config.hostPort;
+          containerPorts.main = lib.mkDefault config.containerPort;
+        }
+        (lib.mkIf (config.containerDataDir != null) {
+          bindMounts."${config.containerDataDir}" = lib.mkDefault {
+            hostPath = "${cfg.dataDir}/${name}";
+            isReadOnly = false;
+          };
+        })
+      ];
     };
+
+  anyEnabled = lib.any (x: x) (lib.mapAttrsToList (_: instance: instance.enable) cfg.instances);
+
+  getUniquePorts =
+    protocol:
+    let
+      getPorts =
+        let
+          getHostPort = portConfig: lib.optionals (portConfig.protocol == protocol) [ portConfig.hostPort ];
+        in
+        _: instance: lib.concatMap getHostPort instance.forwardPorts;
+      allPorts = lib.concatLists (lib.mapAttrsToList getPorts cfg.instances);
+    in
+    lib.unique allPorts;
 in
 {
   options.modules.nixos.containers = {
@@ -226,28 +315,58 @@ in
       default = "/srv/containers";
       description = "Default host directory where container data will be saved";
     };
+
+    wireguardInterface = lib.mkOption {
+      type = lib.types.str;
+      default = "wg0";
+      description = ''
+        Name for the WireGuard interface when protecting a container behind a VPN
+      '';
+    };
   };
 
-  config = lib.mkIf (cfg.instances != { }) {
+  config = lib.mkIf anyEnabled {
+    sops = {
+      secrets = {
+        "proton/wireguard/public_key" = { };
+        "proton/wireguard/private_key" = { };
+        "proton/wireguard/endpoint" = { };
+      };
+      templates."${cfg.wireguardInterface}.conf".content = ''
+        [Interface]
+        PrivateKey = ${config.sops.placeholder."proton/wireguard/private_key"}
+        Address = 10.2.0.2/32
+        DNS = 10.2.0.1
+
+        [Peer]
+        PublicKey = ${config.sops.placeholder."proton/wireguard/public_key"}
+        AllowedIPs = 0.0.0.0/0, ::/0
+        Endpoint = ${config.sops.placeholder."proton/wireguard/endpoint"}
+      '';
+    };
+
     networking = {
       nat = {
         enable = true;
-        internalInterfaces = [ internalInterface ];
+        internalInterfaces = [ (if config.networking.nftables.enable then "ve-*" else "ve-+") ];
         inherit (cfg) externalInterface;
         enableIPv6 = true;
       };
-
-      firewall.allowedTCPPorts = mappedHostPorts;
 
       # Prevent NetworkManager from managing container interfaces
       # https://nixos.org/manual/nixos/stable/#sec-container-networking
       networkmanager = lib.mkIf config.networking.networkmanager.enable {
         unmanaged = [ "interface-name:ve-*" ];
       };
+
+      firewall = {
+        allowedTCPPorts = getUniquePorts "tcp";
+        allowedUDPPorts = getUniquePorts "udp";
+      };
     };
 
     containers = lib.mapAttrs mkBaseConfig cfg.instances;
 
-    systemd.services = lib.mkMerge (lib.mapAttrsToList mkServiceOverrides cfg.instances);
+    systemd.services = lib.concatMapAttrs mkServiceOverrides cfg.instances;
   };
 }

@@ -1,38 +1,40 @@
-{
-  inputs,
-  config,
-  lib,
-  ...
-}:
+{ config, lib, ... }:
 let
-  cfg = config.modules.nixos.containers.instances.servarr or { enable = false; };
+  cfg = config.modules.nixos.containers.instances.servarr;
+
+  servarrServices = [
+    "lidarr"
+    "radarr"
+    "sonarr"
+    "prowlarr"
+  ];
 in
-{
-  config = lib.mkIf cfg.enable {
+lib.mkMerge [
+  {
+    modules.nixos.containers.instances.servarr = {
+      containerPorts = {
+        lidarr = 8686;
+        radarr = 7878;
+        sonarr = 8989;
+        prowlarr = 9696;
+      };
+      containerDataDir = "/var/lib/servarr";
+      behindVpn = true;
+    };
+  }
+  (lib.mkIf cfg.enable {
     containers.servarr = {
-      enableTun = true;
-
-      # TODO: Finish and implement option (visibile false) for data directory
       config = {
-        imports = [ "${inputs.self}/modules/nixos" ];
-
-        services = {
-          lidarr = {
-            enable = true;
-          };
-          radarr = {
-            enable = true;
-          };
-          sonarr = {
-            enable = true;
-          };
-          prowlarr = {
-            enable = true;
-          };
-        };
-
-        modules.nixos.proton-vpn.enable = true;
+        services =
+          let
+            mkService = name: {
+              enable = true;
+              dataDir = "${cfg.containerDataDir}/${name}";
+              settings.server.port = cfg.containerPorts.${name};
+            };
+          in
+          lib.genAttrs servarrServices mkService;
       };
     };
-  };
-}
+  })
+]

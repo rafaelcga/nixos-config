@@ -1,6 +1,6 @@
 { config, lib, ... }:
 let
-  cfg = config.modules.nixos.containers.instances.ddns-updater or { enable = false; };
+  cfg = config.modules.nixos.containers.instances.ddns-updater;
 
   secrets = {
     "web_domain" = { };
@@ -21,14 +21,13 @@ let
     }
   '';
 in
-{
-  config = lib.mkIf cfg.enable {
+lib.mkMerge [
+  { modules.nixos.containers.instances.ddns-updater.containerPort = 8000; }
+  (lib.mkIf cfg.enable {
     sops = {
       inherit secrets;
       templates."ddns-updater/config.json".content = jsonConfig;
     };
-
-    modules.nixos.containers.instances.ddns-updater.containerPort = 8000;
 
     containers.ddns-updater = {
       bindMounts = {
@@ -48,5 +47,5 @@ in
         };
       };
     };
-  };
-}
+  })
+]

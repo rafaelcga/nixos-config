@@ -18,11 +18,13 @@
         "nvidia"
       ];
     };
+    printing.enable = true;
     # External modules
     disko.disks = {
       main = {
         device = "/dev/disk/by-id/nvme-KIOXIA-EXCERIA_PLUS_G3_SSD_4EAKF0X9Z0EA";
-        type = "boot-ext4";
+        format = "ext4";
+        isBootable = true;
       };
     };
     catppuccin.enable = true;
@@ -33,7 +35,6 @@
     flatpak.enable = true;
     # Apps
     steam.enable = true;
-    virt-manager.enable = true;
   };
 
   environment.sessionVariables.GDK_SCALE = "1.25"; # sets XWayland render scale
