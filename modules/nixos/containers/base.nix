@@ -271,7 +271,7 @@ let
       ];
     };
 
-  anyEnabled = lib.any (lib.mapAttrsToList (_: instance: instance.enable) cfg.instances);
+  anyEnabled = lib.any (x: x) (lib.mapAttrsToList (_: instance: instance.enable) cfg.instances);
 
   getUniquePorts =
     protocol:
