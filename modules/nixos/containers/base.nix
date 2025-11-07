@@ -42,6 +42,53 @@ let
       };
     };
 
+  mkBaseConfig =
+    name: instance:
+    lib.mkIf instance.enable (
+      lib.mkMerge [
+        {
+          inherit (cfg) hostAddress hostAddress6;
+          inherit (instance) localAddress localAddress6 bindMounts;
+
+          autoStart = true;
+          privateNetwork = true;
+
+          forwardPorts =
+            let
+              mkForwardPort = portPair: {
+                inherit (portPair) hostPort containerPort;
+                protocol = "tcp";
+              };
+            in
+            map mkForwardPort instance.mappedPorts;
+
+          config = {
+            system.stateVersion = config.system.stateVersion;
+          };
+        }
+        (
+          let
+            driPath = device: "/dev/dri/${device}";
+            mkAllowedDevice = device: {
+              node = driPath device;
+              modifier = "rw";
+            };
+            mkBindMount = device: {
+              hostPath = driPath device;
+              isReadOnly = false;
+            };
+          in
+          lib.mkIf instance.gpuPassthrough {
+            allowedDevices = map mkAllowedDevice instance.gpuDevices;
+
+            bindMounts = lib.genAttrs' instance.gpuDevices (
+              device: lib.nameValuePair (driPath device) (mkBindMount device)
+            );
+          }
+        )
+      ]
+    );
+
   containerOpts =
     { name, config, ... }:
     {
@@ -85,7 +132,7 @@ let
         };
 
         mappedPorts = lib.mkOption {
-          type = lib.types.attrsOf (
+          type = lib.types.listOf (
             lib.types.submodule {
               options = {
                 hostPort = lib.mkOption {
@@ -105,15 +152,15 @@ let
           default =
             let
               services = lib.attrNames (lib.intersectAttrs config.containerPorts config.hostPorts);
+              getPorts =
+                service:
+                let
+                  hostPort = config.hostPorts.${service};
+                  containerPort = config.containerPorts.${service};
+                in
+                lib.optionals (hostPort != null && containerPort != null) [ { inherit hostPort containerPort; } ];
             in
-            lib.genAttrs services (
-              service:
-              let
-                hostPort = config.hostPorts.${service};
-                containerPort = config.containerPorts.${service};
-              in
-              lib.mkIf (hostPort != null && containerPort != null) { inherit hostPort containerPort; }
-            );
+            lib.concatMap getPorts services;
         };
 
         containerDataDir = lib.mkOption {
@@ -171,7 +218,7 @@ let
           containerPorts.main = lib.mkDefault config.containerPort;
         }
         (lib.mkIf (config.containerDataDir != null) {
-          bindMounts."${config.containerDataDir}" = {
+          bindMounts."${config.containerDataDir}" = lib.mkDefault {
             hostPath = "${cfg.dataDir}/${name}";
             isReadOnly = false;
           };
@@ -181,7 +228,7 @@ let
 
   mappedHostPorts =
     let
-      getPorts = _: instance: lib.mapAttrsToList (_: opts: opts.hostPort) instance.mappedPorts;
+      getPorts = _: instance: map (portPair: portPair.hostPort) instance.mappedPorts;
       allPorts = lib.concatLists (lib.mapAttrsToList getPorts cfg.instances);
     in
     lib.unique allPorts;
@@ -235,6 +282,8 @@ in
 
       firewall.allowedTCPPorts = mappedHostPorts;
     };
+
+    containers = lib.mapAttrs mkBaseConfig cfg.instances;
 
     systemd.services = lib.concatMapAttrs mkServiceOverrides cfg.instances;
   };
