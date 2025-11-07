@@ -48,19 +48,15 @@ let
       lib.mkMerge [
         {
           inherit (cfg) hostAddress hostAddress6;
-          inherit (instance) localAddress localAddress6 bindMounts;
+          inherit (instance)
+            localAddress
+            localAddress6
+            bindMounts
+            forwardPorts
+            ;
 
           autoStart = true;
           privateNetwork = true;
-
-          forwardPorts =
-            let
-              mkForwardPort = portPair: {
-                inherit (portPair) hostPort containerPort;
-                protocol = "tcp";
-              };
-            in
-            map mkForwardPort instance.mappedPorts;
 
           config = {
             system.stateVersion = config.system.stateVersion;
@@ -89,6 +85,27 @@ let
       ]
     );
 
+  portOpts = {
+    options = {
+      protocol = lib.mkOption {
+        type = lib.types.str;
+        default = "tcp";
+        description = "The protocol specifier for port forwarding between host and container";
+      };
+
+      hostPort = lib.mkOption {
+        type = lib.types.port;
+        description = "Source port of the external interface on host";
+      };
+
+      containerPort = lib.mkOption {
+        type = lib.types.nullOr lib.types.port;
+        default = null;
+        description = "Target port of container";
+      };
+    };
+  };
+
   containerOpts =
     { name, config, ... }:
     {
@@ -106,45 +123,33 @@ let
         };
 
         hostPort = lib.mkOption {
-          type = lib.types.nullOr lib.types.ints.unsigned;
+          type = lib.types.nullOr lib.types.port;
           default = null;
           description = "Host port to map to exposed container port";
         };
 
         hostPorts = lib.mkOption {
-          type = lib.types.attrsOf (lib.types.nullOr lib.types.ints.unsigned);
+          type = lib.types.attrsOf (lib.types.nullOr lib.types.port);
           default = { };
           description = "Host ports to map to exposed services in the container";
         };
 
         containerPort = lib.mkOption {
-          type = lib.types.nullOr lib.types.ints.unsigned;
+          type = lib.types.nullOr lib.types.port;
           default = null;
           visible = false;
           description = "Exposed container port";
         };
 
         containerPorts = lib.mkOption {
-          type = lib.types.attrsOf (lib.types.nullOr lib.types.ints.unsigned);
+          type = lib.types.attrsOf (lib.types.nullOr lib.types.port);
           default = { };
           visible = false;
           description = "Exposed container services mapped to their ports";
         };
 
-        mappedPorts = lib.mkOption {
-          type = lib.types.listOf (
-            lib.types.submodule {
-              options = {
-                hostPort = lib.mkOption {
-                  type = lib.types.ints.unsigned;
-                };
-
-                containerPort = lib.mkOption {
-                  type = lib.types.ints.unsigned;
-                };
-              };
-            }
-          );
+        forwardPorts = lib.mkOption {
+          type = lib.types.listOf (lib.types.submodule portOpts);
           readOnly = true;
           internal = true;
           description = "Services and their respective mapped ports";
@@ -157,10 +162,20 @@ let
                 let
                   hostPort = config.hostPorts.${service};
                   containerPort = config.containerPorts.${service};
+                  protocol = "tcp";
                 in
-                lib.optionals (hostPort != null && containerPort != null) [ { inherit hostPort containerPort; } ];
+                lib.optionals (hostPort != null && containerPort != null) [
+                  { inherit hostPort containerPort protocol; }
+                ];
             in
-            lib.concatMap getPorts services;
+            (lib.concatMap getPorts services) ++ config.extraForwardPorts;
+        };
+
+        extraForwardPorts = lib.mkOption {
+          type = lib.types.listOf (lib.types.submodule portOpts);
+          default = [ ];
+          visible = false;
+          description = "Extra forward ports for a container";
         };
 
         containerDataDir = lib.mkOption {
@@ -226,9 +241,14 @@ let
       ];
     };
 
-  mappedHostPorts =
+  getUniquePorts =
+    protocol:
     let
-      getPorts = _: instance: map (portPair: portPair.hostPort) instance.mappedPorts;
+      getPorts =
+        let
+          getHostPort = portConfig: lib.optionals (portConfig.protocol == protocol) [ portConfig.hostPort ];
+        in
+        _: instance: lib.concatMap getHostPort instance.forwardPorts;
       allPorts = lib.concatLists (lib.mapAttrsToList getPorts cfg.instances);
     in
     lib.unique allPorts;
@@ -280,7 +300,10 @@ in
         unmanaged = [ "interface-name:ve-*" ];
       };
 
-      firewall.allowedTCPPorts = mappedHostPorts;
+      firewall = {
+        allowedTCPPorts = getUniquePorts "tcp";
+        allowedUDPPorts = getUniquePorts "udp";
+      };
     };
 
     containers = lib.mapAttrs mkBaseConfig cfg.instances;
