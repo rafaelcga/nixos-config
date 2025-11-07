@@ -69,6 +69,23 @@ in
             };
           };
         };
+        servarr = {
+          enable = true;
+          localAddress = "172.22.0.5";
+          localAddress6 = "fc00::5";
+          hostPorts = {
+            lidarr = 8003;
+            radarr = 8004;
+            sonarr = 8005;
+            prowlarr = 8006;
+          };
+          bindMounts = {
+            "/media" = {
+              hostPath = "/mnt/media";
+              isReadOnly = false;
+            };
+          };
+        };
       };
     };
   };
