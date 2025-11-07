@@ -22,7 +22,8 @@
     disko.disks = {
       main = {
         device = "/dev/disk/by-id/nvme-KIOXIA-EXCERIA_PLUS_G3_SSD_4EAKF0X9Z0EA";
-        type = "boot-ext4";
+        format = "ext4";
+        isBootable = true;
       };
     };
     catppuccin.enable = true;
