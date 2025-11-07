@@ -271,6 +271,8 @@ let
       ];
     };
 
+  anyEnabled = lib.any (lib.mapAttrsToList (_: instance: instance.enable) cfg.instances);
+
   getUniquePorts =
     protocol:
     let
@@ -323,7 +325,7 @@ in
     };
   };
 
-  config = lib.mkIf (cfg.instances != { }) {
+  config = lib.mkIf anyEnabled {
     sops = {
       secrets = {
         "proton/wireguard/public_key" = { };
