@@ -44,6 +44,7 @@ let
 
   commonBlock = ''
     encode
+
     log {
         output file ${config.services.caddy.logDir}/access.log {
             roll_size 100MiB
@@ -54,12 +55,19 @@ let
             time_format rfc3339
         }
     }
+
     header {
         X-Content-Type-Options nosniff
         X-Frame-Options DENY
         -Server
         Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
         X-Robots-Tag none
+    }
+
+    @webos header_regexp User-Agent (Web0S|WebAppManager|NetCast|SmartTV)
+    header @webos {
+        -Content-Security-Policy
+        -X-Frame-Options
     }
   '';
 
