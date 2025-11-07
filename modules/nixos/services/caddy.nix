@@ -5,24 +5,8 @@
   ...
 }:
 let
-  cfg = config.modules.nixos.caddy;
-
   inherit (config.modules.nixos) crowdsec;
-  crowdsecConfig = lib.mkIf crowdsec.enable {
-    services.crowdsec = {
-      hub.collections = [ "crowdsecurity/caddy" ];
-      localConfig.acquisitions = [
-        {
-          source = "file";
-          filenames = [ "${config.services.caddy.logDir}/*.log" ];
-          labels = {
-            type = "caddy";
-          };
-        }
-      ];
-    };
-    modules.nixos.crowdsec.bouncers = [ "caddy" ];
-  };
+  cfg = config.modules.nixos.caddy;
 
   globalConfig = lib.concatStringsSep "\n" [
     ''
@@ -149,7 +133,21 @@ in
           templates."caddy-env".content = envFile;
         };
       }
-      crowdsecConfig
+      (lib.mkIf crowdsec.enable {
+        services.crowdsec = {
+          hub.collections = [ "crowdsecurity/caddy" ];
+          localConfig.acquisitions = [
+            {
+              source = "file";
+              filenames = [ "${config.services.caddy.logDir}/*.log" ];
+              labels = {
+                type = "caddy";
+              };
+            }
+          ];
+        };
+        modules.nixos.crowdsec.bouncers = [ "caddy" ];
+      })
     ]
   );
 }

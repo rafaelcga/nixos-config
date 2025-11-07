@@ -12,72 +12,78 @@ let
   nft = "${pkgs.nftables}/bin/nft";
   wg = "${pkgs.wireguard-tools}/bin/wg";
 
-  postUpScript =
-    if config.networking.nftables.enable then
-      ''
-        #!/bin/bash
+  killSwitchPostUp =
+    let
+      postUpScript =
+        if config.networking.nftables.enable then
+          ''
+            #!/bin/bash
 
-        set -euo pipefail
+            set -euo pipefail
 
-        ${nft} insert rule inet filter output \
-          oifname != "%i" \
-          mark != $(${wg} show %i fwmark) \
-          fib daddr type != local \
-          counter reject
-      ''
-    else
-      ''
-        #!/bin/bash
+            ${nft} insert rule inet filter output \
+              oifname != "%i" \
+              mark != $(${wg} show %i fwmark) \
+              fib daddr type != local \
+              counter reject
+          ''
+        else
+          ''
+            #!/bin/bash
 
-        set -euo pipefail
+            set -euo pipefail
 
-        # Reject traffic not going through WireGuard interface, non-encrypted
-        # or non-local
-        ${iptables} -I OUTPUT \
-          ! -o %i \
-          -m mark ! --mark $(${wg} show %i fwmark) \
-          -m addrtype ! --dst-type LOCAL \
-          -j REJECT
-        ${ip6tables} -I OUTPUT \
-          ! -o %i \
-          -m mark ! --mark $(${wg} show %i fwmark) \
-          -m addrtype ! --dst-type LOCAL \
-          -j REJECT
-      '';
-  killSwitchPostUp = pkgs.writeScriptBin "killswitch-up" postUpScript;
+            # Reject traffic not going through WireGuard interface, non-encrypted
+            # or non-local
+            ${iptables} -I OUTPUT \
+              ! -o %i \
+              -m mark ! --mark $(${wg} show %i fwmark) \
+              -m addrtype ! --dst-type LOCAL \
+              -j REJECT
+            ${ip6tables} -I OUTPUT \
+              ! -o %i \
+              -m mark ! --mark $(${wg} show %i fwmark) \
+              -m addrtype ! --dst-type LOCAL \
+              -j REJECT
+          '';
+    in
+    pkgs.writeScriptBin "killswitch-up" postUpScript;
 
-  PreDownScript =
-    if config.networking.nftables.enable then
-      ''
-        #!/bin/bash
+  killSwitchPreDown =
+    let
+      PreDownScript =
+        if config.networking.nftables.enable then
+          ''
+            #!/bin/bash
 
-        set -euo pipefail
+            set -euo pipefail
 
-        ${nft} delete rule inet filter output \
-          oifname != "%i" \
-          mark != $(${wg} show %i fwmark) \
-          fib daddr type != local \
-          counter reject
-      ''
-    else
-      ''
-        #!/bin/bash
+            ${nft} delete rule inet filter output \
+              oifname != "%i" \
+              mark != $(${wg} show %i fwmark) \
+              fib daddr type != local \
+              counter reject
+          ''
+        else
+          ''
+            #!/bin/bash
 
-        set -euo pipefail
+            set -euo pipefail
 
-        # Delete post-up rule
-        ${iptables} -D OUTPUT \
-          ! -o %i \
-          -m mark ! --mark $(${wg} show %i fwmark) \
-          -m addrtype ! --dst-type LOCAL \
-          -j REJECT
-        ${ip6tables} -D OUTPUT \
-          ! -o %i \
-          -m mark ! --mark $(${wg} show %i fwmark) \
-          -m addrtype ! --dst-type LOCAL \
-          -j REJECT
-      '';
-  killSwitchPreDown = pkgs.writeScriptBin "killswitch-down" PreDownScript;
+            # Delete post-up rule
+            ${iptables} -D OUTPUT \
+              ! -o %i \
+              -m mark ! --mark $(${wg} show %i fwmark) \
+              -m addrtype ! --dst-type LOCAL \
+              -j REJECT
+            ${ip6tables} -D OUTPUT \
+              ! -o %i \
+              -m mark ! --mark $(${wg} show %i fwmark) \
+              -m addrtype ! --dst-type LOCAL \
+              -j REJECT
+          '';
+    in
+    pkgs.writeScriptBin "killswitch-down" PreDownScript;
 in
 {
   options.modules.nixos.proton-vpn = {

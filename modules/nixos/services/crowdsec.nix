@@ -7,6 +7,10 @@
 let
   cfg = config.modules.nixos.crowdsec;
 
+  cscli = "${pkgs.crowdsec}/bin/cscli";
+  grep = "${pkgs.gnugrep}/bin/grep";
+  jq = "${pkgs.jq}/bin/jq";
+
   collections = [
     "crowdsecurity/linux"
     "crowdsecurity/linux-lpe"
@@ -50,50 +54,44 @@ let
     }
   ];
 
-  sopsConfig =
+  enrollSopsConfig = {
+    secrets."crowdsec/enroll_key" = { };
+    templates."crowdsec/console-enroll-env".content = ''
+      ENROLL_KEY=${config.sops.placeholder."crowdsec/enroll_key"}
+    '';
+  };
+
+  bouncerSopsList =
     let
-      enrollSopsConfig = {
-        secrets."crowdsec/enroll_key" = { };
-        templates."crowdsec/console-enroll-env".content = ''
-          ENROLL_KEY=${config.sops.placeholder."crowdsec/enroll_key"}
-        '';
-      };
       mkBouncerSopsConfig = name: {
         secrets."crowdsec/${name}_bouncer_key" = { };
         templates."crowdsec/${name}-env".content = ''
           BOUNCER_KEY=${config.sops.placeholder."crowdsec/${name}_bouncer_key"}
         '';
       };
-      bouncerSopsList = map mkBouncerSopsConfig cfg.bouncers;
     in
-    {
-      sops = lib.mkMerge ([ enrollSopsConfig ] ++ bouncerSopsList);
-    };
+    map mkBouncerSopsConfig cfg.bouncers;
 
-  systemdConfig =
-    let
-      cscli = "${pkgs.crowdsec}/bin/cscli";
-      grep = "${pkgs.gnugrep}/bin/grep";
-      jq = "${pkgs.jq}/bin/jq";
-
-      enrollService = {
-        enroll-crowdsec-console = {
-          description = "Enrolls the engine at app.crowdsec.net";
-          after = [ "crowdsec.service" ];
-          wants = [ "crowdsec.service" ];
-          wantedBy = [ "multi-user.target" ];
-          serviceConfig = {
-            Type = "oneshot";
-            EnvironmentFile = config.sops.templates."crowdsec/console-enroll-env".path;
-          };
-          script = ''
-            set -euo pipefail
-
-            ${cscli} console enroll "$ENROLL_KEY"
-          '';
-        };
+  enrollService = {
+    enroll-crowdsec-console = {
+      description = "Enrolls the engine at app.crowdsec.net";
+      after = [ "crowdsec.service" ];
+      wants = [ "crowdsec.service" ];
+      wantedBy = [ "multi-user.target" ];
+      serviceConfig = {
+        Type = "oneshot";
+        EnvironmentFile = config.sops.templates."crowdsec/console-enroll-env".path;
       };
-      # https://github.com/crowdsecurity/crowdsec/blob/master/docker/docker_start.sh
+      script = ''
+        set -euo pipefail
+
+        ${cscli} console enroll "$ENROLL_KEY"
+      '';
+    };
+  };
+
+  bouncerServiceList =
+    let # https://github.com/crowdsecurity/crowdsec/blob/master/docker/docker_start.sh
       mkBouncerService = name: {
         "register-crowdsec-${name}-bouncer" = {
           description = "Registers idempotently ${name} CrowdSec bouncer";
@@ -115,11 +113,8 @@ let
           '';
         };
       };
-      bouncerServiceList = map mkBouncerService cfg.bouncers;
     in
-    {
-      systemd.services = lib.mkMerge ([ enrollService ] ++ bouncerServiceList);
-    };
+    map mkBouncerService cfg.bouncers;
 in
 {
   options.modules.nixos.crowdsec = {
@@ -149,24 +144,22 @@ in
     };
   };
 
-  config = lib.mkIf cfg.enable (
-    lib.mkMerge [
-      {
-        services.crowdsec = {
-          enable = true;
-          autoUpdateService = true;
+  config = lib.mkIf cfg.enable {
+    services.crowdsec = {
+      enable = true;
+      autoUpdateService = true;
 
-          settings.general = {
-            api.server.listen_uri = "127.0.0.1:${cfg.lapiPort}";
-          };
-          hub.collections = collections;
-          localConfig.acquisitions = acquisitions;
-        };
+      settings.general = {
+        api.server.listen_uri = "127.0.0.1:${cfg.lapiPort}";
+      };
+      hub.collections = collections;
+      localConfig.acquisitions = acquisitions;
+    };
 
-        environment.systemPackages = [ pkgs.crowdsec-firewall-bouncer ];
-      }
-      sopsConfig
-      systemdConfig
-    ]
-  );
+    environment.systemPackages = [ pkgs.crowdsec-firewall-bouncer ];
+
+    sops = lib.mkMerge ([ enrollSopsConfig ] ++ bouncerSopsList);
+
+    systemd.services = lib.mkMerge ([ enrollService ] ++ bouncerServiceList);
+  };
 }
