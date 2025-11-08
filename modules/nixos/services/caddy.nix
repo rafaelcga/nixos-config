@@ -57,12 +57,14 @@ let
     }
 
     header {
-        Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://www.youtube.com blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' wss://*.{$DOMAIN}; worker-src 'self' blob:; media-src 'self' blob: data:; object-src 'none'; frame-ancestors 'self';"
+        Content-Security-Policy "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; object-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://www.youtube.com blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' wss:; worker-src 'self' blob:; media-src 'self' data: blob: https://www.youtube.com;"
+        Permissions-Policy "accelerometer=(), ambient-light-sensor=(), battery=(), bluetooth=(), gyroscope=(), hid=(), interest-cohort=(), magnetometer=(), serial=(), usb=(), xr-spatial-tracking=()"
         X-Content-Type-Options nosniff
         X-Frame-Options DENY
         -Server
         Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
         X-Robots-Tag none
+        Referrer-Policy no-referrer
     }
 
     @webos header_regexp User-Agent (Web0S|WebAppManager|NetCast|SmartTV)
