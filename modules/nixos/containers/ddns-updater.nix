@@ -45,6 +45,8 @@ lib.mkMerge [
             TZ = "Europe/Madrid";
           };
         };
+
+        networking.firewall.allowedTCPPorts = [ cfg.containerPort ];
       };
     };
   })

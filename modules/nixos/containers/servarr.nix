@@ -31,6 +31,7 @@ lib.mkMerge [
               enable = true;
               dataDir = "${cfg.containerDataDir}/${name}";
               settings.server.port = cfg.containerPorts.${name};
+              openFirewall = true;
             };
           in
           lib.genAttrs servarrServices mkService;

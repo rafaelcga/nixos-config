@@ -86,6 +86,12 @@ in
             };
           };
         };
+        qbittorrent = {
+          enable = true;
+          localAddress = "172.22.0.6";
+          localAddress6 = "fc00::6";
+          hostPort = 8007;
+        };
       };
     };
   };
