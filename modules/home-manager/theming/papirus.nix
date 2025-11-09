@@ -13,7 +13,7 @@ in
 
     name = lib.mkOption {
       type = lib.types.str;
-      default = "Papirus-Dark";
+      default = "Papirus";
       description = "Theme name";
     };
 
@@ -25,7 +25,14 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    home.packages = [ cfg.package ];
+    home = {
+      packages = [ cfg.package ];
+      file.".local/share/icons/Papirus" = {
+        source = "${cfg.package}/share/icons/Papirus";
+        recursive = true;
+      };
+    };
+
     gtk.iconTheme = { inherit (cfg) name package; };
   };
 }

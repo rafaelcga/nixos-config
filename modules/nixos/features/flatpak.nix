@@ -49,7 +49,7 @@ in
             set -euo pipefail
 
             ${flatpak} --user override --filesystem="$HOME/.local/share/fonts:ro"
-            ${flatpak} --user override --filesystem="$HOME/.icons:ro"
+            ${flatpak} --user override --filesystem="$HOME/.local/share/icons:ro"
             ${flatpak} --user override --filesystem="/nix/store:ro"
           '';
         };
