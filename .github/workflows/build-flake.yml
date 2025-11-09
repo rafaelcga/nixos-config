@@ -18,7 +18,7 @@ jobs:
   discover-hosts:
     name: Discover NixOS hosts
     runs-on: ubuntu-latest
-    if: github.event_name != "push" || !contains(github.event.head_commit.message, "Merge pull request \#")
+    if: github.event_name != 'push' || !contains(github.event.head_commit.message, 'Merge pull request \#')
     outputs:
       hosts: ${{ steps.get-hosts.outputs.hosts }}
     steps:
@@ -74,5 +74,5 @@ jobs:
     if: ${{ always() }}
     steps:
       - name: Check status of built hosts
-        if: ${{ needs.build-hosts.result == "failure" }}
+        if: ${{ needs.build-hosts.result == 'failure' }}
         run: exit 1
