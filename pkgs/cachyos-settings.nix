@@ -3,6 +3,7 @@
   stdenv,
   fetchFromGitHub,
 }:
+
 stdenv.mkDerivation rec {
   pname = "cachyos-settings";
   version = "1.2.12";
@@ -10,17 +11,20 @@ stdenv.mkDerivation rec {
   src = fetchFromGitHub {
     owner = "CachyOS";
     repo = "CachyOS-Settings";
-    tag = version;
+    rev = "v${version}";
     sha256 = "sha256-WknipQ447/r3FqnHqdCINYvYsoP6u4bbTnQeiXr42sk=";
   };
 
   installPhase = ''
     runHook preInstall
 
+    mkdir -p $out/bin
     mkdir -p $out/etc
-    mkdir -p $out/usr
+    mkdir -p $out/lib
+
     cp -v -a $src/etc $out
-    cp -v -a $src/usr $out
+    cp -v -a $src/usr/bin $out
+    cp -v -a $src/usr/lib $out
 
     runHook postInstall
   '';
