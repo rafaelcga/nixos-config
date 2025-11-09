@@ -2,6 +2,9 @@
   lib,
   stdenv,
   fetchFromGitHub,
+
+  bash,
+  hdparm,
 }:
 
 stdenv.mkDerivation rec {
@@ -29,10 +32,18 @@ stdenv.mkDerivation rec {
     runHook postInstall
   '';
 
+  postInstall = ''
+    for f in $(find "$out/lib/udev/rules.d" -type f -name '*'); do
+      substituteInPlace "$f" \
+        --replace "/usr/bin/bash" "${bash}/bin/bash" \
+        --replace "/usr/bin/hdparm" "${hdparm}/bin/hdparm"
+    done
+  '';
+
   meta = with lib; {
-    description = "CachyOS system settings for Nix";
+    description = "Settings used for CachyOS";
     homepage = "https://github.com/CachyOS/CachyOS-Settings";
-    license = licenses.gpl3Only;
+    license = lib.licenses.gpl3Only;
     platforms = platforms.linux;
   };
 }
