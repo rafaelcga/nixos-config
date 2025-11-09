@@ -13,23 +13,17 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    # .local/share/icons/Papirus
+    # Link to .local/share/icons for Flatpaks
     xdg.dataFile =
       let
-        variants = [
-          ""
-          "-Dark"
-          "-Light"
-        ];
-
-        mkVariant =
-          variant:
-          let
-            source = "${pkgs.papirus-icon-theme}/share/icons/Papirus";
-          in
-          lib.nameValuePair "icons/Papirus${variant}" { inherit source; };
+        themeName = config.gtk.iconTheme.name;
+        isPapirus = (lib.match "Papirus.*" themeName) != null;
       in
-      lib.genAttrs' variants mkVariant;
+      lib.mkIf isPapirus {
+        "icons/${themeName}" = {
+          source = "${pkgs.papirus-icon-theme}/share/icons/${themeName}";
+        };
+      };
 
     gtk = {
       enable = true;
