@@ -25,11 +25,11 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    home = {
-      packages = [ cfg.package ];
-      file.".local/share/icons/Papirus" = {
-        source = "${cfg.package}/share/icons/Papirus";
-      };
+    home.packages = [ cfg.package ];
+
+    # .local/share/icons/Papirus
+    xdg.dataFile."icons/Papirus" = {
+      source = "${cfg.package}/share/icons/Papirus";
     };
 
     gtk.iconTheme = { inherit (cfg) name package; };

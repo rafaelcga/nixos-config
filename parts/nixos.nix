@@ -5,6 +5,7 @@ let
       description = "Rafa Giménez";
     };
   };
+
   hosts = {
     "fractal" = {
       user = "rafael";
@@ -29,6 +30,7 @@ let
           config.allowUnfree = true;
         };
       };
+
       userConfig = {
         modules.nixos.user = lib.mkMerge [
           { name = config.user; }
@@ -48,7 +50,5 @@ let
     };
 in
 {
-  systems = [ "x86_64-linux" ];
-
   flake.nixosConfigurations = lib.mapAttrs mkNixosSystem hosts;
 }
