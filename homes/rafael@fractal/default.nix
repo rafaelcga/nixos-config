@@ -21,6 +21,7 @@
   home.packages = with pkgs; [
     # General apps
     telegram-desktop
+    local.tidal-dl-ng
     # Gaming
     umu-launcher
     heroic
