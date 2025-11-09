@@ -4,10 +4,8 @@
   outputs =
     inputs@{ flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
-      imports = [
-        ./parts/nixos.nix
-        ./parts/packages.nix
-      ];
+      imports = [ ./parts ];
+      systems = [ "x86_64-linux" ];
     };
 
   inputs = {

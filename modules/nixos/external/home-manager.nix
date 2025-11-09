@@ -7,16 +7,20 @@
 }:
 let
   inherit (config.modules.nixos) user;
-  userHomeConfig = "${inputs.self}/homes/${user.name}@${config.networking.hostName}";
+  userConfigPath = "${inputs.self}/homes/${user.name}@${config.networking.hostName}";
 in
 {
   imports = [ inputs.home-manager.nixosModules.home-manager ];
 
+  _module.args.hmConfig = config.home-manager.users.${user.name};
+
   home-manager = {
-    sharedModules = [ "${inputs.self}/modules/home-manager" ];
     users.${user.name} = {
-      imports = lib.optionals (lib.pathExists userHomeConfig) [ userHomeConfig ];
-      home = { inherit (config.system) stateVersion; };
+      imports = [
+        "${inputs.self}/modules/home-manager"
+      ]
+      ++ lib.optionals (lib.pathExists userConfigPath) [ userConfigPath ];
+      home.stateVersion = config.system.stateVersion;
     };
 
     useGlobalPkgs = true;

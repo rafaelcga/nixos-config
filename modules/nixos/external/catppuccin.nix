@@ -3,47 +3,14 @@
   config,
   lib,
   pkgs,
+  hmConfig,
   ...
 }:
 let
   inherit (config.modules.nixos) user;
-  inherit (config.home-manager.users.${user.name}.modules.home-manager) papirus plasma-manager;
-  utils = import "${inputs.self}/lib/utils.nix" { inherit lib; };
+  inherit (hmConfig.modules.home-manager) papirus plasma-manager;
 
   cfg = config.modules.nixos.catppuccin;
-
-  themeConfig = {
-    catppuccin = {
-      enable = true;
-      inherit (cfg) flavor accent;
-      cache.enable = true;
-    };
-  };
-
-  sddmThemeConfig = lib.mkIf config.services.displayManager.sddm.enable {
-    catppuccin.sddm = {
-      inherit (cfg) flavor accent;
-      font = "JetBrainsMono Nerd Font";
-      fontSize = "12";
-      background = "${inputs.self}/resources/wallpapers/blank_wall.png";
-    };
-    fonts.packages = [ pkgs.nerd-fonts.jetbrains-mono ];
-  };
-
-  papirusConfig = lib.mkIf papirus.enable {
-    modules.home-manager.papirus.package = lib.mkForce pkgs.catppuccin-papirus-folders;
-  };
-
-  plasmaConfig = lib.mkIf plasma-manager.enable {
-    home.packages = [ pkgs.catppuccin-kde ];
-    modules.home-manager.plasma-manager = {
-      colorScheme = lib.mkForce cfg.colorScheme;
-      splashTheme = lib.mkForce cfg.themeName;
-    };
-  };
-
-  upperFlavor = utils.capitalizeFirst cfg.flavor;
-  upperAccent = utils.capitalizeFirst cfg.accent;
 in
 {
   imports = [ inputs.catppuccin.nixosModules.catppuccin ];
@@ -83,11 +50,17 @@ in
       description = "Accent color";
     };
 
-    themeName = lib.mkOption {
-      type = lib.types.str;
-      default = "Catppuccin-${upperFlavor}-${upperAccent}";
-      readOnly = true;
-    };
+    themeName =
+      let
+        utils = import "${inputs.self}/lib/utils.nix" { inherit lib; };
+        upperFlavor = utils.capitalizeFirst cfg.flavor;
+        upperAccent = utils.capitalizeFirst cfg.accent;
+      in
+      lib.mkOption {
+        type = lib.types.str;
+        default = "Catppuccin-${upperFlavor}-${upperAccent}";
+        readOnly = true;
+      };
 
     colorScheme = lib.mkOption {
       type = lib.types.str;
@@ -96,18 +69,45 @@ in
     };
   };
 
-  config = lib.mkIf cfg.enable (
-    lib.mkMerge [
-      themeConfig
-      sddmThemeConfig
-      {
-        home-manager.users.${user.name}.imports = [
-          inputs.catppuccin.homeModules.catppuccin
-          themeConfig
-          papirusConfig
-          plasmaConfig
-        ];
-      }
-    ]
-  );
+  config =
+    let
+      themeConfig = {
+        catppuccin = {
+          enable = true;
+          inherit (cfg) flavor accent;
+          cache.enable = true;
+        };
+      };
+    in
+    lib.mkIf cfg.enable (
+      lib.mkMerge [
+        themeConfig
+        (lib.mkIf config.services.displayManager.sddm.enable {
+          catppuccin.sddm = {
+            inherit (cfg) flavor accent;
+            font = "JetBrainsMono Nerd Font";
+            fontSize = "12";
+            background = "${inputs.self}/resources/wallpapers/blank_wall.png";
+          };
+          fonts.packages = [ pkgs.nerd-fonts.jetbrains-mono ];
+        })
+        {
+          home-manager.users.${user.name}.imports = [
+            inputs.catppuccin.homeModules.catppuccin
+            themeConfig
+
+            (lib.mkIf papirus.enable {
+              modules.home-manager.papirus.package = lib.mkForce pkgs.catppuccin-papirus-folders;
+            })
+            (lib.mkIf plasma-manager.enable {
+              home.packages = [ pkgs.catppuccin-kde ];
+              modules.home-manager.plasma-manager = {
+                colorScheme = lib.mkForce cfg.colorScheme;
+                splashTheme = lib.mkForce cfg.themeName;
+              };
+            })
+          ];
+        }
+      ]
+    );
 }

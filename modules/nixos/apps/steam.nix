@@ -2,11 +2,11 @@
   config,
   lib,
   pkgs,
+  hmConfig,
   ...
 }:
 let
-  inherit (config.modules.nixos) user;
-  inherit (config.home-manager.users.${user.name}.home) pointerCursor;
+  inherit (hmConfig.home) pointerCursor;
   cfg = config.modules.nixos.steam;
 in
 {
