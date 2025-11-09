@@ -29,7 +29,6 @@ in
       packages = [ cfg.package ];
       file.".local/share/icons/Papirus" = {
         source = "${cfg.package}/share/icons/Papirus";
-        recursive = true;
       };
     };
 
