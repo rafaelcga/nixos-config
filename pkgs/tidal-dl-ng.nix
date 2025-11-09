@@ -35,6 +35,13 @@ python3.pkgs.buildPythonApplication rec {
     typer
   ];
 
+  optional-dependencies = with python3.pkgs; {
+    gui = [
+      pyside6
+      pyqtdarktheme-fork
+    ];
+  };
+
   pythonImportsCheck = [
     "tidal_dl_ng"
   ];
