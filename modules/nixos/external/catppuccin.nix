@@ -84,7 +84,7 @@ in
         themeConfig
         (lib.mkIf config.services.displayManager.sddm.enable {
           catppuccin.sddm = {
-            inherit (cfg) flavor accent;
+            enable = true;
             font = "JetBrainsMono Nerd Font";
             fontSize = "12";
             background = "${inputs.self}/resources/wallpapers/blank_wall.png";
@@ -98,7 +98,7 @@ in
             config = lib.mkMerge [
               themeConfig
               (lib.mkIf papirus.enable {
-                modules.home-manager.papirus.package = lib.mkForce pkgs.catppuccin-papirus-folders;
+                catppuccin.gtk.icon.enable = true;
               })
               (lib.mkIf plasma-manager.enable {
                 home.packages = [ pkgs.catppuccin-kde ];

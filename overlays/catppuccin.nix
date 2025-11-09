@@ -19,8 +19,4 @@ final: prev: {
           cp ${splashPreview} $contents_dir/previews/splash.png
         '';
       });
-
-  catppuccin-papirus-folders = prev.catppuccin-papirus-folders.override {
-    inherit flavor accent;
-  };
 }

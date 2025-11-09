@@ -10,28 +10,33 @@ in
 {
   options.modules.home-manager.papirus = {
     enable = lib.mkEnableOption "Enable Papirus Icon Theme";
-
-    name = lib.mkOption {
-      type = lib.types.str;
-      default = "Papirus";
-      description = "Theme name";
-    };
-
-    package = lib.mkOption {
-      type = lib.types.package;
-      default = pkgs.papirus-icon-theme;
-      description = "Theme package";
-    };
   };
 
   config = lib.mkIf cfg.enable {
-    home.packages = [ cfg.package ];
-
     # .local/share/icons/Papirus
-    xdg.dataFile."icons/Papirus" = {
-      source = "${cfg.package}/share/icons/Papirus";
-    };
+    xdg.dataFile =
+      let
+        variants = [
+          ""
+          "-Dark"
+          "-Light"
+        ];
 
-    gtk.iconTheme = { inherit (cfg) name package; };
+        mkVariant =
+          variant:
+          let
+            source = "${pkgs.papirus-icon-theme}/share/icons/Papirus";
+          in
+          lib.nameValuePair "icons/Papirus${variant}" { inherit source; };
+      in
+      lib.genAttrs' variants mkVariant;
+
+    gtk = {
+      enable = true;
+      iconTheme = {
+        name = lib.mkDefault "Papirus";
+        package = lib.mkDefault pkgs.papirus-icon-theme;
+      };
+    };
   };
 }
