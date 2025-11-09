@@ -23,15 +23,13 @@ in
     networking.firewall.trustedInterfaces = [ "virbr0" ]; # Enables VM networking
 
     # Automatically add virtualization connection
-    home-manager.users.${user.name}.imports = [
-      {
-        dconf.settings = {
-          "org/virt-manager/virt-manager/connections" = {
-            autoconnect = [ "qemu:///system" ];
-            uris = [ "qemu:///system" ];
-          };
+    home-manager.users.${user.name} = {
+      dconf.settings = {
+        "org/virt-manager/virt-manager/connections" = {
+          autoconnect = [ "qemu:///system" ];
+          uris = [ "qemu:///system" ];
         };
-      }
-    ];
+      };
+    };
   };
 }

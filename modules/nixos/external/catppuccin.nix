@@ -92,21 +92,23 @@ in
           fonts.packages = [ pkgs.nerd-fonts.jetbrains-mono ];
         })
         {
-          home-manager.users.${user.name}.imports = [
-            inputs.catppuccin.homeModules.catppuccin
-            themeConfig
+          home-manager.users.${user.name} = {
+            imports = [ inputs.catppuccin.homeModules.catppuccin ];
 
-            (lib.mkIf papirus.enable {
-              modules.home-manager.papirus.package = lib.mkForce pkgs.catppuccin-papirus-folders;
-            })
-            (lib.mkIf plasma-manager.enable {
-              home.packages = [ pkgs.catppuccin-kde ];
-              modules.home-manager.plasma-manager = {
-                colorScheme = lib.mkForce cfg.colorScheme;
-                splashTheme = lib.mkForce cfg.themeName;
-              };
-            })
-          ];
+            config = lib.mkMerge [
+              themeConfig
+              (lib.mkIf papirus.enable {
+                modules.home-manager.papirus.package = lib.mkForce pkgs.catppuccin-papirus-folders;
+              })
+              (lib.mkIf plasma-manager.enable {
+                home.packages = [ pkgs.catppuccin-kde ];
+                modules.home-manager.plasma-manager = {
+                  colorScheme = lib.mkForce cfg.colorScheme;
+                  splashTheme = lib.mkForce cfg.themeName;
+                };
+              })
+            ];
+          };
         }
       ]
     );
