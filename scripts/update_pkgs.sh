@@ -17,23 +17,19 @@ PKGS_DIR="$REPO_DIR/pkgs"
 
 echo "${BOLD}Upgrading local packages...${RESET}"
 
-grep -P "(pkgs\.)?callPackage" "$PKGS_DIR/default.nix" \
-  | while read line; do
-    pkg_name="$(grep -oP "^\s*\K[a-zA-Z0-9_\-]+" <<<"$line")"
-    rel_path="$(grep -oP "callPackage\s+\K[a-zA-Z0-9_\-\.\/]+" <<<"$line")"
+find "$PKGS_DIR" -name "*.nix" -not -name "default.nix" \
+  | while read abs_path; do
+    if [[ "$(basename "$abs_path")" == "package.nix" ]]; then
+      pkg_name=$(basename "$(dirname "$abs_path")")
+    else
+      pkg_name=$(basename "$abs_path" .nix)
+    fi
 
     printf "%s❖ %s%s " "$BOLD" "$pkg_name" "$RESET"
 
-    abs_path="$(readlink -m "$PKGS_DIR/$rel_path")"
-    if [[ -d $abs_path ]]; then
-      pkg_dir="$abs_path"
-    else
-      pkg_dir="$(dirname "$abs_path")"
-    fi
-
+    pkg_dir="$(dirname "$abs_path")"
     set +e
-    if ([[ "$(basename "$abs_path")" == "package.nix" ]] \
-      || [[ -f "$abs_path/default.nix" ]]) \
+    if [[ "$(basename "$abs_path")" == "package.nix" ]] \
       && [[ -f "$pkg_dir/update.sh" ]]; then
       echo "through custom script..."
       (cd "$pkg_dir" && ./update.sh)
@@ -51,7 +47,8 @@ grep -P "(pkgs\.)?callPackage" "$PKGS_DIR/default.nix" \
         elif [[ $status -eq 0 ]]; then
           echo "[✔️️] updated: $update_line"
         else
-          echo "[❌] update failed"
+          echo "[❌] update failed:"
+          echo "$output"
         fi
       )
     fi
