@@ -40,10 +40,10 @@ stdenv.mkDerivation rec {
     done
   '';
 
-  meta = with lib; {
+  meta = {
     description = "Settings used for CachyOS";
     homepage = "https://github.com/CachyOS/CachyOS-Settings";
     license = lib.licenses.gpl3Only;
-    platforms = platforms.linux;
+    platforms = lib.platforms.linux;
   };
 }
