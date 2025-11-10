@@ -15,6 +15,7 @@ in
     # System
     zram.enable = true;
     ssh.enable = true;
+    upgrade.enable = true;
     # Hardware
     graphics = {
       enable = true;
