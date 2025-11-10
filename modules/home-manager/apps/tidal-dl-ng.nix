@@ -334,7 +334,7 @@ in
 
     systemd.user.services.generate-tidal-dl-ng-settings = {
       Unit.Description = "Generates tidal-dl-ng writable settings.json from Nix config";
-      Install.WantedBy = "default.target";
+      Install.WantedBy = [ "default.target" ];
       Service =
         let
           bash = "${pkgs.bash}/bin/bash";
