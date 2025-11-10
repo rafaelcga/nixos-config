@@ -2,14 +2,10 @@
   config,
   lib,
   pkgs,
-  osConfig,
   ...
 }:
 let
-  inherit (osConfig.modules.nixos) user;
   cfg = config.modules.home-manager.tidal-dl-ng;
-
-  settingsPath = "${user.home}/.config/tidal-dl-ng/settings.json";
 
   settingsOpts = {
     options = {
@@ -51,7 +47,7 @@ let
 
       download_base_path = lib.mkOption {
         type = lib.types.str;
-        default = "${user.home}/Music";
+        default = "~/Music";
         description = "Where to store the downloaded media.";
       };
 
@@ -327,9 +323,17 @@ in
     settings = lib.mkOption {
       type = lib.types.submodule settingsOpts;
       default = { };
-      description = "JSON settings at ${settingsPath}";
+      description = ''
+        Settings to be saved as JSON at ~/.config/tidal-dl-ng/settings.json
+      '';
     };
   };
 
-  config = lib.mkIf cfg.enable { };
+  config = lib.mkIf cfg.enable {
+    home.packages = [ pkgs.local.tidal-dl-ng ];
+
+    xdg.configFile."tidal-dl-ng/settings.json" = {
+      text = lib.generators.toJSON { } cfg.settings;
+    };
+  };
 }
