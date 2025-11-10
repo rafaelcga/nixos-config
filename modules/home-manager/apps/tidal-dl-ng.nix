@@ -7,6 +7,7 @@
 let
   cfg = config.modules.home-manager.tidal-dl-ng;
 
+  settingsFormat = pkgs.formats.json { };
   settingsOpts = {
     options = {
       skip_existing = lib.mkOption {
@@ -333,7 +334,7 @@ in
     home.packages = [ pkgs.local.tidal-dl-ng ];
 
     xdg.configFile."tidal_dl_ng/settings.json" = {
-      text = lib.generators.toJSON { } cfg.settings;
+      source = settingsFormat.generate "tidal-dl-ng-settings.json" cfg.settings;
     };
   };
 }
