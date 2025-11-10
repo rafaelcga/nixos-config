@@ -7,7 +7,6 @@
 let
   cfg = config.modules.home-manager.tidal-dl-ng;
 
-  settingsFormat = pkgs.formats.json { };
   settingsOpts = {
     options = {
       skip_existing = lib.mkOption {
@@ -333,8 +332,20 @@ in
   config = lib.mkIf cfg.enable {
     home.packages = [ pkgs.local.tidal-dl-ng ];
 
-    xdg.configFile."tidal_dl_ng/settings.json" = {
-      source = settingsFormat.generate "tidal-dl-ng-settings.json" cfg.settings;
+    systemd.user.services.generate-tidal-dl-ng-settings = {
+      description = "Generates tidal-dl-ng writable settings.json from Nix config";
+      wantedBy = [ "multi-user.target" ];
+      serviceConfig = {
+        Type = "oneshot";
+      };
+      script = ''
+        set -euo pipefail
+
+        CONFIG_DIR="''${XDG_CONFIG_HOME:-$HOME/.config}/tidal_dl_ng"
+        mkdir -p "$CONFIG_DIR"
+
+        echo "${builtins.toJSON cfg.settings}" | jq . >"$CONFIG_DIR/settings.json"
+      '';
     };
   };
 }
