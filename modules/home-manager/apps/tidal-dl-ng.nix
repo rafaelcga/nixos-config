@@ -333,10 +333,8 @@ in
     home.packages = [ pkgs.local.tidal-dl-ng ];
 
     systemd.user.services.generate-tidal-dl-ng-settings = {
-      Unit = {
-        Description = "Generates tidal-dl-ng writable settings.json from Nix config";
-        WantedBy = "multi-user.target";
-      };
+      Unit.Description = "Generates tidal-dl-ng writable settings.json from Nix config";
+      Install.WantedBy = "default.target";
       Service =
         let
           bash = "${pkgs.bash}/bin/bash";
