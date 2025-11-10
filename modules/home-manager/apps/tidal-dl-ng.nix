@@ -324,7 +324,7 @@ in
       type = lib.types.submodule settingsOpts;
       default = { };
       description = ''
-        Settings to be saved as JSON at ~/.config/tidal-dl-ng/settings.json
+        Settings to be saved as JSON at ~/.config/tidal_dl_ng/settings.json
       '';
     };
   };
@@ -332,7 +332,7 @@ in
   config = lib.mkIf cfg.enable {
     home.packages = [ pkgs.local.tidal-dl-ng ];
 
-    xdg.configFile."tidal-dl-ng/settings.json" = {
+    xdg.configFile."tidal_dl_ng/settings.json" = {
       text = lib.generators.toJSON { } cfg.settings;
     };
   };
