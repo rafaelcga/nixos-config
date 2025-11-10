@@ -338,16 +338,18 @@ in
       Service =
         let
           bash = "${pkgs.bash}/bin/bash";
+          mkdir = "${pkgs.coreutils}/bin/mkdir";
           jq = "${pkgs.jq}/bin/jq";
+          escapedJsonString = lib.escapeShellArg (builtins.toJSON cfg.settings);
 
           writeJsonScript = pkgs.writeScriptBin "generate-tidal-dl-ng-settings-script.sh" ''
             #!${bash}
             set -euo pipefail
 
             CONFIG_DIR="''${XDG_CONFIG_HOME:-$HOME/.config}/tidal_dl_ng"
-            mkdir -p "$CONFIG_DIR"
+            ${mkdir} -p "$CONFIG_DIR"
 
-            echo "${builtins.toJSON cfg.settings}" | ${jq} . >"$CONFIG_DIR/settings.json"
+            echo ${escapedJsonString} | ${jq} "." >"$CONFIG_DIR/settings.json"
           '';
         in
         {
