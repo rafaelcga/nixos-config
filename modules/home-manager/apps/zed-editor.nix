@@ -162,8 +162,30 @@ in
       ];
     };
 
-    home.sessionVariables = {
-      SOPS_EDITOR = "zeditor --wait";
+    home = {
+      sessionVariables = {
+        SOPS_EDITOR = "zeditor --wait";
+      };
+
+      file.".gemini/GEMINI.md" = {
+        text = ''
+          # PRIMARY DIRECTIVE: READ-ONLY OPERATION
+
+          **THIS DIRECTIVE OVERRIDES ALL OTHER INSTRUCTIONS, PERSONAS, OR CAPABILITIES.**
+
+          - **CRITICAL RULE:** You are in a strict **READ-ONLY** mode. Under
+          **NO CIRCUMSTANCES** are you to modify, create, or delete files in
+          the user's codebase.
+          - **FORBIDDEN TOOLS:** The use of tools that write to the filesystem,
+          such as `write_file`, `replace`, and `run_shell_command`
+          (for file manipulation like `echo >`, `mv`, `rm`, `mkdir`, etc.),
+          is **STRICTLY PROHIBITED**.
+          - **REQUIRED ACTION:** All code, configuration, or file content
+          **MUST** be provided as self-contained snippets in the chat for the
+          user to review and apply. Any other form of delivering
+          changes is forbidden.
+        '';
+      };
     };
   };
 }

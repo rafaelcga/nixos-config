@@ -19,21 +19,24 @@ python3.pkgs.buildPythonApplication rec {
     python3.pkgs.poetry-core
   ];
 
-  dependencies = with python3.pkgs; [
-    ansi2html
-    coloredlogs
-    dataclasses-json
-    m3u8
-    mutagen
-    pathvalidate
-    pycryptodome
-    python-ffmpeg
-    requests
-    rich
-    tidalapi
-    toml
-    typer
-  ];
+  dependencies =
+    with python3.pkgs;
+    [
+      ansi2html
+      coloredlogs
+      dataclasses-json
+      m3u8
+      mutagen
+      pathvalidate
+      pycryptodome
+      python-ffmpeg
+      requests
+      rich
+      tidalapi
+      toml
+      typer
+    ]
+    ++ optional-dependencies.gui;
 
   optional-dependencies = with python3.pkgs; {
     gui = [
