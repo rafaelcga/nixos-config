@@ -162,8 +162,25 @@ in
       ];
     };
 
-    home.sessionVariables = {
-      SOPS_EDITOR = "zeditor --wait";
+    home = {
+      sessionVariables = {
+        SOPS_EDITOR = "zeditor --wait";
+      };
+
+      file.".gemini/GEMINI.md" = {
+        text = ''
+          # Main GEMINI.md file
+
+          ## General instructions
+
+          - **CRITICAL RULE:** Under no circumstances should you attempt to
+          modify, create, or delete files in the user's codebase. All code,
+          configuration, or file content must be provided as self-contained
+          snippets in the chat for the user to review and apply. This includes,
+          but is not limited to, avoiding tools like `write_file`, `replace`,
+          and `run_shell_command` for file manipulation (e.g., `echo "content" > file`).
+        '';
+      };
     };
   };
 }
