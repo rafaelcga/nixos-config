@@ -211,6 +211,112 @@ let
         default = 3;
         description = "Maximum concurrent number of downloads (threads).";
       };
+
+      symlink_to_track = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+        description = ''
+          If enabled the tracks of albums, playlists and mixes will be downloaded
+          to the track directory but symlinked accordingly.
+        '';
+      };
+
+      playlist_create = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+        description = ''
+          Creates a '_playlist.m3u8' file for downloaded albums, playlists and mixes.
+        '';
+      };
+
+      metadata_replay_gain = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+        description = "Replay gain information will be written to metadata.";
+      };
+
+      metadata_write_url = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = "URL of the media file will be written to metadata.";
+      };
+
+      window_x = lib.mkOption {
+        type = lib.types.int;
+        default = 50;
+        description = "X-Coordinate of saved window location.";
+      };
+
+      window_y = lib.mkOption {
+        type = lib.types.int;
+        default = 50;
+        description = "Y-Coordinate of saved window location.";
+      };
+
+      window_w = lib.mkOption {
+        type = lib.types.int;
+        default = 1200;
+        description = "Width of saved window size.";
+      };
+
+      window_h = lib.mkOption {
+        type = lib.types.int;
+        default = 800;
+        description = "Height of saved window size.";
+      };
+
+      metadata_delimiter_artist = lib.mkOption {
+        type = lib.types.str;
+        default = ", ";
+        description = "Metadata tag delimiter for multiple artists. Default: ', '";
+      };
+
+      metadata_delimiter_album_artist = lib.mkOption {
+        type = lib.types.str;
+        default = ", ";
+        description = "Metadata tag delimiter for multiple album artists. Default: ', '";
+      };
+
+      filename_delimiter_artist = lib.mkOption {
+        type = lib.types.str;
+        default = ", ";
+        description = "Filename delimiter for multiple artists. Default: ', '";
+      };
+
+      filename_delimiter_album_artist = lib.mkOption {
+        type = lib.types.str;
+        default = ", ";
+        description = "Filename delimiter for multiple album artists. Default: ', '";
+      };
+
+      metadata_target_upc = lib.mkOption {
+        type = lib.types.enum [
+          "UPC"
+          "BARCODE"
+          "EAN"
+        ];
+        default = "UPC";
+        description = ''
+          Select the target metadata tag ('UPC', 'BARCODE', 'EAN') where to
+          write the UPC information to. Default: 'UPC'.
+        '';
+      };
+
+      api_rate_limit_batch_size = lib.mkOption {
+        type = lib.types.int;
+        default = 20;
+        description = ''
+          Number of albums to process before applying rate limit delay (tweaking variable).
+        '';
+      };
+
+      api_rate_limit_delay_sec = lib.mkOption {
+        type = lib.types.float;
+        default = 3.0;
+        description = ''
+          Delay in seconds between batches to avoid API rate limiting (tweaking variable).
+        '';
+      };
     };
   };
 in
