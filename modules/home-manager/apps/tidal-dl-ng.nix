@@ -149,6 +149,68 @@ let
           values: "320" (320x320), "640" (640x640), "1280" (1280x1280).
         '';
       };
+
+      metadata_cover_embed = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = "Embed album cover into file.";
+      };
+
+      mark_explicit = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+        description = ''
+          Mark explicit tracks with '🅴' in track title (only applies to metadata).
+        '';
+      };
+
+      cover_album_file = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = "Save cover to 'cover.jpg', if an album is downloaded.";
+      };
+
+      extract_flac = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = ''
+          Extract FLAC audio tracks from MP4 containers and save them
+          as `*.flac` (uses FFmpeg).
+        '';
+      };
+
+      downloads_simultaneous_per_track_max = lib.mkOption {
+        type = lib.types.int;
+        default = 20;
+        description = "Maximum number of simultaneous chunk downloads per track.";
+      };
+
+      download_delay_sec_min = lib.mkOption {
+        type = lib.types.float;
+        default = 3.0;
+        description = "Lower boundary for the calculation of the download delay in seconds.";
+      };
+
+      download_delay_sec_max = lib.mkOption {
+        type = lib.types.float;
+        default = 5.0;
+        description = "Upper boundary for the calculation of the download delay in seconds.";
+      };
+
+      album_track_num_pad_min = lib.mkOption {
+        type = lib.types.int;
+        default = 1;
+        description = ''
+          Minimum length of the album track count, will be padded with
+          zeroes (0). To disable padding set this to 1.
+        '';
+      };
+
+      downloads_concurrent_max = lib.mkOption {
+        type = lib.types.int;
+        default = 3;
+        description = "Maximum concurrent number of downloads (threads).";
+      };
     };
   };
 in
