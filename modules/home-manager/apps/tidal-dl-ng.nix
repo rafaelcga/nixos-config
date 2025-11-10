@@ -333,19 +333,29 @@ in
     home.packages = [ pkgs.local.tidal-dl-ng ];
 
     systemd.user.services.generate-tidal-dl-ng-settings = {
-      description = "Generates tidal-dl-ng writable settings.json from Nix config";
-      wantedBy = [ "multi-user.target" ];
-      serviceConfig = {
-        Type = "oneshot";
+      Unit = {
+        Description = "Generates tidal-dl-ng writable settings.json from Nix config";
+        WantedBy = "multi-user.target";
       };
-      script = ''
-        set -euo pipefail
+      Service =
+        let
+          bash = "${pkgs.bash}/bin/bash";
+          jq = "${pkgs.jq}/bin/jq";
 
-        CONFIG_DIR="''${XDG_CONFIG_HOME:-$HOME/.config}/tidal_dl_ng"
-        mkdir -p "$CONFIG_DIR"
+          writeJsonScript = pkgs.writeScriptBin "generate-tidal-dl-ng-settings-script.sh" ''
+            #!${bash}
+            set -euo pipefail
 
-        echo "${builtins.toJSON cfg.settings}" | jq . >"$CONFIG_DIR/settings.json"
-      '';
+            CONFIG_DIR="''${XDG_CONFIG_HOME:-$HOME/.config}/tidal_dl_ng"
+            mkdir -p "$CONFIG_DIR"
+
+            echo "${builtins.toJSON cfg.settings}" | ${jq} . >"$CONFIG_DIR/settings.json"
+          '';
+        in
+        {
+          Type = "oneshot";
+          ExecStart = "${writeJsonScript}/bin/generate-tidal-dl-ng-settings-script.sh";
+        };
     };
   };
 }
