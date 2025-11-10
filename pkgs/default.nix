@@ -4,6 +4,7 @@ let
 in
 {
   inherit (pkgs-python.python3.pkgs)
+    pyqtdarktheme-fork
     rich
     typer
     ;
