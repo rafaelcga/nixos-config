@@ -12,7 +12,7 @@ let
   nft = "${pkgs.nftables}/bin/nft";
   wg = "${pkgs.wireguard-tools}/bin/wg";
 
-  killSwitchPostUp =
+  postUp =
     let
       postUpScript =
         if config.networking.nftables.enable then
@@ -47,11 +47,11 @@ let
               -j REJECT
           '';
     in
-    pkgs.writeScriptBin "killswitch-up" postUpScript;
+    pkgs.writeScript "wg-killswitch-up.sh" postUpScript;
 
-  killSwitchPreDown =
+  preDown =
     let
-      PreDownScript =
+      preDownScript =
         if config.networking.nftables.enable then
           ''
             #!/bin/bash
@@ -83,7 +83,7 @@ let
               -j REJECT
           '';
     in
-    pkgs.writeScriptBin "killswitch-down" PreDownScript;
+    pkgs.writeScript "wg-killswitch-down.sh" preDownScript;
 in
 {
   options.modules.nixos.wireguard = {
@@ -105,8 +105,7 @@ in
     networking.wg-quick.interfaces = {
       "${cfg.interfaceName}" = {
         inherit (cfg) configFile;
-        postUp = "${killSwitchPostUp}/bin/killswitch-up";
-        preDown = "${killSwitchPreDown}/bin/killswitch-down";
+        inherit postUp preDown;
       };
     };
   };
