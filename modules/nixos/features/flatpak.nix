@@ -51,6 +51,7 @@ in
             ${flatpak} --user override --filesystem="$HOME/.local/share/fonts:ro"
             ${flatpak} --user override --filesystem="$HOME/.local/share/icons:ro"
             ${flatpak} --user override --filesystem="/nix/store:ro"
+            ${flatpak} --user override --env="PATH=/run/current-system/sw/bin:/app/bin:/usr/bin"
           '';
         };
       };
