@@ -40,12 +40,12 @@ in
         set -euo pipefail
 
         FONT_DIR="''${XDG_DATA_HOME:-$HOME/.local/share}/fonts"
+        mkdir -p "$(dirname "$FONT_DIR")"
 
         if [[ -d "$FONT_DIR" ]] && [[ ! -L "$FONT_DIR" ]]; then
           rm -rf "$FONT_DIR"
         fi
 
-        mkdir -p "$(dirname "$FONT_DIR")"
         ln -snf "/run/current-system/sw/share/X11/fonts" "$FONT_DIR"
       '';
     };
