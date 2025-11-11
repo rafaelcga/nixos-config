@@ -17,7 +17,10 @@ in
     services.flatpak.enable = true;
 
     environment = {
-      systemPackages = with pkgs; [ flatpak-xdg-utils ];
+      systemPackages = with pkgs; [
+        flatpak
+        flatpak-xdg-utils
+      ];
       sessionVariables.GSK_RENDERER = "gl"; # fixes graphical flatpak bug under Wayland
     };
 
