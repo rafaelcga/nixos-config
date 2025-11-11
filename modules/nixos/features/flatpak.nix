@@ -21,7 +21,6 @@ in
     systemd.services =
       let
         flatpak = "${pkgs.flatpak}/bin/flatpak";
-        currentSystemBin = "/run/current-system/sw/bin";
       in
       {
         add-flathub-repo = {
