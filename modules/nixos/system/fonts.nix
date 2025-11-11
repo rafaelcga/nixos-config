@@ -39,14 +39,14 @@ in
       script = ''
         set -euo pipefail
 
-        font_dir="$HOME/.local/share/fonts"
+        FONT_DIR="''${XDG_DATA_HOME:-$HOME/.local/share}/fonts"
 
-        if [[ -d "$font_dir" ]] && [[ ! -L "$font_dir" ]]; then
-          rm -rf "$font_dir"
+        if [[ -d "$FONT_DIR" ]] && [[ ! -L "$FONT_DIR" ]]; then
+          rm -rf "$FONT_DIR"
         fi
 
-        mkdir -p "$HOME/.local/share"
-        ln -snf "/run/current-system/sw/share/X11/fonts" "$font_dir"
+        mkdir -p "$(dirname "$FONT_DIR")"
+        ln -snf "/run/current-system/sw/share/X11/fonts" "$FONT_DIR"
       '';
     };
   };
