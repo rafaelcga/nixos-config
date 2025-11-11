@@ -16,13 +16,12 @@ in
   config = lib.mkIf cfg.enable {
     services.flatpak.enable = true;
 
-    environment = {
-      systemPackages = with pkgs; [
-        flatpak
-        flatpak-xdg-utils
-      ];
-      sessionVariables.GSK_RENDERER = "gl"; # fixes graphical flatpak bug under Wayland
+    xdg.portal = {
+      enable = true;
+      extraPortals = with pkgs; [ xdg-desktop-portal-gtk ];
+      xdgOpenUsePortal = true;
     };
+    environment.sessionVariables.GSK_RENDERER = "gl"; # fixes graphical flatpak bug under Wayland
 
     systemd.services =
       let
