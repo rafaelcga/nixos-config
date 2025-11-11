@@ -330,32 +330,19 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    home.packages = [ pkgs.local.tidal-dl-ng ];
+    home = {
+      packages = [ pkgs.local.tidal-dl-ng ];
 
-    systemd.user.services.generate-tidal-dl-ng-settings = {
-      Unit.Description = "Generates tidal-dl-ng writable settings.json from Nix config";
-      Install.WantedBy = [ "default.target" ];
-      Service =
+      activation.generate-tidal-dl-ng-settings =
         let
-          bash = "${pkgs.bash}/bin/bash";
-          mkdir = "${pkgs.coreutils}/bin/mkdir";
           jq = "${pkgs.jq}/bin/jq";
           escapedJsonString = lib.escapeShellArg (builtins.toJSON cfg.settings);
-
-          writeJsonScript = pkgs.writeScriptBin "generate-tidal-dl-ng-settings-script.sh" ''
-            #!${bash}
-            set -euo pipefail
-
-            CONFIG_DIR="''${XDG_CONFIG_HOME:-$HOME/.config}/tidal_dl_ng"
-            ${mkdir} -p "$CONFIG_DIR"
-
-            echo ${escapedJsonString} | ${jq} "." >"$CONFIG_DIR/settings.json"
-          '';
         in
-        {
-          Type = "oneshot";
-          ExecStart = "${writeJsonScript}/bin/generate-tidal-dl-ng-settings-script.sh";
-        };
+        lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+          CONFIG_DIR="''${XDG_CONFIG_HOME:-$HOME/.config}/tidal_dl_ng"
+          mkdir -p "$CONFIG_DIR"
+          echo ${escapedJsonString} | ${jq} "." >"$CONFIG_DIR/settings.json"
+        '';
     };
   };
 }
