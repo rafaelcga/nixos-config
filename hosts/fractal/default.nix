@@ -18,7 +18,6 @@
         "nvidia"
       ];
     };
-    printing.enable = true;
     # External modules
     disko.disks = {
       main = {
