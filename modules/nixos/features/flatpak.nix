@@ -21,6 +21,7 @@ in
     systemd.services =
       let
         flatpak = "${pkgs.flatpak}/bin/flatpak";
+        currentSystemBin = "/run/current-system/sw/bin";
       in
       {
         add-flathub-repo = {
@@ -51,7 +52,8 @@ in
             ${flatpak} --user override --filesystem="$HOME/.local/share/fonts:ro"
             ${flatpak} --user override --filesystem="$HOME/.local/share/icons:ro"
             ${flatpak} --user override --filesystem="/nix/store:ro"
-            ${flatpak} --user override --env="PATH=/run/current-system/sw/bin:/app/bin:/usr/bin"
+            ${flatpak} --user override --filesystem="${currentSystemBin}:ro"
+            ${flatpak} --user override --env="PATH=${currentSystemBin}:/app/bin:/usr/bin"
           '';
         };
       };
