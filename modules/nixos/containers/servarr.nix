@@ -8,6 +8,13 @@ let
     "sonarr"
     "prowlarr"
   ];
+
+  mkApiKey =
+    service:
+    let
+      apiKey = config.sops.placeholder."servarr/${service}";
+    in
+    "${lib.toUpper service}__AUTH__APIKEY=${apiKey}";
 in
 lib.mkMerge [
   {
@@ -23,7 +30,23 @@ lib.mkMerge [
     };
   }
   (lib.mkIf cfg.enable {
+    sops = {
+      secrets = {
+        "servarr/lidarr" = { };
+        "servarr/radarr" = { };
+        "servarr/sonarr" = { };
+        "servarr/prowlarr" = { };
+      };
+      templates."servarr-env".content = lib.concatMapStringsSep "\n" mkApiKey servarrServices;
+    };
+
     containers.servarr = {
+      bindMounts = {
+        "${config.sops.templates."servarr-env".path}" = {
+          isReadOnly = true;
+        };
+      };
+
       config = {
         services =
           let
@@ -31,6 +54,7 @@ lib.mkMerge [
               enable = true;
               dataDir = "${cfg.containerDataDir}/${name}";
               settings.server.port = cfg.containerPorts.${name};
+              environmentFiles = [ config.sops.templates."servarr-env".path ];
               openFirewall = true;
             };
           in
