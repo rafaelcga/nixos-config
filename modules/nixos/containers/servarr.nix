@@ -9,7 +9,7 @@ let
     in
     "${lib.toUpper service}__AUTH__APIKEY=${apiKey}";
 
-  servarrServices = lib.attrNames cfg.containerPorts;
+  services = lib.attrNames cfg.containerPorts;
 in
 lib.mkMerge [
   {
@@ -30,8 +30,8 @@ lib.mkMerge [
         let
           mkSecret = service: lib.nameValuePair "servarr/${service}" { };
         in
-        lib.genAttrs' servarrServices mkSecret;
-      templates."servarr-env".content = lib.concatMapStringsSep "\n" mkApiKey servarrServices;
+        lib.genAttrs' services mkSecret;
+      templates."servarr-env".content = lib.concatMapStringsSep "\n" mkApiKey services;
     };
 
     containers.servarr = {
@@ -52,7 +52,7 @@ lib.mkMerge [
               openFirewall = true;
             };
           in
-          lib.genAttrs servarrServices mkService;
+          lib.genAttrs services mkService;
       };
     };
   })
