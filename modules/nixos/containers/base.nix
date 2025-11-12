@@ -258,10 +258,10 @@ let
       };
 
       config = lib.mkMerge [
-        {
-          hostPorts.main = lib.mkDefault config.hostPort;
-          containerPorts.main = lib.mkDefault config.containerPort;
-        }
+        (lib.mkIf (config.containerPort != null) {
+          hostPorts."${name}" = lib.mkDefault config.hostPort;
+          containerPorts."${name}" = lib.mkDefault config.containerPort;
+        })
         (lib.mkIf (config.containerDataDir != null) {
           bindMounts."${config.containerDataDir}" = lib.mkDefault {
             hostPath = "${cfg.dataDir}/${name}";

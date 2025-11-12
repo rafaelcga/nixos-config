@@ -2,19 +2,14 @@
 let
   cfg = config.modules.nixos.containers.instances.servarr;
 
-  servarrServices = [
-    "lidarr"
-    "radarr"
-    "sonarr"
-    "prowlarr"
-  ];
-
   mkApiKey =
     service:
     let
       apiKey = config.sops.placeholder."servarr/${service}";
     in
     "${lib.toUpper service}__AUTH__APIKEY=${apiKey}";
+
+  servarrServices = lib.attrNames cfg.containerPorts;
 in
 lib.mkMerge [
   {
@@ -31,12 +26,11 @@ lib.mkMerge [
   }
   (lib.mkIf cfg.enable {
     sops = {
-      secrets = {
-        "servarr/lidarr" = { };
-        "servarr/radarr" = { };
-        "servarr/sonarr" = { };
-        "servarr/prowlarr" = { };
-      };
+      secrets =
+        let
+          mkSecret = service: lib.nameValuePair "servarr/${service}" { };
+        in
+        lib.genAttrs' servarrServices mkSecret;
       templates."servarr-env".content = lib.concatMapStringsSep "\n" mkApiKey servarrServices;
     };
 
