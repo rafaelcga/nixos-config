@@ -12,78 +12,54 @@ let
   nft = "${pkgs.nftables}/bin/nft";
   wg = "${pkgs.wireguard-tools}/bin/wg";
 
-  postUp =
-    let
-      postUpScript =
-        if config.networking.nftables.enable then
-          ''
-            #!/bin/bash
+  killSwitchPostUp =
+    if config.networking.nftables.enable then
+      ''
+        ${nft} insert rule inet filter output \
+          oifname != "%i" \
+          mark != $(${wg} show %i fwmark) \
+          fib daddr type != local \
+          counter reject
+      ''
+    else
+      ''
+        # Reject traffic not going through WireGuard interface, non-encrypted
+        # or non-local
+        ${iptables} -I OUTPUT \
+          ! -o %i \
+          -m mark ! --mark $(${wg} show %i fwmark) \
+          -m addrtype ! --dst-type LOCAL \
+          -j REJECT
+        ${ip6tables} -I OUTPUT \
+          ! -o %i \
+          -m mark ! --mark $(${wg} show %i fwmark) \
+          -m addrtype ! --dst-type LOCAL \
+          -j REJECT
+      '';
 
-            set -euo pipefail
-
-            ${nft} insert rule inet filter output \
-              oifname != "%i" \
-              mark != $(${wg} show %i fwmark) \
-              fib daddr type != local \
-              counter reject
-          ''
-        else
-          ''
-            #!/bin/bash
-
-            set -euo pipefail
-
-            # Reject traffic not going through WireGuard interface, non-encrypted
-            # or non-local
-            ${iptables} -I OUTPUT \
-              ! -o %i \
-              -m mark ! --mark $(${wg} show %i fwmark) \
-              -m addrtype ! --dst-type LOCAL \
-              -j REJECT
-            ${ip6tables} -I OUTPUT \
-              ! -o %i \
-              -m mark ! --mark $(${wg} show %i fwmark) \
-              -m addrtype ! --dst-type LOCAL \
-              -j REJECT
-          '';
-    in
-    pkgs.writeScript "wg-killswitch-up.sh" postUpScript;
-
-  preDown =
-    let
-      preDownScript =
-        if config.networking.nftables.enable then
-          ''
-            #!/bin/bash
-
-            set -euo pipefail
-
-            ${nft} delete rule inet filter output \
-              oifname != "%i" \
-              mark != $(${wg} show %i fwmark) \
-              fib daddr type != local \
-              counter reject
-          ''
-        else
-          ''
-            #!/bin/bash
-
-            set -euo pipefail
-
-            # Delete post-up rule
-            ${iptables} -D OUTPUT \
-              ! -o %i \
-              -m mark ! --mark $(${wg} show %i fwmark) \
-              -m addrtype ! --dst-type LOCAL \
-              -j REJECT
-            ${ip6tables} -D OUTPUT \
-              ! -o %i \
-              -m mark ! --mark $(${wg} show %i fwmark) \
-              -m addrtype ! --dst-type LOCAL \
-              -j REJECT
-          '';
-    in
-    pkgs.writeScript "wg-killswitch-down.sh" preDownScript;
+  killSwitchPreDown =
+    if config.networking.nftables.enable then
+      ''
+        ${nft} delete rule inet filter output \
+          oifname != "%i" \
+          mark != $(${wg} show %i fwmark) \
+          fib daddr type != local \
+          counter reject
+      ''
+    else
+      ''
+        # Delete post-up rule
+        ${iptables} -D OUTPUT \
+          ! -o %i \
+          -m mark ! --mark $(${wg} show %i fwmark) \
+          -m addrtype ! --dst-type LOCAL \
+          -j REJECT
+        ${ip6tables} -D OUTPUT \
+          ! -o %i \
+          -m mark ! --mark $(${wg} show %i fwmark) \
+          -m addrtype ! --dst-type LOCAL \
+          -j REJECT
+      '';
 in
 {
   options.modules.nixos.wireguard = {
@@ -99,13 +75,20 @@ in
       type = lib.types.str;
       description = "Path to the WireGuard configuration file";
     };
+
+    useKillSwitch = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = "Setup kill-switch for WireGuard interface";
+    };
   };
 
   config = lib.mkIf cfg.enable {
     networking.wg-quick.interfaces = {
       "${cfg.interfaceName}" = {
         inherit (cfg) configFile;
-        inherit postUp preDown;
+        postUp = lib.optionals cfg.useKillSwitch [ killSwitchPostUp ];
+        preDown = lib.optionals cfg.useKillSwitch [ killSwitchPreDown ];
       };
     };
   };

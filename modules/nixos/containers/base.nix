@@ -103,6 +103,7 @@ let
               enable = true;
               interfaceName = cfg.wireguardInterface;
               configFile = config.sops.templates."${cfg.wireguardInterface}.conf".path;
+              useKillSwitch = true;
             };
           };
         })
@@ -328,20 +329,20 @@ in
   config = lib.mkIf anyEnabled {
     sops = {
       secrets = {
-        "proton/wireguard/public_key" = { };
-        "proton/wireguard/private_key" = { };
-        "proton/wireguard/endpoint" = { };
+        "wireguard/proton/public_key" = { };
+        "wireguard/proton/private_key" = { };
+        "wireguard/proton/endpoint" = { };
       };
       templates."${cfg.wireguardInterface}.conf".content = ''
         [Interface]
-        PrivateKey = ${config.sops.placeholder."proton/wireguard/private_key"}
+        PrivateKey = ${config.sops.placeholder."wireguard/proton/private_key"}
         Address = 10.2.0.2/32
         DNS = 10.2.0.1
 
         [Peer]
-        PublicKey = ${config.sops.placeholder."proton/wireguard/public_key"}
+        PublicKey = ${config.sops.placeholder."wireguard/proton/public_key"}
         AllowedIPs = 0.0.0.0/0, ::/0
-        Endpoint = ${config.sops.placeholder."proton/wireguard/endpoint"}
+        Endpoint = ${config.sops.placeholder."wireguard/proton/endpoint"}
       '';
     };
 
