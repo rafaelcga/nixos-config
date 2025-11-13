@@ -72,6 +72,7 @@ lib.mkMerge [
             );
         in
         lib.mkMerge (lib.mapAttrsToList mkSecrets instances);
+
       templates."homepage-env".content =
         let
           mkEnvFile =
