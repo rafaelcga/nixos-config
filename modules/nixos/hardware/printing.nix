@@ -23,7 +23,7 @@ let
 in
 {
   options.modules.nixos.printing = {
-    enable = lib.mkEnableOption "Enable printing support";
+    enable = lib.mkEnableOption "Enable printing and scanning support";
 
     vendor = lib.mkOption {
       type = lib.types.enum [
