@@ -4,9 +4,7 @@ let
   cfg = config.modules.nixos.networking;
 in
 {
-  options.modules.nixos.ssh = {
-    enable = lib.mkEnableOption "Enable SSH";
-
+  options.modules.nixos.networking = {
     staticIp = lib.mkOption {
       type = lib.types.nullOr lib.types.str;
       default = null;
