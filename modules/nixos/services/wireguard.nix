@@ -12,6 +12,46 @@ let
   nft = "${pkgs.nftables}/bin/nft";
   wg = "${pkgs.wireguard-tools}/bin/wg";
 
+  serverPostUp =
+    if config.networking.nftables.enable then
+      ''
+        ${nft} add rule ip filter FORWARD \
+          {iifname, oifname} "%i" \
+          counter accept
+        ${nft} add rule ip nat POSTROUTING \
+          oifname "${config.networking.defaultGateway.interface}" \
+          counter masquerade
+      ''
+    else
+      ''
+        ${iptables} -A FORWARD -i %i -j ACCEPT
+        ${iptables} -A FORWARD -o %i -j ACCEPT
+        ${iptables} -t nat -A POSTROUTING \
+          -o ${config.networking.defaultGateway.interface} \
+          -j MASQUERADE
+      '';
+
+  serverPreDown =
+    if config.networking.nftables.enable then
+      ''
+        ${nft} delete rule ip filter FORWARD \
+          {iifname, oifname} "%i" \
+          counter accept
+        ${nft} delete rule ip nat POSTROUTING \
+          oifname "${config.networking.defaultGateway.interface}" \
+          counter masquerade
+      ''
+    else
+      ''
+        ${iptables} -D FORWARD -i %i -j ACCEPT
+        ${iptables} -D FORWARD -o %i -j ACCEPT
+        ${iptables} -t nat -D POSTROUTING \
+          -o ${config.networking.defaultGateway.interface} \
+          -j MASQUERADE
+      '';
+
+  # Reject traffic not going through WireGuard interface, non-encrypted
+  # or non-local
   killSwitchPostUp =
     if config.networking.nftables.enable then
       ''
@@ -23,8 +63,6 @@ let
       ''
     else
       ''
-        # Reject traffic not going through WireGuard interface, non-encrypted
-        # or non-local
         ${iptables} -I OUTPUT \
           ! -o %i \
           -m mark ! --mark $(${wg} show %i fwmark) \
@@ -48,7 +86,6 @@ let
       ''
     else
       ''
-        # Delete post-up rule
         ${iptables} -D OUTPUT \
           ! -o %i \
           -m mark ! --mark $(${wg} show %i fwmark) \
@@ -76,6 +113,12 @@ in
       description = "Path to the WireGuard configuration file";
     };
 
+    isVpnServer = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = "Whether host acts as WireGuard server";
+    };
+
     useKillSwitch = lib.mkOption {
       type = lib.types.bool;
       default = false;
@@ -87,8 +130,12 @@ in
     networking.wg-quick.interfaces = {
       "${cfg.interfaceName}" = {
         inherit (cfg) configFile;
-        postUp = lib.optionals cfg.useKillSwitch [ killSwitchPostUp ];
-        preDown = lib.optionals cfg.useKillSwitch [ killSwitchPreDown ];
+        postUp =
+          lib.optionals cfg.isVpnServer [ serverPostUp ]
+          ++ lib.optionals cfg.useKillSwitch [ killSwitchPostUp ];
+        preDown =
+          lib.optionals cfg.isVpnServer [ serverPreDown ]
+          ++ lib.optionals cfg.useKillSwitch [ killSwitchPreDown ];
       };
     };
   };
