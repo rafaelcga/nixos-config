@@ -36,7 +36,7 @@ let
 
           printf "${lib.concatStringsSep "\n" hostPaths}" \
             | while read path; do
-              if [[ ! -f "$path" ]]; then
+              if [[ ! -f "$path" ]] && [[ ! -L "$path" ]]; then
                 mkdir -p "$path"
                 if [[ "$path" == "${user.home}"* ]]; then
                   chown -R "${user.name}:${user.group}" "$path"
