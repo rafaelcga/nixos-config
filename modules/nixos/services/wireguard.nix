@@ -19,7 +19,7 @@ let
           {iifname, oifname} "%i" \
           counter accept
         ${nft} add rule ip nat POSTROUTING \
-          oifname "${config.networking.defaultGateway.interface}" \
+          oifname "${config.modules.nixos.networking.defaultInterface}" \
           counter masquerade
       ''
     else
@@ -27,7 +27,7 @@ let
         ${iptables} -A FORWARD -i %i -j ACCEPT
         ${iptables} -A FORWARD -o %i -j ACCEPT
         ${iptables} -t nat -A POSTROUTING \
-          -o ${config.networking.defaultGateway.interface} \
+          -o ${config.modules.nixos.networking.defaultInterface} \
           -j MASQUERADE
       '';
 
@@ -38,7 +38,7 @@ let
           {iifname, oifname} "%i" \
           counter accept
         ${nft} delete rule ip nat POSTROUTING \
-          oifname "${config.networking.defaultGateway.interface}" \
+          oifname "${config.modules.nixos.networking.defaultInterface}" \
           counter masquerade
       ''
     else
@@ -46,7 +46,7 @@ let
         ${iptables} -D FORWARD -i %i -j ACCEPT
         ${iptables} -D FORWARD -o %i -j ACCEPT
         ${iptables} -t nat -D POSTROUTING \
-          -o ${config.networking.defaultGateway.interface} \
+          -o ${config.modules.nixos.networking.defaultInterface} \
           -j MASQUERADE
       '';
 

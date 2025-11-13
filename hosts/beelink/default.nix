@@ -4,7 +4,10 @@
 
   modules.nixos = {
     # System
-    networking.staticIp = "192.168.1.2";
+    networking = {
+      staticIp = "192.168.1.2";
+      defaultInterface = "enp1s0";
+    };
     ssh.enable = true;
     upgrade.enable = true;
     zram.enable = true;
@@ -32,7 +35,7 @@
     crowdsec.enable = true;
     # Containers
     containers = {
-      externalInterface = config.networking.defaultGateway.interface;
+      externalInterface = config.modules.nixos.networking.defaultInterface;
       hostAddress = "172.22.0.1";
       hostAddress6 = "fc00::1";
       # WebUI port range 8000-8999
