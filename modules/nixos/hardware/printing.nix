@@ -5,12 +5,20 @@
   ...
 }:
 let
+  inherit (config.modules.nixos) user;
   cfg = config.modules.nixos.printing;
 
   vendorDrivers = with pkgs; {
-    canon = [ cnijfilter2 ];
-    hp = [ hplipWithPlugin ];
-    samsung = [ samsung-unified-linux-driver ];
+    brother = [
+      brgenml1lpr
+      brgenml1cupswrapper
+    ];
+    canon = [
+      cnijfilter2
+    ];
+    hp = [
+      hplipWithPlugin
+    ];
   };
 in
 {
@@ -19,11 +27,11 @@ in
 
     vendor = lib.mkOption {
       type = lib.types.enum [
+        "brother"
         "canon"
         "hp"
-        "samsung"
       ];
-      default = "canon";
+      default = "brother";
       description = "Printer vendor";
     };
   };
@@ -44,6 +52,19 @@ in
         enable = true;
         drivers = vendorDrivers.${cfg.vendor};
       };
+
+      udev.packages = with pkgs; [ sane-airscan ];
     };
+
+    hardware.sane = {
+      enable = true;
+      extraBackends = with pkgs; [ sane-airscan ];
+      disabledDefaultBackends = [ "escl" ];
+    };
+
+    users.users.${user.name}.extraGroups = [
+      "scanner"
+      "lp"
+    ];
   };
 }
