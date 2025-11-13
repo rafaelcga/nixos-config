@@ -1,21 +1,13 @@
-let
-  ethernetInterface = "enp1s0";
-in
+{ config, ... }:
 {
   imports = [ ];
 
-  networking.interfaces."${ethernetInterface}".ipv4.addresses = [
-    {
-      address = "192.168.1.2";
-      prefixLength = 24;
-    }
-  ];
-
   modules.nixos = {
     # System
-    zram.enable = true;
+    networking.staticIp = "192.168.1.2";
     ssh.enable = true;
     upgrade.enable = true;
+    zram.enable = true;
     # Hardware
     graphics = {
       enable = true;
@@ -40,7 +32,7 @@ in
     crowdsec.enable = true;
     # Containers
     containers = {
-      externalInterface = ethernetInterface;
+      externalInterface = config.networking.defaultGateway.interface;
       hostAddress = "172.22.0.1";
       hostAddress6 = "fc00::1";
       # WebUI port range 8000-8999

@@ -1,28 +1,51 @@
-{ config, ... }:
+{ config, lib, ... }:
 let
   inherit (config.modules.nixos) user;
+  cfg = config.modules.nixos.networking;
 in
 {
-  networking = {
-    networkmanager = {
-      enable = true;
-      wifi.backend = "iwd";
-    };
+  options.modules.nixos.ssh = {
+    enable = lib.mkEnableOption "Enable SSH";
 
-    wireless.iwd = {
-      enable = true;
-      settings = {
-        Network = {
-          EnableIPv6 = true;
-        };
-        Settings = {
-          AutoConnect = true;
+    staticIp = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      description = "Static IPv4 address for the system";
+    };
+  };
+
+  config = {
+    networking = {
+      networkmanager = {
+        enable = true;
+        wifi.backend = "iwd";
+      };
+
+      wireless.iwd = {
+        enable = true;
+        settings = {
+          Network = {
+            EnableIPv6 = true;
+          };
+          Settings = {
+            AutoConnect = true;
+          };
         };
       };
+
+      interfaces."${config.networking.defaultGateway.interface}" = {
+        ipv4.addresses = lib.optionals (cfg.staticIp != null) [
+          {
+            address = cfg.staticIp;
+            prefixLength = 24;
+          }
+        ];
+      };
+
+      nftables.enable = true;
+      firewall.enable = true;
     };
 
-    nftables.enable = true;
-    firewall.enable = true;
+    users.users.${user.name}.extraGroups = [ "networkmanager" ];
   };
-  users.users.${user.name}.extraGroups = [ "networkmanager" ];
 }
