@@ -37,7 +37,7 @@ in
         };
       };
 
-      interfaces."${config.modules.nixos.networking.defaultInterface}" = {
+      interfaces."${cfg.defaultInterface}" = {
         ipv4.addresses = lib.optionals (cfg.staticIp != null) [
           {
             address = cfg.staticIp;
