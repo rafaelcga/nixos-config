@@ -3,10 +3,37 @@
 
   outputs =
     inputs@{ flake-parts, ... }:
-    flake-parts.lib.mkFlake { inherit inputs; } {
-      imports = [ ./parts ];
-      systems = [ "x86_64-linux" ];
-    };
+    let
+      flakeMeta = {
+        users = {
+          rafael = {
+            description = "Rafa Giménez";
+          };
+        };
+
+        hosts = {
+          fractal = {
+            user = "rafael";
+            system = "x86_64-linux";
+            stateVersion = "25.11";
+          };
+          beelink = {
+            user = "rafael";
+            system = "x86_64-linux";
+            stateVersion = "25.11";
+          };
+        };
+      };
+    in
+    flake-parts.lib.mkFlake
+      {
+        inherit inputs;
+        specialArgs = { inherit flakeMeta; };
+      }
+      {
+        imports = [ ./parts ];
+        systems = [ "x86_64-linux" ];
+      };
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";

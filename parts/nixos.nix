@@ -1,24 +1,10 @@
-{ inputs, lib, ... }:
+{
+  inputs,
+  lib,
+  flakeMeta,
+  ...
+}:
 let
-  users = {
-    "rafael" = {
-      description = "Rafa Giménez";
-    };
-  };
-
-  hosts = {
-    "fractal" = {
-      user = "rafael";
-      system = "x86_64-linux";
-      stateVersion = "25.11";
-    };
-    "beelink" = {
-      user = "rafael";
-      system = "x86_64-linux";
-      stateVersion = "25.11";
-    };
-  };
-
   mkNixosSystem =
     host: config:
     let
@@ -34,7 +20,7 @@ let
       userConfig = {
         modules.nixos.user = lib.mkMerge [
           { name = config.user; }
-          users.${config.user}
+          flakeMeta.users.${config.user}
         ];
       };
     in
@@ -46,9 +32,9 @@ let
         "${inputs.self}/modules/nixos"
         "${inputs.self}/hosts/${host}"
       ];
-      specialArgs = { inherit inputs; };
+      specialArgs = { inherit inputs flakeMeta; };
     };
 in
 {
-  flake.nixosConfigurations = lib.mapAttrs mkNixosSystem hosts;
+  flake.nixosConfigurations = lib.mapAttrs mkNixosSystem flakeMeta.hosts;
 }

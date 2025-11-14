@@ -91,7 +91,7 @@ let
           enableTun = true;
 
           bindMounts = {
-            "${config.sops.templates."${cfg.wireguardInterface}.conf".path}" = {
+            "${config.sops.templates."containers/${cfg.wireguardInterface}.conf".path}" = {
               isReadOnly = true;
             };
           };
@@ -102,7 +102,7 @@ let
             modules.nixos.wireguard = {
               enable = true;
               interfaceName = cfg.wireguardInterface;
-              configFile = config.sops.templates."${cfg.wireguardInterface}.conf".path;
+              configFile = config.sops.templates."containers/${cfg.wireguardInterface}.conf".path;
               useKillSwitch = true;
             };
           };
@@ -333,7 +333,7 @@ in
         "wireguard/proton/private_key" = { };
         "wireguard/proton/endpoint" = { };
       };
-      templates."${cfg.wireguardInterface}.conf".content = ''
+      templates."containers/${cfg.wireguardInterface}.conf".content = ''
         [Interface]
         PrivateKey = ${config.sops.placeholder."wireguard/proton/private_key"}
         Address = 10.2.0.2/32
