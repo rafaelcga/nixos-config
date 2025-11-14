@@ -1,4 +1,3 @@
-{ config, ... }:
 {
   imports = [ ];
 
@@ -35,7 +34,6 @@
     crowdsec.enable = true;
     # Containers
     containers = {
-      externalInterface = config.modules.nixos.networking.defaultInterface;
       hostAddress = "172.22.0.1";
       hostAddress6 = "fc00::1";
       # WebUI port range 8000-8999

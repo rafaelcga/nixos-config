@@ -288,11 +288,6 @@ let
 in
 {
   options.modules.nixos.containers = {
-    externalInterface = lib.mkOption {
-      type = lib.types.str; # no default to make it required
-      description = "External interface for NAT";
-    };
-
     hostAddress = lib.mkOption {
       type = lib.types.str;
       default = "172.22.0.1"; # 172.22.0.0/24
@@ -349,9 +344,9 @@ in
     networking = {
       nat = {
         enable = true;
-        internalInterfaces = [ (if config.networking.nftables.enable then "ve-*" else "ve-+") ];
-        inherit (cfg) externalInterface;
         enableIPv6 = true;
+        externalInterface = config.modules.nixos.networking.defaultInterface;
+        internalInterfaces = [ (if config.networking.nftables.enable then "ve-*" else "ve-+") ];
       };
 
       # Prevent NetworkManager from managing container interfaces
