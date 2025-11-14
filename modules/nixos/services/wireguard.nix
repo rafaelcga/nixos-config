@@ -174,6 +174,7 @@ in
         ];
 
         networking.wg-quick.interfaces."${cfg.interfaceName}" = {
+          autostart = cfg.isVpnServer;
           postUp =
             lib.optionals cfg.isVpnServer [ firewallRules.serverPostUp ]
             ++ lib.optionals cfg.useKillSwitch [ firewallRules.killSwitchPostUp ];
