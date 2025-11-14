@@ -222,7 +222,7 @@ in
                 if cfg.isVpnServer then
                   ''
                     Address = ${cfg.internalIp}/24
-                    ListenPort = ${cfg.listenPort}
+                    ListenPort = ${builtins.toString cfg.listenPort}
                   ''
                 else
                   let
@@ -248,7 +248,7 @@ in
                   ''
                     [Peer]
                     PublicKey = ${config.sops.placeholder."wireguard/home_vpn/${cfg.serverHostName}/public_key"}
-                    Endpoint = vpn.${config.sops.placeholder."web_domain"}:${cfg.listenPort}
+                    Endpoint = vpn.${config.sops.placeholder."web_domain"}:${builtins.toString cfg.listenPort}
                     AllowedIPs = 0.0.0.0/0, ::/0
                   '';
             in
