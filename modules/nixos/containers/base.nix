@@ -1,7 +1,7 @@
 {
-  inputs,
   config,
   lib,
+  pkgs,
   ...
 }:
 let
@@ -97,13 +97,8 @@ let
           };
 
           config = {
-            imports = [ "${inputs.self}/modules/nixos/services/wireguard.nix" ];
-
-            modules.nixos.wireguard = {
-              enable = true;
-              interfaceName = cfg.wireguardInterface;
+            networking.wg-quick.interfaces."${cfg.wireguardInterface}" = {
               configFile = config.sops.templates."containers/${cfg.wireguardInterface}.conf".path;
-              useKillSwitch = true;
             };
           };
         })
@@ -328,17 +323,52 @@ in
         "wireguard/proton/private_key" = { };
         "wireguard/proton/endpoint" = { };
       };
-      templates."containers/${cfg.wireguardInterface}.conf".content = ''
-        [Interface]
-        PrivateKey = ${config.sops.placeholder."wireguard/proton/private_key"}
-        Address = 10.2.0.2/32
-        DNS = 10.2.0.1
 
-        [Peer]
-        PublicKey = ${config.sops.placeholder."wireguard/proton/public_key"}
-        AllowedIPs = 0.0.0.0/0, ::/0
-        Endpoint = ${config.sops.placeholder."wireguard/proton/endpoint"}
-      '';
+      templates."containers/${cfg.wireguardInterface}.conf".content =
+        let
+          iptables = "${pkgs.iptables}/bin/iptables";
+          ip6tables = "${pkgs.iptables}/bin/ip6tables";
+          wg = "${pkgs.wireguard-tools}/bin/wg";
+
+          postUpFile = pkgs.writeShellScript "killswitch_postup.sh" ''
+            ${iptables} -I OUTPUT \
+              ! -o %i \
+              -m mark ! --mark $(${wg} show %i fwmark) \
+              -m addrtype ! --dst-type LOCAL \
+              -j REJECT
+            ${ip6tables} -I OUTPUT \
+              ! -o %i \
+              -m mark ! --mark $(${wg} show %i fwmark) \
+              -m addrtype ! --dst-type LOCAL \
+              -j REJECT
+          '';
+
+          preDownFile = pkgs.writeShellScript "killswitch_predown.sh" ''
+            ${iptables} -D OUTPUT \
+              ! -o %i \
+              -m mark ! --mark $(${wg} show %i fwmark) \
+              -m addrtype ! --dst-type LOCAL \
+              -j REJECT
+            ${ip6tables} -D OUTPUT \
+              ! -o %i \
+              -m mark ! --mark $(${wg} show %i fwmark) \
+              -m addrtype ! --dst-type LOCAL \
+              -j REJECT
+          '';
+        in
+        ''
+          [Interface]
+          PrivateKey = ${config.sops.placeholder."wireguard/proton/private_key"}
+          Address = 10.2.0.2/32
+          DNS = 10.2.0.1
+          PostUp = ${postUpFile}
+          PreDown = ${preDownFile}
+
+          [Peer]
+          PublicKey = ${config.sops.placeholder."wireguard/proton/public_key"}
+          AllowedIPs = 0.0.0.0/0, ::/0
+          Endpoint = ${config.sops.placeholder."wireguard/proton/endpoint"}
+        '';
     };
 
     networking = {

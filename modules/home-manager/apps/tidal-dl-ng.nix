@@ -339,13 +339,11 @@ in
         Type = "oneshot";
         ExecStart =
           let
-            bash = "${pkgs.bash}/bin/bash";
             mkdir = "${pkgs.coreutils}/bin/mkdir";
             jq = "${pkgs.jq}/bin/jq";
             escapedJsonString = lib.escapeShellArg (builtins.toJSON cfg.settings);
           in
-          pkgs.writeScript "tidal-settings-script.sh" ''
-            #!${bash}
+          pkgs.writeShellScript "tidal_settings_script.sh" ''
             set -euo pipefail
 
             CONFIG_DIR="''${XDG_CONFIG_HOME:-$HOME/.config}/tidal_dl_ng"
