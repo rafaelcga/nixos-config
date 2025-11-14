@@ -32,6 +32,11 @@
     # Features
     cachyos-settings.enable = true;
     flatpak.enable = true;
+    # Services
+    wireguard = {
+      enable = true;
+      serverHostName = "beelink";
+    };
     # Apps
     steam.enable = true;
   };

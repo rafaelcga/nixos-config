@@ -32,6 +32,10 @@
     # Services
     caddy.enable = true;
     crowdsec.enable = true;
+    wireguard = {
+      enable = true;
+      serverHostName = "beelink";
+    };
     # Containers
     containers = {
       hostAddress = "172.22.0.1";
