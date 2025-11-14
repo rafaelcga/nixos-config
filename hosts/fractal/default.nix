@@ -33,6 +33,10 @@
     cachyos-settings.enable = true;
     flatpak.enable = true;
     # Services
+    home-vpn = {
+      enable = true;
+      serverHostName = "beelink";
+    };
     # Apps
     steam.enable = true;
   };

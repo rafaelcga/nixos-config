@@ -1,4 +1,5 @@
 {
+  inputs,
   config,
   lib,
   pkgs,
@@ -9,60 +10,61 @@ let
   inherit (config.modules.nixos.networking) defaultInterface;
   cfg = config.modules.nixos.home-vpn;
 
-  # TODO: Rewrite as shell scripts and include in configFile (cannot merge
-  # default options with config file)
-  # firewallRules =
-  #   let
-  #     iptables = "${pkgs.iptables}/bin/iptables";
-  #     ip6tables = "${pkgs.iptables}/bin/ip6tables";
-  #     nft = "${pkgs.nftables}/bin/nft";
-  #   in
-  #   if config.networking.nftables.enable then
-  #     {
-  #       serverPostUp = ''
-  #         ${nft} add rule inet filter FORWARD \
-  #           {iifname, oifname} "%i" \
-  #           counter accept
-  #         ${nft} add rule inet nat POSTROUTING \
-  #           oifname "${defaultInterface}" \
-  #           counter masquerade
-  #       '';
-  #       serverPreDown = ''
-  #         ${nft} delete rule inet filter FORWARD \
-  #           {iifname, oifname} "%i" \
-  #           counter accept
-  #         ${nft} delete rule inet nat POSTROUTING \
-  #           oifname "${defaultInterface}" \
-  #           counter masquerade
-  #       '';
-  #     }
-  #   else
-  #     {
-  #       serverPostUp = ''
-  #         ${iptables} -A FORWARD -i %i -j ACCEPT
-  #         ${iptables} -A FORWARD -o %i -j ACCEPT
-  #         ${iptables} -t nat -A POSTROUTING \
-  #           -o ${defaultInterface} \
-  #           -j MASQUERADE
-  #         ${ip6tables} -A FORWARD -i %i -j ACCEPT
-  #         ${ip6tables} -A FORWARD -o %i -j ACCEPT
-  #         ${ip6tables} -t nat -A POSTROUTING \
-  #           -o ${defaultInterface} \
-  #           -j MASQUERADE
-  #       '';
-  #       serverPreDown = ''
-  #         ${iptables} -D FORWARD -i %i -j ACCEPT
-  #         ${iptables} -D FORWARD -o %i -j ACCEPT
-  #         ${iptables} -t nat -D POSTROUTING \
-  #           -o ${defaultInterface} \
-  #           -j MASQUERADE
-  #         ${ip6tables} -D FORWARD -i %i -j ACCEPT
-  #         ${ip6tables} -D FORWARD -o %i -j ACCEPT
-  #         ${ip6tables} -t nat -D POSTROUTING \
-  #           -o ${defaultInterface} \
-  #           -j MASQUERADE
-  #       '';
-  #     };
+  utils = import "${inputs.self}/lib/utils.nix" { inherit lib; };
+
+  iptables = "${pkgs.iptables}/bin/iptables";
+  ip6tables = "${pkgs.iptables}/bin/ip6tables";
+  nft = "${pkgs.nftables}/bin/nft";
+
+  postUpFile = pkgs.writeShellScript "wg_server_postup.sh" (
+    if config.networking.nftables.enable then
+      ''
+        ${nft} add rule inet filter FORWARD \
+          {iifname, oifname} "%i" \
+          counter accept
+        ${nft} add rule inet nat POSTROUTING \
+          oifname "${defaultInterface}" \
+          counter masquerade
+      ''
+    else
+      ''
+        ${iptables} -A FORWARD -i %i -j ACCEPT
+        ${iptables} -A FORWARD -o %i -j ACCEPT
+        ${iptables} -t nat -A POSTROUTING \
+          -o ${defaultInterface} \
+          -j MASQUERADE
+        ${ip6tables} -A FORWARD -i %i -j ACCEPT
+        ${ip6tables} -A FORWARD -o %i -j ACCEPT
+        ${ip6tables} -t nat -A POSTROUTING \
+          -o ${defaultInterface} \
+          -j MASQUERADE
+      ''
+  );
+
+  preDownFile = pkgs.writeShellScript "wg_server_predown.sh" (
+    if config.networking.nftables.enable then
+      ''
+        ${nft} delete rule inet filter FORWARD \
+          {iifname, oifname} "%i" \
+          counter accept
+        ${nft} delete rule inet nat POSTROUTING \
+          oifname "${defaultInterface}" \
+          counter masquerade
+      ''
+    else
+      ''
+        ${iptables} -D FORWARD -i %i -j ACCEPT
+        ${iptables} -D FORWARD -o %i -j ACCEPT
+        ${iptables} -t nat -D POSTROUTING \
+          -o ${defaultInterface} \
+          -j MASQUERADE
+        ${ip6tables} -D FORWARD -i %i -j ACCEPT
+        ${ip6tables} -D FORWARD -o %i -j ACCEPT
+        ${ip6tables} -t nat -D POSTROUTING \
+          -o ${defaultInterface} \
+          -j MASQUERADE
+      ''
+  );
 in
 {
   options.modules.nixos.home-vpn = {
@@ -114,8 +116,109 @@ in
       }
     ];
 
-    networking.wg-quick.interfaces."${cfg.interfaceName}" = {
-      autostart = cfg.isVpnServer;
+    sops = {
+      secrets =
+        let
+          mkPeerSecrets =
+            hostName: _:
+            let
+              basePath = "wireguard/home_vpn/${hostName}";
+            in
+            {
+              "${basePath}/public_key" = { };
+              "${basePath}/private_key" = { };
+            };
+        in
+        lib.mkMerge [
+          (lib.concatMapAttrs mkPeerSecrets flakeMeta.hosts)
+          { "web_domain" = { }; }
+        ];
+
+      templates."wireguard/${cfg.interfaceName}.conf".content =
+        let
+          inherit (config.networking) hostName;
+
+          clientIps =
+            let
+              sortedPeers = lib.sort lib.lessThan (lib.attrNames flakeMeta.hosts);
+              clientPeers = lib.remove cfg.serverHostName sortedPeers;
+              # Using imap1, index starts from 1
+              mkValuePairs = index: client: {
+                name = client;
+                value = utils.addToAddress cfg.internalIp index;
+              };
+
+            in
+            lib.listToAttrs (lib.imap1 mkValuePairs clientPeers);
+
+          interfaceConfig = lib.concatStringsSep "\n" [
+            ''
+              [Interface]
+              PrivateKey = ${config.sops.placeholder."wireguard/home_vpn/${hostName}/private_key"}
+            ''
+            (
+              if cfg.isVpnServer then
+                ''
+                  Address = ${cfg.internalIp}/24
+                  ListenPort = ${builtins.toString cfg.listenPort}
+                ''
+              else
+                let
+                  clientIp = clientIps.${hostName};
+                in
+                ''
+                  Address = ${clientIp}/32
+                  DNS = ${cfg.internalIp}
+                ''
+            )
+            (lib.optionalString cfg.isVpnServer ''
+              PostUp = ${postUpFile}
+              PreDown = ${preDownFile}
+            '')
+          ];
+
+          peersConfig =
+            if cfg.isVpnServer then
+              let
+                mkClientPeer = name: peerIp: ''
+                  [Peer]
+                  PublicKey = ${config.sops.placeholder."wireguard/home_vpn/${name}/public_key"}
+                  AllowedIPs = ${peerIp}/32
+                '';
+                clientConfigs = lib.mapAttrsToList mkClientPeer clientIps;
+              in
+              lib.concatStringsSep "\n\n" clientConfigs
+            else
+              ''
+                [Peer]
+                PublicKey = ${config.sops.placeholder."wireguard/home_vpn/${cfg.serverHostName}/public_key"}
+                Endpoint = vpn.${config.sops.placeholder."web_domain"}:${builtins.toString cfg.listenPort}
+                AllowedIPs = 0.0.0.0/0, ::/0
+              '';
+        in
+        lib.concatStringsSep "\n\n" [
+          interfaceConfig
+          peersConfig
+        ];
     };
+
+    networking = lib.mkMerge [
+      {
+        wg-quick.interfaces."${cfg.interfaceName}" = {
+          autostart = cfg.isVpnServer;
+          configFile = config.sops.templates."wireguard/${cfg.interfaceName}.conf".path;
+        };
+      }
+      (lib.mkIf cfg.isVpnServer {
+        nat = {
+          enable = true;
+          enableIPv6 = true;
+          externalInterface = defaultInterface;
+          internalInterfaces = [ cfg.interfaceName ];
+        };
+
+        firewall.allowedUDPPorts = [ cfg.listenPort ];
+      })
+    ];
   };
 }
