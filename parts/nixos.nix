@@ -23,11 +23,19 @@ let
           flakeMeta.users.${config.user}
         ];
       };
+
+      homeVpnConfig = {
+        modules.nixos.home-vpn = {
+          enable = true;
+          serverHostName = "beelink";
+        };
+      };
     in
     lib.nixosSystem {
       modules = [
         coreConfig
         userConfig
+        homeVpnConfig
         "${inputs.self}/overlays"
         "${inputs.self}/modules/nixos"
         "${inputs.self}/hosts/${host}"
