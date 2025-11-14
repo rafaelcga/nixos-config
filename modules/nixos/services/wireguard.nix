@@ -3,10 +3,7 @@
   config,
   lib,
   pkgs,
-  flakeMeta ? {
-    users = { };
-    hosts = { };
-  },
+  flakeMeta,
   ...
 }:
 let
