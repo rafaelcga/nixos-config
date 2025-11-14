@@ -262,17 +262,22 @@ in
             '';
         };
 
-        networking = {
-          nat = lib.mkIf cfg.isVpnServer {
-            enable = true;
-            enableIPv6 = true;
-            externalInterface = defaultInterface;
-            internalInterfaces = [ cfg.interfaceName ];
-          };
+        networking = lib.mkMerge [
+          {
+            wg-quick.interfaces."${cfg.interfaceName}".configFile =
+              config.sops.templates."wireguard/${cfg.interfaceName}.conf".path;
+          }
+          (lib.mkIf cfg.isVpnServer {
+            nat = {
+              enable = true;
+              enableIPv6 = true;
+              externalInterface = defaultInterface;
+              internalInterfaces = [ cfg.interfaceName ];
+            };
 
-          wg-quick.interfaces."${cfg.interfaceName}".configFile =
-            config.sops.templates."wireguard/${cfg.interfaceName}.conf".path;
-        };
+            firewall.allowedUDPPorts = [ cfg.listenPort ];
+          })
+        ];
       })
       (lib.mkIf (cfg.configFile != null) {
         networking.wg-quick.interfaces."${cfg.interfaceName}".configFile = cfg.configFile;
