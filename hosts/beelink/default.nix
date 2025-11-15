@@ -38,23 +38,29 @@
       hostAddress6 = "fc00::1";
       # WebUI port range 8000-8999
       instances = {
-        adguardhome = {
+        homepage = {
           enable = true;
           localAddress = "172.22.0.2";
           localAddress6 = "fc00::2";
           hostPort = 8000;
         };
-        ddns-updater = {
+        adguardhome = {
           enable = true;
           localAddress = "172.22.0.3";
           localAddress6 = "fc00::3";
           hostPort = 8001;
         };
-        jellyfin = {
+        ddns-updater = {
           enable = true;
           localAddress = "172.22.0.4";
           localAddress6 = "fc00::4";
           hostPort = 8002;
+        };
+        jellyfin = {
+          enable = true;
+          localAddress = "172.22.0.5";
+          localAddress6 = "fc00::5";
+          hostPort = 8003;
           gpuPassthrough = true;
           bindMounts = {
             "/media" = {
@@ -65,13 +71,13 @@
         };
         servarr = {
           enable = true;
-          localAddress = "172.22.0.5";
-          localAddress6 = "fc00::5";
+          localAddress = "172.22.0.6";
+          localAddress6 = "fc00::6";
           hostPorts = {
-            lidarr = 8003;
-            radarr = 8004;
-            sonarr = 8005;
-            prowlarr = 8006;
+            lidarr = 8004;
+            radarr = 8005;
+            sonarr = 8006;
+            prowlarr = 8007;
           };
           bindMounts = {
             "/media" = {
@@ -82,9 +88,9 @@
         };
         qbittorrent = {
           enable = true;
-          localAddress = "172.22.0.6";
-          localAddress6 = "fc00::6";
-          hostPort = 8007;
+          localAddress = "172.22.0.7";
+          localAddress6 = "fc00::7";
+          hostPort = 8008;
         };
       };
     };
