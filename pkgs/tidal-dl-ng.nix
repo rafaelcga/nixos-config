@@ -6,13 +6,13 @@
 
 python3.pkgs.buildPythonApplication rec {
   pname = "tidal-dl-ng";
-  version = "0.31.3";
+  version = "0.31.4";
   pyproject = true;
 
   src = fetchPypi {
     pname = "tidal_dl_ng";
     inherit version;
-    hash = "sha256-fc0OU9khBjRxsS2io6et4MdWw97/FzyNBkF3652+aqY=";
+    hash = "sha256-+Vkul7bYaeGNIA3DGCbhWNBFIFFvZ6f78oAXYxROHjc=";
   };
 
   build-system = [
