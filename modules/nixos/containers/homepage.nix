@@ -30,7 +30,7 @@ let
         service: data:
         let
           instance = cfg_instances.${data.instance};
-          port = instance.containerPorts.${service};
+          port = builtins.toString instance.containerPorts.${service};
           href = "${instance.localAddress}:${port}";
         in
         {
@@ -49,9 +49,9 @@ let
       mkGroup =
         serviceNames:
         let
-          groupServices = lib.getAttrs serviceNames serviceData;
+          groupServices = lib.filterAttrs (name: _: lib.elem name serviceNames) serviceData;
         in
-        lib.mkMerge (lib.mapAttrsToList mkService groupServices);
+        lib.mapAttrsToList mkService groupServices;
     in
     [
       {
