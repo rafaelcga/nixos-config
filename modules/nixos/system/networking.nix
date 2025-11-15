@@ -1,6 +1,10 @@
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  userName,
+  ...
+}:
 let
-  inherit (config.modules.nixos) user;
   cfg = config.modules.nixos.networking;
 in
 {
@@ -62,6 +66,6 @@ in
       ];
     };
 
-    users.users.${user.name}.extraGroups = [ "networkmanager" ];
+    users.users.${userName}.extraGroups = [ "networkmanager" ];
   };
 }

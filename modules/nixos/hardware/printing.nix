@@ -2,10 +2,10 @@
   config,
   lib,
   pkgs,
+  userName,
   ...
 }:
 let
-  inherit (config.modules.nixos) user;
   cfg = config.modules.nixos.printing;
 
   vendorDrivers = with pkgs; {
@@ -62,7 +62,7 @@ in
       disabledDefaultBackends = [ "escl" ];
     };
 
-    users.users.${user.name}.extraGroups = [
+    users.users.${userName}.extraGroups = [
       "scanner"
       "lp"
     ];

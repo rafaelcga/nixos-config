@@ -1,10 +1,10 @@
 {
   config,
   lib,
+  userName,
   ...
 }:
 let
-  inherit (config.modules.nixos) user;
   cfg = config.modules.nixos.virt-manager;
 in
 {
@@ -19,11 +19,11 @@ in
       libvirtd.enable = true;
       spiceUSBRedirection.enable = true;
     };
-    users.groups.libvirtd.members = [ user.name ];
+    users.groups.libvirtd.members = [ userName ];
     networking.firewall.trustedInterfaces = [ "virbr0" ]; # Enables VM networking
 
     # Automatically add virtualization connection
-    home-manager.users.${user.name} = {
+    home-manager.users.${userName} = {
       dconf.settings = {
         "org/virt-manager/virt-manager/connections" = {
           autoconnect = [ "qemu:///system" ];

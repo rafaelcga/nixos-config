@@ -3,16 +3,23 @@
   config,
   lib,
   pkgs,
+  userName,
   ...
 }:
 let
-  inherit (config.modules.nixos) user;
   cfg = config.modules.nixos.sops-nix;
+  user = config.users.users.${userName};
 in
 {
   imports = [ inputs.sops-nix.nixosModules.sops ];
 
   options.modules.nixos.sops-nix = {
+    sshKeyFile = lib.mkOption {
+      type = lib.types.str;
+      default = "${user.home}/.ssh/id_ed25519";
+      description = "Path to the private SSH key";
+    };
+
     ageKeyFile = lib.mkOption {
       type = lib.types.str;
       default = "${user.home}/.config/sops/age/keys.txt";
@@ -25,7 +32,7 @@ in
       defaultSopsFile = "${inputs.self}/secrets/secrets.yaml";
       age.sshKeyPaths = [
         "/etc/ssh/ssh_host_ed25519_key"
-        user.sshPrivateKey
+        cfg.sshKeyFile
         "/tmp/ssh/id_ed25519" # tmp location for local installs
       ];
     };
@@ -52,7 +59,7 @@ in
           set -euo pipefail
 
           mkdir -p "$(dirname "${cfg.ageKeyFile}")"
-          ${ssh-to-age} -private-key -i "${user.sshPrivateKey}" > "${cfg.ageKeyFile}"
+          ${ssh-to-age} -private-key -i "${cfg.sshKeyFile}" > "${cfg.ageKeyFile}"
         '';
     };
   };

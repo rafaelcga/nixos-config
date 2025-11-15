@@ -4,10 +4,10 @@
   lib,
   pkgs,
   hmConfig,
+  userName,
   ...
 }:
 let
-  inherit (config.modules.nixos) user;
   inherit (hmConfig.modules.home-manager) papirus plasma-manager;
 
   cfg = config.modules.nixos.catppuccin;
@@ -92,7 +92,7 @@ in
           fonts.packages = [ pkgs.nerd-fonts.jetbrains-mono ];
         })
         {
-          home-manager.users.${user.name} = {
+          home-manager.users.${userName} = {
             imports = [ inputs.catppuccin.homeModules.catppuccin ];
 
             config = lib.mkMerge [

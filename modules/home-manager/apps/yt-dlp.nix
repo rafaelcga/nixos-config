@@ -1,16 +1,11 @@
-{
-  config,
-  lib,
-  osConfig,
-  ...
-}:
+{ config, lib, ... }:
 let
-  inherit (osConfig.modules.nixos) user;
+  inherit (config.home) homeDirectory;
   cfg = config.modules.home-manager.yt-dlp;
 
   settings = {
     # Output
-    output = "${user.home}/Videos/%(playlist)s/%(title)s.%(ext)s";
+    output = "${homeDirectory}/Videos/%(playlist)s/%(title)s.%(ext)s";
     # Format
     format = "bv*+ba";
     format-sort = "res,quality,codec,lang";
@@ -23,7 +18,7 @@ let
     ignore-errors = true;
     continue = true;
     no-overwrites = true;
-    download-archive = "${user.home}/.cache/yt-dlp/downloads.txt";
+    download-archive = "${homeDirectory}/.cache/yt-dlp/downloads.txt";
     # Post-processing options
     remux-video = "mkv";
     embed-chapters = true;

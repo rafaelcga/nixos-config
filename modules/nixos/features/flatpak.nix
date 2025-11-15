@@ -2,11 +2,12 @@
   config,
   lib,
   pkgs,
+  userName,
   ...
 }:
 let
-  inherit (config.modules.nixos) user;
   cfg = config.modules.nixos.flatpak;
+  user = config.users.users.${userName};
 in
 {
   options.modules.nixos.flatpak = {

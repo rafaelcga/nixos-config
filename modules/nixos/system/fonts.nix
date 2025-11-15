@@ -2,11 +2,12 @@
   config,
   lib,
   pkgs,
+  userName,
   ...
 }:
 let
-  inherit (config.modules.nixos) user;
   cfg = config.modules.nixos.fonts;
+  user = config.users.users.${userName};
 in
 {
   options.modules.nixos.fonts = {

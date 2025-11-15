@@ -2,11 +2,12 @@
   config,
   lib,
   pkgs,
+  userName,
   ...
 }:
 let
-  inherit (config.modules.nixos) user;
   cfg = config.modules.nixos.containers;
+  user = config.users.users.${userName};
 
   mkServiceOverrides =
     name: instance:

@@ -3,20 +3,19 @@
   config,
   lib,
   specialArgs,
+  hostName,
+  userName,
   ...
 }:
-let
-  inherit (config.modules.nixos) user;
-in
 {
   imports = [ inputs.home-manager.nixosModules.home-manager ];
 
-  _module.args.hmConfig = config.home-manager.users.${user.name};
+  _module.args.hmConfig = config.home-manager.users.${userName};
 
   home-manager = {
-    users.${user.name} =
+    users.${userName} =
       let
-        userConfigPath = "${inputs.self}/homes/${user.name}@${config.networking.hostName}";
+        userConfigPath = "${inputs.self}/homes/${userName}@${hostName}";
       in
       {
         imports = [

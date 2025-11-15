@@ -3,6 +3,7 @@
   lib,
   pkgs,
   flakeMeta,
+  userName,
   ...
 }:
 let
@@ -10,24 +11,6 @@ let
 in
 {
   options.modules.nixos.user = {
-    name = lib.mkOption {
-      type = lib.types.str;
-      default = flakeMeta.hosts.${config.networking.hostName}.user;
-      description = "User name";
-    };
-
-    home = lib.mkOption {
-      type = lib.types.str;
-      default = config.users.users.${cfg.name}.home;
-      description = "User home directory";
-    };
-
-    group = lib.mkOption {
-      type = lib.types.str;
-      default = config.users.users.${cfg.name}.group;
-      description = "User primary group";
-    };
-
     shell = lib.mkOption {
       type = lib.types.enum [
         "bash"
@@ -35,12 +18,6 @@ in
       ];
       default = "fish";
       description = "User login shell";
-    };
-
-    sshPrivateKey = lib.mkOption {
-      type = lib.types.str;
-      default = "${cfg.home}/.ssh/id_ed25519";
-      description = "Path to the private SSH key";
     };
   };
 
@@ -50,14 +27,14 @@ in
 
     sops.secrets."passwords/user".neededForUsers = true;
 
-    users.users.${cfg.name} = lib.mkMerge [
+    users.users.${userName} = lib.mkMerge [
       {
         shell = pkgs.${cfg.shell};
         isNormalUser = true;
         hashedPasswordFile = config.sops.secrets."passwords/user".path;
         extraGroups = [ "wheel" ];
       }
-      flakeMeta.users.${cfg.name}
+      flakeMeta.users.${userName}
     ];
 
     # XDG Base Directory
