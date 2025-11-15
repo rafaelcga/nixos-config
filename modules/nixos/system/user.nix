@@ -2,6 +2,7 @@
   config,
   lib,
   pkgs,
+  flakeMeta,
   ...
 }:
 let
@@ -11,6 +12,7 @@ in
   options.modules.nixos.user = {
     name = lib.mkOption {
       type = lib.types.str;
+      default = flakeMeta.hosts.${config.networking.hostName}.user;
       description = "User name";
     };
 
@@ -35,12 +37,6 @@ in
       description = "User login shell";
     };
 
-    description = lib.mkOption {
-      type = lib.types.str;
-      default = "";
-      description = "User's full name";
-    };
-
     sshPrivateKey = lib.mkOption {
       type = lib.types.str;
       default = "${cfg.home}/.ssh/id_ed25519";
@@ -54,13 +50,15 @@ in
 
     sops.secrets."passwords/user".neededForUsers = true;
 
-    users.users.${cfg.name} = {
-      inherit (cfg) description;
-      shell = pkgs.${cfg.shell};
-      isNormalUser = true;
-      hashedPasswordFile = config.sops.secrets."passwords/user".path;
-      extraGroups = [ "wheel" ];
-    };
+    users.users.${cfg.name} = lib.mkMerge [
+      {
+        shell = pkgs.${cfg.shell};
+        isNormalUser = true;
+        hashedPasswordFile = config.sops.secrets."passwords/user".path;
+        extraGroups = [ "wheel" ];
+      }
+      flakeMeta.users.${cfg.name}
+    ];
 
     # XDG Base Directory
     environment.sessionVariables = {

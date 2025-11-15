@@ -6,41 +6,15 @@
 }:
 let
   mkNixosSystem =
-    host: config:
-    let
-      coreConfig = {
-        networking.hostName = host;
-        system.stateVersion = config.stateVersion;
-        nixpkgs = {
-          hostPlatform = config.system;
-          config.allowUnfree = true;
-        };
-      };
-
-      userConfig = {
-        modules.nixos.user = lib.mkMerge [
-          { name = config.user; }
-          flakeMeta.users.${config.user}
-        ];
-      };
-
-      homeVpnConfig = {
-        modules.nixos.home-vpn = {
-          enable = true;
-          serverHostName = "beelink";
-        };
-      };
-    in
+    hostName: _:
     lib.nixosSystem {
       modules = [
-        coreConfig
-        userConfig
-        homeVpnConfig
         "${inputs.self}/overlays"
         "${inputs.self}/modules/nixos"
-        "${inputs.self}/hosts/${host}"
+        "${inputs.self}/hosts/core.nix"
+        "${inputs.self}/hosts/${hostName}"
       ];
-      specialArgs = { inherit inputs flakeMeta; };
+      specialArgs = { inherit inputs flakeMeta hostName; };
     };
 in
 {
