@@ -4,14 +4,8 @@
 set -euo pipefail
 
 ROOT_DIR="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
-REPO_URL="https://github.com/rafaelcga/nixos-config.git"
+REPO_DIR="$(dirname "$ROOT_DIR")"
 TEMP_SSH="/mnt/tmp/ssh/id_ed25519"
-
-repo_name="$(
-  grep -oP "(https://)?github.com/[a-zA-Z0-9_\-]+/\K[a-zA-Z0-9_\-]+(?=.git)" \
-    <<<"$REPO_URL"
-)"
-repo_dir="$(pwd)/$repo_name"
 
 hostname=""
 key_path=""
@@ -29,16 +23,24 @@ if [ -z "$hostname" ] || [ -z "$key_path" ]; then
   exit 1
 fi
 
-echo "Cloning configuration repo..."
-git clone "$REPO_URL"
-
 echo "--------------------------------------------------"
 (cd $ROOT_DIR && ./generate_hardware.sh -n "$hostname")
-(cd $repo_dir && git add "$repo_dir/hosts/$hostname/hardware-configuration.nix")
+(cd $REPO_DIR && git add "$REPO_DIR/hosts/$hostname/hardware-configuration.nix")
 
 echo "--------------------------------------------------"
 echo "Formatting disks..."
-disko --mode destroy,format,mount "$repo_dir/hosts/$hostname"
+tmp_config=$(mktemp /tmp/disko-config.XXXXXX.nix)
+cat >"$tmp_config" <<EOF
+{
+    imports = [
+        "$REPO_DIR/overlays"
+        "$REPO_DIR/modules/nixos"
+        "$REPO_DIR/hosts/core.nix"
+        "$REPO_DIR/hosts/$hostname"
+    ];
+}
+EOF
+disko --mode destroy,format,mount "$tmp_config"
 
 echo "--------------------------------------------------"
 echo "Copying SSH key for SOPS secrets..."
