@@ -30,6 +30,7 @@ echo "--------------------------------------------------"
 echo "--------------------------------------------------"
 echo "Formatting disks..."
 tmp_config=$(mktemp /tmp/disko-config.XXXXXX.nix)
+# Import all modules from NixOS configuration in flake-parts
 cat >"$tmp_config" <<EOF
 {
     imports = [
