@@ -26,7 +26,6 @@ in
       ];
       systemPackages = with pkgs; [
         loupe
-        papers
         ghostty
         celluloid
         gnome-calendar
