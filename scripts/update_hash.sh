@@ -21,7 +21,7 @@ while getopts ":p:" opt; do
   esac
 done
 
-if [[ -z "$pkg_path" ]] || [[ ! -f "$pkg_path" ]]; then
+if [[ -z "$pkg_path" || ! -f "$pkg_path" ]]; then
   echo "Error: A valid path to a .nix package file is required." >&2
   usage
 fi

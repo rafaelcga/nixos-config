@@ -28,7 +28,7 @@ while getopts ":n:k:" opt; do
   esac
 done
 
-if [ -z "$hostname" ] || [ -z "$key_path" ]; then
+if [[ -z "$hostname" || -z "$key_path" ]]; then
   echo "Error: Missing required arguments." >&2
   usage
 fi

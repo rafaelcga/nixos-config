@@ -21,25 +21,30 @@ function usage() {
 
 hostname=""
 key_path=""
-do_test=false
+do_test="false"
 
 while getopts ":n:k:t" opt; do
   case $opt in
     n) hostname="$OPTARG" ;;
     k) key_path="$(realpath "$OPTARG")" ;;
-    t) do_test=true ;;
+    t) do_test="true" ;;
     \?) usage ;;
   esac
 done
 # Remove getopts parsed args from parameter list
 shift $((OPTIND - 1))
 
-if [ -z "$hostname" ] || [ -z "$key_path" ] || [ "$#" -ne 1 ]; then
+if [[ -z "$hostname" ||
+  -z "$key_path" ||
+  ("$#" -ne 1 && "$do_test" == "false") ]]; then
   echo "Error: Missing required arguments." >&2
   usage
 fi
 
-remote="$1"
+remote=""
+if [[ "$#" -eq 1 ]]; then
+  remote="$1"
+fi
 
 temp="$(mktemp -d)"
 function cleanup() {
@@ -59,18 +64,21 @@ sudo chmod 600 "$temp_ssh"
 echo "--------------------------------------------------"
 echo "Performing NixOS install..."
 
-hardware_config_path="$REPO_DIR/hosts/$hostname/hardware-configuration.nix"
-
 nixos_anywhere_args=(
-  --extra-files "$temp"
-  --generate-hardware-config nixos-generate-config "$hardware_config_path"
   --flake "$REPO_DIR#$hostname"
 )
 
-if [ "$do_test" = true ]; then
-  nixos_anywhere_args+=(--vm-test)
+if [[ "$do_test" == "true" ]]; then
+  nixos_anywhere_args+=(
+    --vm-test
+  )
 else
-  nixos_anywhere_args+=(--target-host "$remote")
+  (cd $ROOT_DIR && ./generate_hardware.sh -n "$hostname")
+
+  nixos_anywhere_args+=(
+    --extra-files "$temp"
+    --target-host "$remote"
+  )
 fi
 
 nixos-anywhere "${nixos_anywhere_args[@]}"
