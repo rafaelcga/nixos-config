@@ -1,46 +1,60 @@
 #!/usr/bin/env nix-shell
-#!nix-shell --quiet -i bash -p
+#!nix-shell --quiet -i bash -p coreutils gnused
 
 set -euo pipefail
+
+function usage() {
+  echo "Usage: $(basename "${BASH_SOURCE[0]}") -p <path_to_nix_file>"
+  echo ""
+  echo "Automatically updates the hash for a fixed-output derivation."
+  echo ""
+  echo "  -p <path>    (Required) Path to the .nix file containing the package derivation."
+  exit 1
+}
 
 pkg_path=""
 
 while getopts ":p:" opt; do
-  case ${opt} in
-    p) pkg_path="$(readlink -f "$OPTARG")" ;;
-    \?) echo "Usage: $(basename "${BASH_SOURCE[0]}") [-p]" ;;
+  case $opt in
+    p) pkg_path="$(realpath "$OPTARG")" ;;
+    \?) usage ;;
   esac
 done
 
 if [[ -z "$pkg_path" ]] || [[ ! -f "$pkg_path" ]]; then
-  echo "Path to .nix file containing a package required."
-  exit 1
+  echo "Error: A valid path to a .nix package file is required." >&2
+  usage
 fi
 
-set +e
-output=$(nix-build -E \
-  "with import <nixpkgs> {}; callPackage $pkg_path {}" 2>&1)
-status=$?
+echo "Attempting to build $pkg_path to detect hash..."
 
-old_hash=$(
-  echo "$output" \
-    | grep -oP "specified:\s*sha256-[A-Za-z0-9\+\/]+=" \
-    | sed -E "s|^specified:\s*||"
-)
-new_hash=$(
-  echo "$output" \
-    | grep -oP "got:\s*sha256-[A-Za-z0-9\+\/]+=" \
-    | sed -E "s|^got:\s*||"
-)
+# Temporarily disable exit-on-error to capture the output of a failing build
+set +e
+output=$(nix-build -E "with import <nixpkgs> {}; callPackage $pkg_path {}" 2>&1)
+status=$?
 set -e
 
-if [[ $status -ne 0 ]] && [[ ! -z $old_hash ]]; then
+if [[ $status -eq 0 ]]; then
+  echo "[✔️] Hash is already up-to-date."
+  exit 0
+fi
+
+# Use \K to ignore lookbehind match
+old_hash=$(echo "$output" | grep -oP 'specified: *\K(sha256-[\w\+\/=]+)')
+new_hash=$(echo "$output" | grep -oP 'got: *\K(sha256-[\w\+\/=]+)')
+
+# If both are non-empty, replace
+if [[ -n "$old_hash" && -n "$new_hash" ]]; then
+  echo "Hash mismatch detected. Updating file..."
   sed -i "s|$old_hash|$new_hash|" "$pkg_path"
-  echo " [✔️] Updated hash:"
-  echo "  - $old_hash"
-  echo "  + $new_hash"
-elif [[ $status -ne 0 ]]; then
-  echo " [❌] error: Package build failed."
+  echo "[✔️] Successfully updated hash in $pkg_path"
+  echo "  - Old: $old_hash"
+  echo "  + New: $new_hash"
 else
-  echo " [✔️] Hash already up-to-date."
+  # If the build failed for a reason other than a hash mismatch.
+  echo "[❌] Package build failed for a reason other than a hash mismatch."
+  echo "--- Nix Build Output ---"
+  echo "$output"
+  echo "------------------------"
+  exit 1
 fi

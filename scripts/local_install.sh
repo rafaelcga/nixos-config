@@ -3,7 +3,7 @@
 
 set -euo pipefail
 
-ROOT_DIR="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
+ROOT_DIR="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
 REPO_DIR="$(dirname "$ROOT_DIR")"
 
 function usage() {
@@ -23,7 +23,7 @@ key_path=""
 while getopts ":n:k:" opt; do
   case $opt in
     n) hostname="$OPTARG" ;;
-    k) key_path="$(readlink -f "$OPTARG")" ;;
+    k) key_path="$(realpath "$OPTARG")" ;;
     \?) usage ;;
   esac
 done

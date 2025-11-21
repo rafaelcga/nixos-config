@@ -12,7 +12,7 @@ else
   RESET=""
 fi
 
-REPO_DIR="$(dirname "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")")"
+REPO_DIR="$(dirname "$(dirname "$(realpath "${BASH_SOURCE[0]}")")")"
 PKGS_DIR="$REPO_DIR/pkgs"
 
 echo "${BOLD}Upgrading local packages...${RESET}"
