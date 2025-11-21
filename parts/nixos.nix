@@ -14,8 +14,7 @@ let
       modules = [
         "${inputs.self}/overlays"
         "${inputs.self}/modules/nixos"
-        "${inputs.self}/hosts/core.nix"
-        "${inputs.self}/hosts/${hostName}"
+        "${inputs.self}/hosts"
       ];
       specialArgs = {
         inherit

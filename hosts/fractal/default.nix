@@ -1,7 +1,5 @@
 { config, lib, ... }:
 {
-  imports = [ ./hardware-configuration.nix ];
-
   modules.nixos = {
     # System
     boot.loader = "limine";

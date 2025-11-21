@@ -73,8 +73,6 @@ if [[ "$do_test" == "true" ]]; then
     --vm-test
   )
 else
-  (cd $ROOT_DIR && ./generate_hardware.sh -n "$hostname")
-
   nixos_anywhere_args+=(
     --extra-files "$temp"
     --target-host "$remote"
