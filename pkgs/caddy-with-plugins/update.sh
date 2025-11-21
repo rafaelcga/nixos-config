@@ -1,33 +1,37 @@
 #!/usr/bin/env nix-shell
-#!nix-shell --quiet -i bash -p curl jq
+#!nix-shell --quiet -i bash -p coreutils gnused curl jq
 
 set -euo pipefail
 
 ROOT_DIR="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
 REPO_DIR="$(dirname "$(dirname "$ROOT_DIR")")"
+PKG_FILE="$ROOT_DIR/package.nix"
 
 echo "Checking for Caddy plugin updates..."
 
-grep -oP "github.com/([a-zA-Z0-9_\-]+/?)+@[^\"]+" "$ROOT_DIR/package.nix" \
-  | while read plugin; do
-    parts=($(sed "s|[/@]|\n|g" <<<"$plugin"))
-    plugin_name=$(grep -oP "(?<=github.com/)([a-zA-Z0-9_\-]+/?)+(?=@.+)" <<<"$plugin")
-    printf " %s " "$plugin_name"
+grep -oP "github.com/\K([a-zA-Z0-9_\-]+/?)+@[^\"]+" "$PKG_FILE" \
+  | while read -r plugin; do
+    splits=($(sed "s|[/@]|\n|g" <<<"$plugin"))
+    printf " %s " "$plugin"
 
-    old_version="${parts[-1]}"
+    repo_owner="${splits[0]}"
+    repo_name="${splits[1]}"
+    old_version="${splits[-1]}"
+
     new_version=$(
-      curl -sL "https://api.github.com/repos/${parts[1]}/${parts[2]}/releases/latest" \
+      curl -sfL -A "nixos-config-update-script/1.0" \
+        "https://api.github.com/repos/$repo_owner/$repo_name/releases/latest" \
         | jq -r ".tag_name"
     )
 
-    if [[ -z "$new_version" ]]; then
+    if [[ -z "$new_version" || "$new_version" == "null" ]]; then
       echo "[❌] error: Could not find latest version."
       continue
     fi
 
     if [[ "$old_version" != "$new_version" ]]; then
       updated_plugin=$(sed -E "s|$old_version|$new_version|" <<<"$plugin")
-      sed -i "s|$plugin|$updated_plugin|" "$ROOT_DIR/package.nix"
+      sed -i "s|$plugin|$updated_plugin|" "$PKG_FILE"
       echo "[✔️] updated: $old_version -> $new_version"
     else
       echo "[✔️] up-to-date"
@@ -38,9 +42,9 @@ echo "Updating derivation hash..."
 
 # Replace non-valid strings by a fake hash
 fake_hash="sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
-if ! grep -qP "hash\s*=\s*\"sha256-[A-Za-z0-9\+\/]+=\"" "$ROOT_DIR/package.nix"; then
+if ! hash="$(grep -qP "hash\s*=\s*\"\K(sha256-[\w\+\/=]+)" "$PKG_FILE")"; then
   echo " [❗] Warning: Non-valid string found in hash, replacing with fake hash \"$fake_hash\"."
-  sed -i "s|\(hash\s*=\s*\"\).*\(\";\)|\1$fake_hash\2|" "$ROOT_DIR/package.nix"
+  sed -i "s|$hash|$fake_hash|" "$PKG_FILE"
 fi
 
-(cd "$REPO_DIR/scripts" && ./update_hash.sh -p "$ROOT_DIR/package.nix")
+(cd "$REPO_DIR/scripts" && ./update_hash.sh -p "$PKG_FILE")
