@@ -1,21 +1,51 @@
 #!/usr/bin/env nix-shell
-#!nix-shell --quiet -i bash -p nix-update
+#!nix-shell --quiet -i bash -p coreutils gnused nix-update
 
 set -euo pipefail
-
-# ANSI formatting codes for TTY
-if [[ -t 1 ]]; then
-  BOLD=$'\033[1m'
-  RESET=$'\033[0m'
-else
-  BOLD=""
-  RESET=""
-fi
 
 REPO_DIR="$(dirname "$(dirname "$(realpath "${BASH_SOURCE[0]}")")")"
 PKGS_DIR="$REPO_DIR/pkgs"
 
-echo "${BOLD}Upgrading local packages...${RESET}"
+function has_custom_update() {
+  local abs_path="$1"
+  [[ "$(basename "$abs_path")" == "package.nix" && -f "$(dirname "$abs_path")/update.sh" ]]
+}
+
+function run_custom_update() {
+  local abs_path="$1"
+  echo "through custom script..."
+  (cd "$(dirname "$abs_path")" && ./update.sh)
+}
+
+function run_nix_update() {
+  local pkg_name="$1"
+
+  (
+    cd "$REPO_DIR" # nix-update needs to be launched on the flake's directory
+
+    set +e
+    local output # separate declaration and assignment for correct status capture
+    output="$(nix-update "$pkg_name" --flake 2>&1)"
+    local status=$?
+    set -e
+
+    local update_line="$(grep -oP "Update \K\S+ -> \S+" <<<"$output")"
+
+    if [[ $status -eq 0 ]]; then
+      if [[ -n "$update_line" ]]; then
+        echo "[✔️️] updated: $update_line"
+      else
+        echo "[✔️️] up-to-date"
+      fi
+    else
+      echo "[❌] update failed:"
+      # Indent the output for readability
+      echo "$output" | sed 's/^/  /'
+    fi
+  )
+}
+
+echo "Upgrading local packages..."
 
 find "$PKGS_DIR" -name "*.nix" -not -name "default.nix" \
   | while read abs_path; do
@@ -25,32 +55,11 @@ find "$PKGS_DIR" -name "*.nix" -not -name "default.nix" \
       pkg_name=$(basename "$abs_path" .nix)
     fi
 
-    printf "%s❖ %s%s " "$BOLD" "$pkg_name" "$RESET"
+    printf "❖ %s " "$pkg_name"
 
-    pkg_dir="$(dirname "$abs_path")"
-    set +e
-    if [[ "$(basename "$abs_path")" == "package.nix" ]] \
-      && [[ -f "$pkg_dir/update.sh" ]]; then
-      echo "through custom script..."
-      (cd "$pkg_dir" && ./update.sh)
+    if has_custom_update "$abs_path"; then
+      run_custom_update "$abs_path"
     else
-      (
-        cd "$REPO_DIR" # nix-update needs to be launched on the flake's directory
-
-        output="$(nix-update "$pkg_name" --flake 2>&1)"
-        status=$?
-
-        update_line="$(grep -oP "Update \K\S+ -> \S+(?= in $abs_path)" <<<"$output")"
-
-        if [[ $status -eq 0 ]] && [[ -z $update_line ]]; then
-          echo "[✔️️] up-to-date"
-        elif [[ $status -eq 0 ]]; then
-          echo "[✔️️] updated: $update_line"
-        else
-          echo "[❌] update failed:"
-          echo "$output"
-        fi
-      )
+      run_nix_update "$pkg_name"
     fi
-    set -e
   done
