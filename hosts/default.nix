@@ -7,13 +7,14 @@
 }:
 let
   cfg = flakeMeta.hosts.${hostName};
-  hardwareConfigPath = "${inputs.self}/hosts/${hostName}/hardware-configuration.nix";
 in
 {
-  imports = [
-    "${inputs.self}/hosts/${hostName}"
-  ]
-  ++ lib.optionals (lib.pathExists hardwareConfigPath) [ hardwareConfigPath ];
+  imports =
+    let
+      hostConfigPath = "${inputs.self}/hosts/${hostName}";
+      hardwareConfigPath = "${hostConfigPath}/hardware-configuration.nix";
+    in
+    [ hostConfigPath ] ++ lib.optionals (lib.pathExists hardwareConfigPath) [ hardwareConfigPath ];
 
   networking.hostName = hostName;
 
