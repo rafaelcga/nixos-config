@@ -5,6 +5,7 @@ set -euo pipefail
 
 ROOT_DIR="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
 REPO_DIR="$(dirname "$ROOT_DIR")"
+ROOT_MNT="/mnt"
 
 function usage() {
   echo "Usage: $(basename "${BASH_SOURCE[0]}") -n <hostname> -k <ssh_key_path>"
@@ -33,11 +34,7 @@ if [[ -z "$hostname" || -z "$key_path" ]]; then
   usage
 fi
 
-temp="$(mktemp -d)"
-function cleanup() {
-  rm -rf "$temp"
-}
-trap cleanup EXIT
+flake="$REPO_DIR#$hostname"
 
 # Generate hardware-configuration.nix
 echo "--------------------------------------------------"
@@ -45,25 +42,12 @@ echo "--------------------------------------------------"
 
 echo "--------------------------------------------------"
 echo "Formatting disks..."
-
-# Import all modules from NixOS configuration in flake-parts
-temp_config="$(mktemp $temp/disko-config.XXXXXX.nix)"
-cat >"$temp_config" <<EOF
-{
-    imports = [
-        "$REPO_DIR/overlays"
-        "$REPO_DIR/modules/nixos"
-        "$REPO_DIR/hosts/core.nix"
-        "$REPO_DIR/hosts/$hostname"
-    ];
-}
-EOF
-disko --mode destroy,format,mount "$temp_config"
+disko --mode destroy,format,mount --root-mountpoint "$ROOT_MNT" --flake "$flake"
 
 echo "--------------------------------------------------"
 echo "Copying SSH key for SOPS secrets..."
 
-temp_ssh="/mnt/tmp/ssh/id_ed25519"
+temp_ssh="$ROOT_MNT/tmp/ssh/id_ed25519"
 mkdir -p "$(dirname "$temp_ssh")"
 cp "$key_path" "$temp_ssh"
 sudo chown root:root "$temp_ssh"
@@ -71,4 +55,4 @@ sudo chmod 600 "$temp_ssh"
 
 echo "--------------------------------------------------"
 echo "Performing NixOS install..."
-(cd $repo_dir && sudo nixos-install --flake ".#$hostname")
+sudo nixos-install --flake "$flake"
