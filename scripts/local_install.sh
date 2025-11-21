@@ -5,33 +5,50 @@ set -euo pipefail
 
 ROOT_DIR="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
 REPO_DIR="$(dirname "$ROOT_DIR")"
-TEMP_SSH="/mnt/tmp/ssh/id_ed25519"
+
+function usage() {
+  echo "Usage: $(basename "${BASH_SOURCE[0]}") -n <hostname> -k <ssh_key_path>"
+  echo ""
+  echo "Performs a local NixOS installation using a specified host configuration and disko for partitioning."
+  echo ""
+  echo "Options:"
+  echo "  -n <hostname>        (Required) The hostname to install, corresponding to a configuration in the './hosts' directory."
+  echo "  -k <ssh_key_path>    (Required) Path to the SSH private key for SOPS to access secrets during installation."
+  exit 1
+}
 
 hostname=""
 key_path=""
 
 while getopts ":n:k:" opt; do
-  case ${opt} in
+  case $opt in
     n) hostname="$OPTARG" ;;
     k) key_path="$(readlink -f "$OPTARG")" ;;
-    \?) echo "Usage: $(basename "${BASH_SOURCE[0]}") [-n] [-k]" ;;
+    \?) usage ;;
   esac
 done
 
 if [ -z "$hostname" ] || [ -z "$key_path" ]; then
-  echo "Hostname and input SSH key path must be defined."
-  exit 1
+  echo "Error: Missing required arguments." >&2
+  usage
 fi
 
+temp="$(mktemp -d)"
+function cleanup() {
+  rm -rf "$temp"
+}
+trap cleanup EXIT
+
+# Generate hardware-configuration.nix
 echo "--------------------------------------------------"
 (cd $ROOT_DIR && ./generate_hardware.sh -n "$hostname")
-(cd $REPO_DIR && git add "$REPO_DIR/hosts/$hostname/hardware-configuration.nix")
 
 echo "--------------------------------------------------"
 echo "Formatting disks..."
-tmp_config=$(mktemp /tmp/disko-config.XXXXXX.nix)
+
 # Import all modules from NixOS configuration in flake-parts
-cat >"$tmp_config" <<EOF
+temp_config="$(mktemp $temp/disko-config.XXXXXX.nix)"
+cat >"$temp_config" <<EOF
 {
     imports = [
         "$REPO_DIR/overlays"
@@ -41,14 +58,16 @@ cat >"$tmp_config" <<EOF
     ];
 }
 EOF
-disko --mode destroy,format,mount "$tmp_config"
+disko --mode destroy,format,mount "$temp_config"
 
 echo "--------------------------------------------------"
 echo "Copying SSH key for SOPS secrets..."
-mkdir -p "$(dirname "$TEMP_SSH")"
-cp "$key_path" "$TEMP_SSH"
-sudo chown root:root "$TEMP_SSH"
-sudo chmod 600 "$TEMP_SSH"
+
+temp_ssh="/mnt/tmp/ssh/id_ed25519"
+mkdir -p "$(dirname "$temp_ssh")"
+cp "$key_path" "$temp_ssh"
+sudo chown root:root "$temp_ssh"
+sudo chmod 600 "$temp_ssh"
 
 echo "--------------------------------------------------"
 echo "Performing NixOS install..."

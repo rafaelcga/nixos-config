@@ -12,19 +12,19 @@ function usage() {
   exit 1
 }
 
-target_host="$(hostname)"
+hostname="$(hostname)"
 
 while getopts ":n:" opt; do
-  case ${opt} in
-    n) target_host="$OPTARG" ;;
+  case $opt in
+    n) hostname="$OPTARG" ;;
     \?) usage ;;
   esac
 done
 
-config_path="$REPO_DIR/hosts/$target_host/hardware-configuration.nix"
+config_path="$REPO_DIR/hosts/$hostname/hardware-configuration.nix"
 mkdir -p "$(dirname "$config_path")"
 
-echo "Generating hardware configuration for '$target_host'..."
+echo "Generating hardware configuration for '$hostname'..."
 
 if ! config=$(nixos-generate-config --show-hardware-config --no-filesystems 2>&1); then
   echo "[❌] Failed to generate hardware configuration:"
@@ -38,4 +38,5 @@ if [[ -z "$config" ]]; then
 fi
 
 echo "$config" >"$config_path"
+(cd $REPO_DIR && git add "$config_path")
 echo "[✔️️] Successfully generated hardware configuration at $config_path"
