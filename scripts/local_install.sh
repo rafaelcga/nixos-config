@@ -1,5 +1,5 @@
 #!/usr/bin/env nix-shell
-#!nix-shell --quiet -i bash -p git disko
+#!nix-shell --quiet -i bash -p nixos-install-tools coreutils git disko
 
 set -euo pipefail
 
