@@ -8,9 +8,9 @@ let
   cfg = config.modules.nixos.disko;
 
   mkDisk =
-    name: config:
+    name: diskConfig:
     let
-      inherit (config)
+      inherit (diskConfig)
         device
         format
         mountpoint
