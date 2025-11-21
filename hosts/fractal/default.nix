@@ -2,7 +2,6 @@
 {
   modules.nixos = {
     # System
-    boot.loader = "limine";
     fonts.enable = true;
     ssh.enable = true;
     zram.enable = true;
@@ -36,11 +35,4 @@
   };
 
   environment.sessionVariables.GDK_SCALE = "1.25"; # sets XWayland render scale
-
-  # Windows Boot Drive
-  boot.loader.limine.extraEntries = lib.mkIf config.boot.loader.limine.enable ''
-    /Windows
-        protocol: efi
-        path: uuid(23f2eb9d-b5be-49bb-83f9-b486a3bcc7a3):/EFI/Microsoft/Boot/bootmgfw.efi
-  '';
 }

@@ -25,7 +25,7 @@ let
           content = {
             type = "filesystem";
             format = "vfat";
-            mountpoint = "/boot";
+            mountpoint = config.boot.loader.efi.efiSysMountPoint;
             mountOptions = [ "umask=0077" ];
           };
         };

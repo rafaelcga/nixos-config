@@ -9,17 +9,10 @@ let
 in
 {
   options.modules.nixos.boot = {
-    loader = lib.mkOption {
-      type = lib.types.enum [
-        "systemd-boot"
-        "limine"
-      ];
-      default = "systemd-boot";
-      description = ''
-        Which bootloader to use. Supported values:
-        - "systemd-boot"
-        - "limine"
-      '';
+    configurationLimit = lib.mkOption {
+      type = lib.types.int;
+      default = 50;
+      description = "Maximum number of latest generations in the boot menu.";
     };
   };
 
@@ -33,13 +26,11 @@ in
 
       loader = {
         efi.canTouchEfiVariables = true;
-        systemd-boot = lib.mkIf (cfg.loader == "systemd-boot") {
+        systemd-boot = {
           enable = true;
           editor = false;
-        };
-        limine = lib.mkIf (cfg.loader == "limine") {
-          enable = true;
-          enableEditor = false;
+          inherit (cfg) configurationLimit;
+          edk2-uefi-shell.enable = true;
         };
       };
 
