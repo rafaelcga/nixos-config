@@ -1,4 +1,3 @@
-{ config, lib, ... }:
 {
   modules.nixos = {
     # System
