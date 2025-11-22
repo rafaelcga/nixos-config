@@ -47,11 +47,11 @@ sudo disko --mode destroy,format,mount --root-mountpoint "$ROOT_MNT" --flake "$f
 echo "--------------------------------------------------"
 echo "Copying SSH key for SOPS secrets..."
 
-temp_ssh="$ROOT_MNT/tmp/ssh/id_ed25519"
-sudo mkdir -p "$(dirname "$temp_ssh")"
-sudo cp "$key_path" "$temp_ssh"
-sudo chown root:root "$temp_ssh"
-sudo chmod 600 "$temp_ssh"
+sops_ssh="$ROOT_MNT/etc/ssh/sops_ed25519_key"
+sudo mkdir -p "$(dirname "$sops_ssh")"
+sudo cp "$key_path" "$sops_ssh"
+sudo chown root:root "$sops_ssh"
+sudo chmod 600 "$sops_ssh"
 
 echo "--------------------------------------------------"
 echo "Performing NixOS install..."

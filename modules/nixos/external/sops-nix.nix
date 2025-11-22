@@ -33,7 +33,8 @@ in
       age.sshKeyPaths = [
         "/etc/ssh/ssh_host_ed25519_key"
         cfg.sshKeyFile
-        "/tmp/ssh/id_ed25519" # tmp location for local installs
+        # System-wide location for private SSH key provisioning
+        "/etc/ssh/sops_ed25519_key"
       ];
     };
 

@@ -55,10 +55,10 @@ trap cleanup EXIT
 echo "--------------------------------------------------"
 echo "Copying SSH key for SOPS secrets..."
 
-temp_ssh="$temp/tmp/ssh/id_ed25519"
-mkdir -p "$(dirname "$temp_ssh")"
-cp "$key_path" "$temp_ssh"
-chmod 600 "$temp_ssh"
+sops_ssh="$temp/etc/ssh/sops_ed25519_key"
+mkdir -p "$(dirname "$sops_ssh")"
+cp "$key_path" "$sops_ssh"
+chmod 600 "$sops_ssh"
 
 echo "--------------------------------------------------"
 echo "Performing NixOS install..."
