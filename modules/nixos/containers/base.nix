@@ -139,11 +139,13 @@ let
 
         localAddress = lib.mkOption {
           type = lib.types.str;
+          apply = addr: "${addr}/24";
           description = "Container local IPv4 address";
         };
 
         localAddress6 = lib.mkOption {
           type = lib.types.str;
+          apply = addr: "${addr}/64";
           description = "Container local IPv6 address";
         };
 
