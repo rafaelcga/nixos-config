@@ -12,8 +12,8 @@ let
 
   utils = import "${inputs.self}/lib/utils.nix" { inherit lib; };
 
-  iptables = "${pkgs.iptables}/bin/iptables";
-  ip6tables = "${pkgs.iptables}/bin/ip6tables";
+  iptables = lib.getExe pkgs.iptables;
+  ip6tables = lib.getExe' pkgs.iptables "ip6tables";
 
   postUpFile = pkgs.writeShellScript "wg_server_postup.sh" ''
     ${iptables} -A FORWARD -i ${cfg.interfaceName} -j ACCEPT

@@ -157,6 +157,8 @@ in
             }
           ];
         };
+
+        modules.nixos.crowdsec.bouncers.caddy.enable = true;
       })
     ]
   );

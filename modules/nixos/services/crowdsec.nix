@@ -1,6 +1,110 @@
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 let
   cfg = config.modules.nixos.crowdsec;
+
+  bouncerOpts =
+    { name, ... }:
+    {
+      options = {
+        enable = lib.mkEnableOption "Enable bouncer";
+
+        bouncerName = lib.mkOption {
+          type = lib.types.str;
+          default = "crowdsec-${name}-bouncer";
+          description = "Name to register the bouncer as to the CrowdSec API";
+        };
+
+        apiKeyFile = lib.mkOption {
+          type = lib.types.str;
+          default = "/var/lib/crowdsec-${name}-bouncer-register/api-key.cred";
+          description = "Path to the API key generated to register bouncer";
+        };
+      };
+    };
+
+  # See https://github.com/NixOS/nixpkgs/blob/master/nixos/modules/services/security/crowdsec-firewall-bouncer.nix
+  registerBouncer =
+    name: bouncerConfig:
+    let
+      inherit (bouncerConfig)
+        enable
+        bouncerName
+        apiKeyFile
+        ;
+      serviceName = "${bouncerName}-register";
+    in
+    {
+      "${serviceName}" = lib.mkIf enable {
+        description = "Register the CrowdSec Bouncer to the local CrowdSec service";
+        wantedBy = [ "multi-user.target" ];
+        after = [ "crowdsec.service" ];
+        wants = [ "crowdsec.service" ];
+
+        serviceConfig = {
+          Type = "oneshot";
+          User = config.services.crowdsec.user;
+          Group = config.services.crowdsec.group;
+          StateDirectory = serviceName;
+          # Needs write permissions to add the bouncer
+          ReadWritePaths = [ "/var/lib/crowdsec" ];
+          DynamicUser = true;
+          LockPersonality = true;
+          PrivateDevices = true;
+          ProcSubset = "pid";
+          ProtectClock = true;
+          ProtectControlGroups = true;
+          ProtectHome = true;
+          ProtectHostname = true;
+          ProtectKernelLogs = true;
+          ProtectKernelModules = true;
+          ProtectKernelTunables = true;
+          ProtectProc = "invisible";
+          RestrictNamespaces = true;
+          RestrictRealtime = true;
+          SystemCallArchitectures = "native";
+          RestrictAddressFamilies = "none";
+          CapabilityBoundingSet = [ "" ];
+          SystemCallFilter = [
+            "@system-service"
+            "~@privileged"
+            "~@resources"
+          ];
+          UMask = "0077";
+        };
+
+        script =
+          let
+            jq = lib.getExe pkgs.jq;
+          in
+          ''
+            cscli=/run/current-system/sw/bin/cscli
+            if $cscli bouncers list --output json \
+              | ${jq} -e -- ${lib.escapeShellArg "any(.[]; .name == \"${bouncerName}\")"} >/dev/null; then
+              # Bouncer already registered. Verify the API key is still present
+              if [[ ! -f ${apiKeyFile} ]]; then
+                echo "Bouncer registered but API key is not present"
+                exit 1
+              fi
+            else
+              # Bouncer not registered
+              # Remove any previously saved API key
+              rm -f "${apiKeyFile}"
+              # Register the bouncer and save the new API key
+              if ! $cscli bouncers add --output raw \
+                -- ${lib.escapeShellArg bouncerName} >${apiKeyFile}; then
+                # Failed to register the bouncer
+                rm -f "${apiKeyFile}"
+                exit 1
+              fi
+            fi
+          '';
+      };
+    };
 in
 {
   options.modules.nixos.crowdsec = {
@@ -18,6 +122,12 @@ in
       type = lib.types.port;
       apply = builtins.toString;
       description = "Port in localhost (127.0.0.1) for AppSec";
+    };
+
+    bouncers = lib.mkOption {
+      type = lib.types.attrsOf (lib.types.submodule bouncerOpts);
+      default = { };
+      description = "Bouncers to register in the CrowdSec API";
     };
   };
 
@@ -121,5 +231,7 @@ in
     sops.secrets = {
       "crowdsec/enroll_key" = { };
     };
+
+    systemd.services = lib.mkMerge (lib.mapAttrsToList registerBouncer cfg.bouncers);
   };
 }

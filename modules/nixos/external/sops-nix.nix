@@ -54,7 +54,7 @@ in
       };
       script =
         let
-          ssh-to-age = "${pkgs.ssh-to-age}/bin/ssh-to-age";
+          ssh-to-age = lib.getExe pkgs.ssh-to-age;
         in
         ''
           set -euo pipefail
