@@ -11,49 +11,6 @@ let
   grep = "${pkgs.gnugrep}/bin/grep";
   jq = "${pkgs.jq}/bin/jq";
 
-  collections = [
-    "crowdsecurity/linux"
-    "crowdsecurity/linux-lpe"
-    "crowdsecurity/http-cve"
-    "crowdsecurity/base-http-scenarios"
-    "crowdsecurity/sshd"
-    "crowdsecurity/sshd-impossible-travel"
-    "crowdsecurity/appsec-virtual-patching"
-    "crowdsecurity/appsec-generic-rules"
-    "crowdsecurity/appsec-crs"
-  ];
-
-  acquisitions = [
-    {
-      source = "file";
-      filenames = [
-        "/var/log/auth.log"
-        "/var/log/syslog"
-      ];
-      labels = {
-        type = "syslog";
-      };
-    }
-    # crowdsecurity/linux-lpe
-    {
-      source = "journalctl";
-      journalctl_filter = [
-        "-k"
-      ];
-      labels = {
-        type = "syslog";
-      };
-    }
-    {
-      source = "appsec";
-      listen_addr = "127.0.0.1:${cfg.appsecPort}";
-      appsec_configs = [ "crowdsecurity/appsec-default" ];
-      labels = {
-        type = "appsec";
-      };
-    }
-  ];
-
   bouncerSopsList =
     let
       mkBouncerSopsConfig = name: {
@@ -129,11 +86,56 @@ in
           enable = true;
           listen_uri = "127.0.0.1:${cfg.lapiPort}";
         };
+
+        # See https://github.com/NixOS/nixpkgs/issues/445342
+        lapi.credentialsFile = "/var/lib/crowdsec/local_api_credentials.yaml";
+        capi.credentialsFile = "/var/lib/crowdsec/online_api_credentials.yaml";
+
         console.tokenFile = config.sops.secrets."crowdsec/enroll_key".path;
       };
 
-      hub.collections = collections;
-      localConfig.acquisitions = acquisitions;
+      hub.collections = [
+        "crowdsecurity/linux"
+        "crowdsecurity/linux-lpe"
+        "crowdsecurity/http-cve"
+        "crowdsecurity/base-http-scenarios"
+        "crowdsecurity/sshd"
+        "crowdsecurity/sshd-impossible-travel"
+        "crowdsecurity/appsec-virtual-patching"
+        "crowdsecurity/appsec-generic-rules"
+        "crowdsecurity/appsec-crs"
+      ];
+
+      localConfig.acquisitions = [
+        {
+          source = "file";
+          filenames = [
+            "/var/log/auth.log"
+            "/var/log/syslog"
+          ];
+          labels = {
+            type = "syslog";
+          };
+        }
+        # crowdsecurity/linux-lpe
+        {
+          source = "journalctl";
+          journalctl_filter = [
+            "-k"
+          ];
+          labels = {
+            type = "syslog";
+          };
+        }
+        {
+          source = "appsec";
+          listen_addr = "127.0.0.1:${cfg.appsecPort}";
+          appsec_configs = [ "crowdsecurity/appsec-default" ];
+          labels = {
+            type = "appsec";
+          };
+        }
+      ];
     };
 
     environment.systemPackages = [ pkgs.crowdsec-firewall-bouncer ];
