@@ -42,14 +42,14 @@ echo "--------------------------------------------------"
 
 echo "--------------------------------------------------"
 echo "Formatting disks..."
-disko --mode destroy,format,mount --root-mountpoint "$ROOT_MNT" --flake "$flake"
+sudo disko --mode destroy,format,mount --root-mountpoint "$ROOT_MNT" --flake "$flake"
 
 echo "--------------------------------------------------"
 echo "Copying SSH key for SOPS secrets..."
 
 temp_ssh="$ROOT_MNT/tmp/ssh/id_ed25519"
-mkdir -p "$(dirname "$temp_ssh")"
-cp "$key_path" "$temp_ssh"
+sudo mkdir -p "$(dirname "$temp_ssh")"
+sudo cp "$key_path" "$temp_ssh"
 sudo chown root:root "$temp_ssh"
 sudo chmod 600 "$temp_ssh"
 
