@@ -145,7 +145,7 @@ in
               # Using imap1, index starts from 1
               mkValuePairs = index: client: {
                 name = client;
-                value = utils.addToAddress cfg.internalIp index;
+                value = utils.addToLastOctet cfg.internalIp index;
               };
 
             in

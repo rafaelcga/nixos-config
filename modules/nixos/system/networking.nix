@@ -20,53 +20,67 @@ in
       default = "wlan0";
       description = "Default network interface";
     };
+
+    defaultGateway = lib.mkOption {
+      type = lib.types.str;
+      default = "192.168.1.1";
+      description = "Default gateway for the default network interface";
+    };
   };
 
-  config = {
-    networking = {
-      networkmanager = {
-        enable = true;
-        dns = "systemd-resolved";
-        wifi.backend = "iwd";
-      };
+  config = lib.mkMerge [
+    {
+      networking = {
+        networkmanager = {
+          enable = true;
+          dns = "systemd-resolved";
+          wifi.backend = "iwd";
+        };
 
-      wireless.iwd = {
-        enable = true;
-        settings = {
-          Network = {
-            EnableIPv6 = true;
-          };
-          Settings = {
-            AutoConnect = true;
+        wireless.iwd = {
+          enable = true;
+          settings = {
+            Network = {
+              EnableIPv6 = true;
+            };
+            Settings = {
+              AutoConnect = true;
+            };
           };
         };
+
+        nftables.enable = true;
+        firewall.enable = true;
       };
 
-      interfaces."${cfg.defaultInterface}" = {
-        ipv4.addresses = lib.optionals (cfg.staticIp != null) [
+      services.resolved = {
+        enable = true;
+        dnssec = "allow-downgrade";
+        # Quad9 as fallback
+        fallbackDns = [
+          "9.9.9.9"
+          "149.112.112.112"
+          "2620:fe::fe"
+          "2620:fe::9"
+        ];
+      };
+
+      users.users.${userName}.extraGroups = [ "networkmanager" ];
+    }
+    (lib.mkIf (cfg.staticIp != null) {
+      networking = {
+        interfaces."${cfg.defaultInterface}".ipv4.addresses = [
           {
             address = cfg.staticIp;
             prefixLength = 24;
           }
         ];
+
+        defaultGateway = {
+          address = cfg.defaultGateway;
+          interface = cfg.defaultInterface;
+        };
       };
-
-      nftables.enable = true;
-      firewall.enable = true;
-    };
-
-    services.resolved = {
-      enable = true;
-      dnssec = "allow-downgrade";
-      # Quad9 as fallback
-      fallbackDns = [
-        "9.9.9.9"
-        "149.112.112.112"
-        "2620:fe::fe"
-        "2620:fe::9"
-      ];
-    };
-
-    users.users.${userName}.extraGroups = [ "networkmanager" ];
-  };
+    })
+  ];
 }

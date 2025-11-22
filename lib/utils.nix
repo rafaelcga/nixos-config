@@ -13,22 +13,38 @@ in
     in
     lib.attrNames (lib.filterAttrs (_: type: type == "directory") dirContents);
 
-  addToAddress =
+  updateLastOctet =
+    address: newLastOctet:
+    let
+      octets = lib.splitString "." address;
+      networkParts = lib.take 3 octets;
+
+      isValidAddress = lib.length octets == 4;
+      isValidResult = newLastOctet >= 0 && newLastOctet < 256;
+    in
+    if !isValidAddress then
+      throw "updateLastOctet: Invalid IP address format: `${address}`"
+    else if !isValidResult then
+      throw "updateLastOctet: Octet overflow"
+    else
+      lib.concatStringsSep "." (networkParts ++ [ (builtins.toString newLastOctet) ]);
+
+  addToLastOctet =
     address: num:
     let
       octets = lib.splitString "." address;
       networkParts = lib.take 3 octets;
       lastOctetStr = lib.last octets;
-      isValidAddress = lib.length octets == 4;
-
       newLastOctet = (lib.toInt lastOctetStr) + num;
+
+      isValidAddress = lib.length octets == 4;
       isValidResult = newLastOctet >= 0 && newLastOctet < 256;
 
     in
     if !isValidAddress then
-      throw "addToAddress: Invalid IP address format: `${address}`"
+      throw "addToLastOctet: Invalid IP address format: `${address}`"
     else if !isValidResult then
-      throw "addToAddress: Octet overflow"
+      throw "addToLastOctet: Octet overflow"
     else
       lib.concatStringsSep "." (networkParts ++ [ (builtins.toString newLastOctet) ]);
 }
