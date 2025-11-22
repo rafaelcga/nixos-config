@@ -408,7 +408,10 @@ in
         enable = true;
         enableIPv6 = true;
         externalInterface = config.modules.nixos.networking.defaultInterface;
-        internalInterfaces = [ (if config.networking.nftables.enable then "ve-*" else "ve-+") ];
+        internalInterfaces = [
+          (if config.networking.nftables.enable then "ve-*" else "ve-+")
+          cfg.hostBridge
+        ];
       };
 
       # Prevent NetworkManager from managing container interfaces
