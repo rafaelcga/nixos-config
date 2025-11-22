@@ -102,7 +102,16 @@ in
         lapi.credentialsFile = "/var/lib/crowdsec/local_api_credentials.yaml";
         capi.credentialsFile = "/var/lib/crowdsec/online_api_credentials.yaml";
 
-        console.tokenFile = config.sops.secrets."crowdsec/enroll_key".path;
+        console = {
+          tokenFile = config.sops.secrets."crowdsec/enroll_key".path;
+          configuration = {
+            share_custom = true;
+            share_manual_decisions = true;
+            share_tainted = true;
+            share_context = true;
+            console_management = true;
+          };
+        };
       };
 
       hub.collections = [
