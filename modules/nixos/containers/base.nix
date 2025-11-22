@@ -21,14 +21,14 @@ let
       hostPaths = lib.unique (lib.mapAttrsToList getHostPath container.bindMounts);
 
       createHostPath = path: ''
-        if [[ ! -e "$path" ]]; then
-          echo "Creating directory: $path"
-          mkdir -p "$path"
-          if [[ "$path" == "${user.home}"* ]]; then
-            chown -R "${user.name}:${user.group}" "$path"
+        if [[ ! -e "${path}" ]]; then
+          echo "Creating directory: ${path}"
+          mkdir -p "${path}"
+          if [[ "${path}" == "${user.home}"* ]]; then
+            chown -R "${user.name}:${user.group}" "${path}"
           fi
         else
-          echo "Path already exists, skipping: $path"
+          echo "Path already exists, skipping: ${path}"
         fi
       '';
     in
