@@ -14,57 +14,32 @@ let
 
   iptables = "${pkgs.iptables}/bin/iptables";
   ip6tables = "${pkgs.iptables}/bin/ip6tables";
-  nft = "${pkgs.nftables}/bin/nft";
 
-  postUpFile = pkgs.writeShellScript "wg_server_postup.sh" (
-    if config.networking.nftables.enable then
-      ''
-        ${nft} add rule inet filter FORWARD \
-          {iifname, oifname} "%i" \
-          counter accept
-        ${nft} add rule inet nat POSTROUTING \
-          oifname "${defaultInterface}" \
-          counter masquerade
-      ''
-    else
-      ''
-        ${iptables} -A FORWARD -i %i -j ACCEPT
-        ${iptables} -A FORWARD -o %i -j ACCEPT
-        ${iptables} -t nat -A POSTROUTING \
-          -o ${defaultInterface} \
-          -j MASQUERADE
-        ${ip6tables} -A FORWARD -i %i -j ACCEPT
-        ${ip6tables} -A FORWARD -o %i -j ACCEPT
-        ${ip6tables} -t nat -A POSTROUTING \
-          -o ${defaultInterface} \
-          -j MASQUERADE
-      ''
-  );
+  postUpFile = pkgs.writeShellScript "wg_server_postup.sh" ''
+    ${iptables} -A FORWARD -i ${cfg.interfaceName} -j ACCEPT
+    ${iptables} -A FORWARD -o ${cfg.interfaceName} -j ACCEPT
+    ${iptables} -t nat -A POSTROUTING \
+      -o ${defaultInterface} \
+      -j MASQUERADE
+    ${ip6tables} -A FORWARD -i ${cfg.interfaceName} -j ACCEPT
+    ${ip6tables} -A FORWARD -o ${cfg.interfaceName} -j ACCEPT
+    ${ip6tables} -t nat -A POSTROUTING \
+      -o ${defaultInterface} \
+      -j MASQUERADE
+  '';
 
-  preDownFile = pkgs.writeShellScript "wg_server_predown.sh" (
-    if config.networking.nftables.enable then
-      ''
-        ${nft} delete rule inet filter FORWARD \
-          {iifname, oifname} "%i" \
-          counter accept
-        ${nft} delete rule inet nat POSTROUTING \
-          oifname "${defaultInterface}" \
-          counter masquerade
-      ''
-    else
-      ''
-        ${iptables} -D FORWARD -i %i -j ACCEPT
-        ${iptables} -D FORWARD -o %i -j ACCEPT
-        ${iptables} -t nat -D POSTROUTING \
-          -o ${defaultInterface} \
-          -j MASQUERADE
-        ${ip6tables} -D FORWARD -i %i -j ACCEPT
-        ${ip6tables} -D FORWARD -o %i -j ACCEPT
-        ${ip6tables} -t nat -D POSTROUTING \
-          -o ${defaultInterface} \
-          -j MASQUERADE
-      ''
-  );
+  preDownFile = pkgs.writeShellScript "wg_server_predown.sh" ''
+    ${iptables} -D FORWARD -i ${cfg.interfaceName} -j ACCEPT
+    ${iptables} -D FORWARD -o ${cfg.interfaceName} -j ACCEPT
+    ${iptables} -t nat -D POSTROUTING \
+      -o ${defaultInterface} \
+      -j MASQUERADE
+    ${ip6tables} -D FORWARD -i ${cfg.interfaceName} -j ACCEPT
+    ${ip6tables} -D FORWARD -o ${cfg.interfaceName} -j ACCEPT
+    ${ip6tables} -t nat -D POSTROUTING \
+      -o ${defaultInterface} \
+      -j MASQUERADE
+  '';
 in
 {
   options.modules.nixos.home-vpn = {
