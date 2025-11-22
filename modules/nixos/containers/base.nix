@@ -38,10 +38,13 @@ let
           printf "${lib.concatStringsSep "\n" hostPaths}" \
             | while read path; do
               if [[ ! -e "$path" ]]; then
+                echo "Creating directory: $path"
                 mkdir -p "$path"
                 if [[ "$path" == "${user.home}"* ]]; then
                   chown -R "${user.name}:${user.group}" "$path"
                 fi
+              else
+                echo "Path already exists, skipping: $path"
               fi
             done
         '';
