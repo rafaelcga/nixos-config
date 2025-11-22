@@ -28,7 +28,6 @@ let
     "web_domain" = { };
     "porkbun/api_key" = { };
     "porkbun/api_secret_key" = { };
-    "crowdsec/bouncers/caddy_key" = lib.mkIf crowdsec.enable { };
   };
 
   envFile = lib.concatStringsSep "\n" [
@@ -38,7 +37,7 @@ let
       PORKBUN_API_SECRET_KEY=${config.sops.placeholder."porkbun/api_secret_key"}
     ''
     (lib.optionalString crowdsec.enable ''
-      CROWDSEC_API_KEY=${config.sops.placeholder."crowdsec/bouncers/caddy_key"}
+      CROWDSEC_API_KEY=${lib.readFile crowdsec.bouncers.caddy.apiKeyFile}
     '')
   ];
 
