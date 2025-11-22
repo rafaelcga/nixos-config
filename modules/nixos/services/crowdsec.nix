@@ -115,16 +115,11 @@ in
         ];
       };
 
-      crowdsec-firewall-bouncer = {
-        enable = true;
-        registerBouncer.enable = false;
-        secrets.apiKeyPath = config.sops.secrets."crowdsec/bouncers/firewall_key".path;
-      };
+      crowdsec-firewall-bouncer.enable = true;
     };
 
     sops.secrets = {
       "crowdsec/enroll_key" = { };
-      "crowdsec/bouncers/firewall_key" = { };
     };
   };
 }
