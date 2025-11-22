@@ -126,24 +126,18 @@ in
             "web_domain" = { };
             "porkbun/api_key" = { };
             "porkbun/api_secret_key" = { };
-            "crowdsec/caddy_bouncer_key" = lib.mkIf crowdsec.enable {
-              path = crowdsec.bouncers.caddy.apiKeyFile;
-            };
           };
 
-          templates."caddy-env".content = lib.concatStringsSep "\n" [
-            ''
-              DOMAIN=${config.sops.placeholder."web_domain"}
-              PORKBUN_API_KEY=${config.sops.placeholder."porkbun/api_key"}
-              PORKBUN_API_SECRET_KEY=${config.sops.placeholder."porkbun/api_secret_key"}
-            ''
-            (lib.optionalString crowdsec.enable ''
-              CROWDSEC_API_KEY=${config.sops.placeholder."crowdsec/caddy_bouncer_key"}
-            '')
-          ];
+          templates."caddy-env".content = ''
+            DOMAIN=${config.sops.placeholder."web_domain"}
+            PORKBUN_API_KEY=${config.sops.placeholder."porkbun/api_key"}
+            PORKBUN_API_SECRET_KEY=${config.sops.placeholder."porkbun/api_secret_key"}
+          '';
         };
       }
       (lib.mkIf crowdsec.enable {
+        modules.nixos.crowdsec.bouncers.caddy.enable = true;
+
         services.crowdsec = {
           hub.collections = [ "crowdsecurity/caddy" ];
           localConfig.acquisitions = [
@@ -157,7 +151,26 @@ in
           ];
         };
 
-        modules.nixos.crowdsec.bouncers.caddy.enable = true;
+        systemd.services.caddy =
+          let
+            envFile = "/run/${crowdsec.bouncers.caddy.bouncerName}/caddy.env";
+          in
+          {
+            wants = [ "crowdsec.service" ];
+            after = [ "crowdsec.service" ];
+            preStart =
+              let
+                cat = lib.getExe' pkgs.coreutils "cat";
+                echo = lib.getExe' pkgs.coreutils "echo";
+                mkdir = lib.getExe' pkgs.coreutils "mkdir";
+              in
+              ''
+                ${mkdir} -p "$(dirname "${envFile}")"
+                ${cat} ${config.sops.templates."caddy-env".path} >"${envFile}"
+                ${echo} "CROWDSEC_API_KEY=$(${cat} ${crowdsec.bouncers.caddy.apiKeyFile})" >>"${envFile}"
+              '';
+            serviceConfig.EnvironmentFile = lib.mkForce envFile;
+          };
       })
     ]
   );
