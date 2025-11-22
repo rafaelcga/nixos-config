@@ -57,7 +57,7 @@ let
     lib.mkIf instance.enable (
       lib.mkMerge [
         {
-          inherit (cfg) hostAddress hostAddress6;
+          inherit (cfg) hostBridge;
           inherit (instance)
             localAddress
             localAddress6
@@ -312,6 +312,15 @@ in
       description = "Default host directory where container data will be saved";
     };
 
+    hostBridge = lib.mkOption {
+      type = lib.types.str;
+      default = "br-containers";
+      description = ''
+        Name for the network bridge connecting the containers to the default
+        network interface.
+      '';
+    };
+
     wireguardInterface = lib.mkOption {
       type = lib.types.str;
       default = "wg0";
@@ -377,6 +386,22 @@ in
     };
 
     networking = {
+      bridges."${cfg.hostBridge}".interfaces = [ ];
+      interfaces."${cfg.hostBridge}" = {
+        ipv4.addresses = [
+          {
+            address = cfg.hostAddress;
+            prefixLength = 24;
+          }
+        ];
+        ipv6.addresses = [
+          {
+            address = cfg.hostAddress6;
+            prefixLength = 64;
+          }
+        ];
+      };
+
       nat = {
         enable = true;
         enableIPv6 = true;
