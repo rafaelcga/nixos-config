@@ -54,13 +54,6 @@ let
     }
   ];
 
-  enrollSopsConfig = {
-    secrets."crowdsec/enroll_key" = { };
-    templates."crowdsec/console-enroll-env".content = ''
-      ENROLL_KEY=${config.sops.placeholder."crowdsec/enroll_key"}
-    '';
-  };
-
   bouncerSopsList =
     let
       mkBouncerSopsConfig = name: {
@@ -71,24 +64,6 @@ let
       };
     in
     map mkBouncerSopsConfig cfg.bouncers;
-
-  enrollService = {
-    enroll-crowdsec-console = {
-      description = "Enrolls the engine at app.crowdsec.net";
-      after = [ "crowdsec.service" ];
-      wants = [ "crowdsec.service" ];
-      wantedBy = [ "multi-user.target" ];
-      serviceConfig = {
-        Type = "oneshot";
-        EnvironmentFile = config.sops.templates."crowdsec/console-enroll-env".path;
-      };
-      script = ''
-        set -euo pipefail
-
-        ${cscli} console enroll "$ENROLL_KEY"
-      '';
-    };
-  };
 
   bouncerServiceList =
     let # https://github.com/crowdsecurity/crowdsec/blob/master/docker/docker_start.sh
@@ -149,17 +124,19 @@ in
       enable = true;
       autoUpdateService = true;
 
-      settings.general = {
-        api.server.listen_uri = "127.0.0.1:${cfg.lapiPort}";
+      settings = {
+        general.api.server.listen_uri = "127.0.0.1:${cfg.lapiPort}";
+        console.tokenFile = config.sops.secrets."crowdsec/enroll_key".path;
       };
+
       hub.collections = collections;
       localConfig.acquisitions = acquisitions;
     };
 
     environment.systemPackages = [ pkgs.crowdsec-firewall-bouncer ];
 
-    sops = lib.mkMerge ([ enrollSopsConfig ] ++ bouncerSopsList);
+    sops = lib.mkMerge ([ { secrets."crowdsec/enroll_key" = { }; } ] ++ bouncerSopsList);
 
-    systemd.services = lib.mkMerge ([ enrollService ] ++ bouncerServiceList);
+    systemd.services = lib.mkMerge bouncerServiceList;
   };
 }
