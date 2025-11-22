@@ -19,6 +19,18 @@ let
         mountPoint: bindMount: if bindMount.hostPath == null then mountPoint else bindMount.hostPath;
       container = config.containers.${name};
       hostPaths = lib.unique (lib.mapAttrsToList getHostPath container.bindMounts);
+
+      createHostPath = path: ''
+        if [[ ! -e "$path" ]]; then
+          echo "Creating directory: $path"
+          mkdir -p "$path"
+          if [[ "$path" == "${user.home}"* ]]; then
+            chown -R "${user.name}:${user.group}" "$path"
+          fi
+        else
+          echo "Path already exists, skipping: $path"
+        fi
+      '';
     in
     lib.mkIf instance.enable {
       "${containerService}" = {
@@ -35,18 +47,7 @@ let
         script = ''
           set -euo pipefail
 
-          printf "${lib.concatStringsSep "\n" hostPaths}" \
-            | while read path; do
-              if [[ ! -e "$path" ]]; then
-                echo "Creating directory: $path"
-                mkdir -p "$path"
-                if [[ "$path" == "${user.home}"* ]]; then
-                  chown -R "${user.name}:${user.group}" "$path"
-                fi
-              else
-                echo "Path already exists, skipping: $path"
-              fi
-            done
+          ${lib.concatMapStringsSep "\n" createHostPath hostPaths}
         '';
       };
     };
