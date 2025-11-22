@@ -398,6 +398,6 @@ in
 
     containers = lib.mapAttrs mkBaseConfig cfg.instances;
 
-    systemd.services = lib.concatMapAttrs mkServiceOverrides cfg.instances;
+    systemd.services = lib.mkMerge (lib.mapAttrsToList mkServiceOverrides cfg.instances);
   };
 }
