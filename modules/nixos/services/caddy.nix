@@ -24,23 +24,6 @@ let
     '')
   ];
 
-  secrets = {
-    "web_domain" = { };
-    "porkbun/api_key" = { };
-    "porkbun/api_secret_key" = { };
-  };
-
-  envFile = lib.concatStringsSep "\n" [
-    ''
-      DOMAIN=${config.sops.placeholder."web_domain"}
-      PORKBUN_API_KEY=${config.sops.placeholder."porkbun/api_key"}
-      PORKBUN_API_SECRET_KEY=${config.sops.placeholder."porkbun/api_secret_key"}
-    ''
-    (lib.optionalString crowdsec.enable ''
-      CROWDSEC_API_KEY=${lib.readFile crowdsec.bouncers.caddy.apiKeyFile}
-    '')
-  ];
-
   commonBlock = ''
     encode
 
@@ -139,8 +122,25 @@ in
         ];
 
         sops = {
-          inherit secrets;
-          templates."caddy-env".content = envFile;
+          secrets = {
+            "web_domain" = { };
+            "porkbun/api_key" = { };
+            "porkbun/api_secret_key" = { };
+            "crowdsec/caddy_bouncer_key" = lib.mkIf crowdsec.enable {
+              path = crowdsec.bouncers.caddy.apiKeyFile;
+            };
+          };
+
+          templates."caddy-env".content = lib.concatStringsSep "\n" [
+            ''
+              DOMAIN=${config.sops.placeholder."web_domain"}
+              PORKBUN_API_KEY=${config.sops.placeholder."porkbun/api_key"}
+              PORKBUN_API_SECRET_KEY=${config.sops.placeholder."porkbun/api_secret_key"}
+            ''
+            (lib.optionalString crowdsec.enable ''
+              CROWDSEC_API_KEY=${config.sops.placeholder."crowdsec/caddy_bouncer_key"}
+            '')
+          ];
         };
       }
       (lib.mkIf crowdsec.enable {
