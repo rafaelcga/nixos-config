@@ -337,26 +337,26 @@ in
 
           postUpFile = pkgs.writeShellScript "killswitch_postup.sh" ''
             ${iptables} -I OUTPUT \
-              ! -o %i \
-              -m mark ! --mark $(${wg} show %i fwmark) \
+              ! -o "${cfg.wireguardInterface}" \
+              -m mark ! --mark $(${wg} show "${cfg.wireguardInterface}" fwmark) \
               -m addrtype ! --dst-type LOCAL \
               -j REJECT
             ${ip6tables} -I OUTPUT \
-              ! -o %i \
-              -m mark ! --mark $(${wg} show %i fwmark) \
+              ! -o "${cfg.wireguardInterface}" \
+              -m mark ! --mark $(${wg} show "${cfg.wireguardInterface}" fwmark) \
               -m addrtype ! --dst-type LOCAL \
               -j REJECT
           '';
 
           preDownFile = pkgs.writeShellScript "killswitch_predown.sh" ''
             ${iptables} -D OUTPUT \
-              ! -o %i \
-              -m mark ! --mark $(${wg} show %i fwmark) \
+              ! -o "${cfg.wireguardInterface}" \
+              -m mark ! --mark $(${wg} show "${cfg.wireguardInterface}" fwmark) \
               -m addrtype ! --dst-type LOCAL \
               -j REJECT
             ${ip6tables} -D OUTPUT \
-              ! -o %i \
-              -m mark ! --mark $(${wg} show %i fwmark) \
+              ! -o "${cfg.wireguardInterface}" \
+              -m mark ! --mark $(${wg} show "${cfg.wireguardInterface}" fwmark) \
               -m addrtype ! --dst-type LOCAL \
               -j REJECT
           '';
