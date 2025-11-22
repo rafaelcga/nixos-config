@@ -77,6 +77,17 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    # See https://github.com/nixos/nixpkgs/issues/446764
+    systemd.tmpfiles.rules =
+      let
+        inherit (config.services.crowdsec) user group;
+      in
+      [
+        "d /var/lib/crowdsec 0755 ${user} ${group} - -"
+        # In contrast to the `lapi.credentialsFile`, the `capi.credentialsFile` must already exist beforehand
+        "f /var/lib/crowdsec/online_api_credentials.yaml 0750 ${user} ${group} - -"
+      ];
+
     services.crowdsec = {
       enable = true;
       autoUpdateService = true;
