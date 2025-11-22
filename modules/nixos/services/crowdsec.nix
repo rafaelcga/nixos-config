@@ -125,7 +125,10 @@ in
       autoUpdateService = true;
 
       settings = {
-        general.api.server.listen_uri = "127.0.0.1:${cfg.lapiPort}";
+        general.api.server = {
+          enable = true;
+          listen_uri = "127.0.0.1:${cfg.lapiPort}";
+        };
         console.tokenFile = config.sops.secrets."crowdsec/enroll_key".path;
       };
 
