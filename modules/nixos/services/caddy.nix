@@ -65,17 +65,16 @@ let
           appsec
         '')
       ];
-      hostConfig = {
-        extraConfig = ''
-          ${commonBlock}
-          route {
-              ${preProxyBlock}
-              reverse_proxy ${host.originHost}:${host.originPort}
-          }
-        '';
-      };
     in
-    lib.nameValuePair "${name}.{$DOMAIN}" hostConfig;
+    lib.nameValuePair "${name}.{$DOMAIN}" {
+      extraConfig = ''
+        ${commonBlock}
+        route {
+            ${preProxyBlock}
+            reverse_proxy ${host.originHost}:${host.originPort}
+        }
+      '';
+    };
 
   virtualHostOpts = {
     options = {
