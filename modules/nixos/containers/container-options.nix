@@ -27,6 +27,22 @@ let
       };
     };
   };
+
+  mountOpts = {
+    options = {
+      hostPath = lib.mkOption {
+        type = lib.types.nullOr lib.types.str;
+        default = null;
+        description = "Location of the host path to be mounted.";
+      };
+
+      isReadOnly = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = "Determine whether the mounted path will be accessed in read-only mode.";
+      };
+    };
+  };
 in
 {
   options = {
@@ -56,6 +72,12 @@ in
       default = { };
       internal = true;
       description = "Exposed container services mapped to their ports";
+    };
+
+    bindMounts = lib.mkOption {
+      type = lib.types.attrsOf (lib.types.submodule mountOpts);
+      default = { };
+      description = "Attribute set of directories to bind to the container";
     };
 
     extraForwardPorts = lib.mkOption {

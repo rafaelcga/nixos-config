@@ -40,6 +40,12 @@
           sonarr = 8006;
           prowlarr = 8007;
         };
+        bindMounts = {
+          "/media" = {
+            hostPath = "/mnt/media";
+            isReadOnly = false;
+          };
+        };
       };
     };
   };

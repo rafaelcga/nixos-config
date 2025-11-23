@@ -118,16 +118,19 @@ in
 
         bindConfigs =
           let
-            mkBindMount =
-              name: containerConfig:
-              lib.optionalAttrs (containerConfig.containerDataDir != null) {
-                "${name}".bindMounts."${containerConfig.containerDataDir}" = {
-                  hostPath = "${cfg.dataDir}/${name}";
-                  isReadOnly = false;
-                };
-              };
+            mkBindMounts = name: containerConfig: {
+              bindMounts = lib.mkMerge [
+                (lib.mkIf (containerConfig.containerDataDir != null) {
+                  "${containerConfig.containerDataDir}" = {
+                    hostPath = "${cfg.dataDir}/${name}";
+                    isReadOnly = false;
+                  };
+                })
+                containerConfig.bindMounts
+              ];
+            };
           in
-          lib.concatMapAttrs mkBindMount enabledContainers;
+          lib.mapAttrs mkBindMounts enabledContainers;
 
         addressConfigs =
           let
