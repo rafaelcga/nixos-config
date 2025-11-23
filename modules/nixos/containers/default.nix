@@ -58,7 +58,7 @@ in
       let
         baseConfigs =
           let
-            mkBaseConfig = name: containerConfig: {
+            mkBaseConfig = _: containerConfig: {
               autoStart = true;
               privateNetwork = true;
 
@@ -73,6 +73,32 @@ in
             };
           in
           lib.mapAttrs mkBaseConfig enabledContainers;
+
+        portConfigs =
+          let
+            mkForwardPorts =
+              _: containerConfig:
+              let
+                createForward =
+                  serviceName:
+                  let
+                    hostPort = containerConfig.hostPorts.${serviceName};
+                    containerPort = containerConfig.containerPorts.${serviceName};
+                  in
+                  lib.optionals (hostPort != null && containerPort != null) [
+                    {
+                      inherit hostPort containerPort;
+                      protocol = "tcp";
+                    }
+                  ];
+
+                serviceNames = lib.attrNames containerConfig.containerPorts;
+              in
+              {
+                forwardPorts = (lib.concatMap createForward serviceNames) ++ containerConfig.extraForwardPorts;
+              };
+          in
+          lib.mapAttrs mkForwardPorts enabledContainers;
 
         addressConfigs =
           let
@@ -91,6 +117,7 @@ in
       in
       lib.mkMerge [
         baseConfigs
+        portConfigs
         addressConfigs
       ];
   };
