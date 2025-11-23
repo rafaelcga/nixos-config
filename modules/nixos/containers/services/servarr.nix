@@ -48,6 +48,7 @@ lib.mkMerge [
           let
             mkService = name: {
               enable = true;
+              inherit (cfg) user group;
               dataDir = "${cfg.containerDataDir}/${name}";
               settings.server.port = cfg.containerPorts.${name};
               environmentFiles = [ config.sops.templates."servarr-env".path ];

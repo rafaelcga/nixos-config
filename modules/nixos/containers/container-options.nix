@@ -48,6 +48,20 @@ in
   options = {
     enable = lib.mkEnableOption "Enable container@${name}";
 
+    user = lib.mkOption {
+      type = lib.types.str;
+      default = name;
+      internal = true;
+      description = "Username for the container services";
+    };
+
+    group = lib.mkOption {
+      type = lib.types.str;
+      default = "containers";
+      internal = true;
+      description = "User group name for the container services";
+    };
+
     hostPort = lib.mkOption {
       type = lib.types.nullOr lib.types.port;
       default = null;

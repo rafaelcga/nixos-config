@@ -2,6 +2,7 @@
   inputs,
   config,
   lib,
+  userName,
   ...
 }:
 let
@@ -83,6 +84,19 @@ in
                 # Workaround for bug https://github.com/NixOS/nixpkgs/issues/162686
                 networking.useHostResolvConf = lib.mkForce false;
                 services.resolved.enable = true;
+
+                users =
+                  let
+                    user = config.users.users.${userName};
+                    group = config.users.groups.${user.group};
+                  in
+                  {
+                    users."${containerConfig.user}" = {
+                      inherit (user) uid;
+                      inherit (containerConfig) group;
+                    };
+                    groups."${containerConfig.group}".gid = group.gid;
+                  };
 
                 system.stateVersion = config.system.stateVersion;
               };
