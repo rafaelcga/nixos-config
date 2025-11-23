@@ -8,9 +8,9 @@ let
   cfg = config.modules.nixos.crowdsec;
 
   bouncerOpts =
-    { name, ... }:
+    { name, config, ... }:
     {
-      options = rec {
+      options = {
         enable = lib.mkEnableOption "Enable bouncer";
 
         bouncerName = lib.mkOption {
@@ -27,7 +27,7 @@ let
 
         serviceName = lib.mkOption {
           type = lib.types.str;
-          default = "${bouncerName}-register";
+          default = "${config.bouncerName}-register";
           readOnly = true;
           internal = true;
           description = "Name of the service generating the API key";
