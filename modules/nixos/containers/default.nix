@@ -45,6 +45,44 @@ in
         enableIPv6 = true;
         externalInterface = config.modules.nixos.networking.defaultInterface;
         internalInterfaces = [ (if config.networking.nftables.enable then "ve-*" else "ve-+") ];
+        forwardPorts =
+          let
+            mkForwardPorts =
+              name: containerConfig:
+              let
+                inherit (config.containers.${name}) localAddress;
+                containerForwards =
+                  let
+                    containerServices = lib.attrNames containerConfig.containerPorts;
+                    createForward =
+                      serviceName:
+                      let
+                        hostPort = containerConfig.hostPorts.${serviceName};
+                        containerPort = containerConfig.containerPorts.${serviceName};
+                      in
+                      lib.optionals (hostPort != null && containerPort != null) [
+                        {
+                          sourcePort = hostPort;
+                          proto = "tcp";
+                          destination = "${localAddress}:${containerPort}";
+                        }
+                      ];
+                  in
+                  lib.concatMap createForward containerServices;
+
+                extraPortForwards =
+                  let
+                    convertForwardPorts = forwardPort: {
+                      sourcePort = forwardPort.hostPort;
+                      proto = forwardPort.protocol;
+                      destination = "${localAddress}:${forwardPort.containerPort}";
+                    };
+                  in
+                  lib.map convertForwardPorts containerConfig.extraForwardPorts;
+              in
+              containerForwards ++ extraPortForwards;
+          in
+          lib.concat (lib.mapAttrsToList mkForwardPorts enabledContainers);
       };
 
       # Prevent NetworkManager from managing container interfaces
@@ -74,32 +112,6 @@ in
           in
           lib.mapAttrs mkBaseConfig enabledContainers;
 
-        portConfigs =
-          let
-            mkForwardPorts =
-              _: containerConfig:
-              let
-                createForward =
-                  serviceName:
-                  let
-                    hostPort = containerConfig.hostPorts.${serviceName};
-                    containerPort = containerConfig.containerPorts.${serviceName};
-                  in
-                  lib.optionals (hostPort != null && containerPort != null) [
-                    {
-                      inherit hostPort containerPort;
-                      protocol = "tcp";
-                    }
-                  ];
-
-                serviceNames = lib.attrNames containerConfig.containerPorts;
-              in
-              {
-                forwardPorts = (lib.concatMap createForward serviceNames) ++ containerConfig.extraForwardPorts;
-              };
-          in
-          lib.mapAttrs mkForwardPorts enabledContainers;
-
         addressConfigs =
           let
             sortedNames = lib.sort lib.lessThan (lib.attrNames enabledContainers);
@@ -117,7 +129,6 @@ in
       in
       lib.mkMerge [
         baseConfigs
-        portConfigs
         addressConfigs
       ];
   };
