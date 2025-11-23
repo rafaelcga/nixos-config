@@ -50,8 +50,11 @@ in
             mkForwardPorts =
               name: containerConfig:
               let
-                inherit (config.containers.${name}) localAddress;
-                loopbackIPs = [ "127.0.0.1" ];
+                inherit (config.containers.${name}) localAddress localAddress6;
+                loopbackIPs = [
+                  "127.0.0.1"
+                  "[::1]"
+                ];
 
                 containerForwards =
                   let
@@ -59,15 +62,18 @@ in
                     createForward =
                       serviceName:
                       let
-                        hostPort = containerConfig.hostPorts.${serviceName};
+                        proto = "tcp";
+                        sourcePort = containerConfig.hostPorts.${serviceName};
                         containerPort = containerConfig.containerPorts.${serviceName};
                       in
-                      lib.optionals (hostPort != null && containerPort != null) [
+                      lib.optionals (sourcePort != null && containerPort != null) [
                         {
-                          sourcePort = hostPort;
-                          proto = "tcp";
                           destination = "${localAddress}:${builtins.toString containerPort}";
-                          inherit loopbackIPs;
+                          inherit proto sourcePort loopbackIPs;
+                        }
+                        {
+                          destination = "[${localAddress6}]:${builtins.toString containerPort}";
+                          inherit proto sourcePort loopbackIPs;
                         }
                       ];
                   in
@@ -75,14 +81,24 @@ in
 
                 extraPortForwards =
                   let
-                    convertForwardPorts = forwardPort: {
-                      sourcePort = forwardPort.hostPort;
-                      proto = forwardPort.protocol;
-                      destination = "${localAddress}:${builtins.toString forwardPort.containerPort}";
-                      inherit loopbackIPs;
-                    };
+                    convertForwardPorts =
+                      forwardPort:
+                      let
+                        proto = forwardPort.protocol;
+                        sourcePort = forwardPort.hostPort;
+                      in
+                      [
+                        {
+                          destination = "${localAddress}:${builtins.toString forwardPort.containerPort}";
+                          inherit proto sourcePort loopbackIPs;
+                        }
+                        {
+                          destination = "[${localAddress6}]:${builtins.toString forwardPort.containerPort}";
+                          inherit proto sourcePort loopbackIPs;
+                        }
+                      ];
                   in
-                  lib.map convertForwardPorts containerConfig.extraForwardPorts;
+                  lib.concatMap convertForwardPorts containerConfig.extraForwardPorts;
               in
               containerForwards ++ extraPortForwards;
           in
