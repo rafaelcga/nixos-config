@@ -64,7 +64,7 @@ in
                         {
                           sourcePort = hostPort;
                           proto = "tcp";
-                          destination = "${localAddress}:${containerPort}";
+                          destination = "${localAddress}:${builtins.toString containerPort}";
                         }
                       ];
                   in
@@ -75,14 +75,14 @@ in
                     convertForwardPorts = forwardPort: {
                       sourcePort = forwardPort.hostPort;
                       proto = forwardPort.protocol;
-                      destination = "${localAddress}:${forwardPort.containerPort}";
+                      destination = "${localAddress}:${builtins.toString forwardPort.containerPort}";
                     };
                   in
                   lib.map convertForwardPorts containerConfig.extraForwardPorts;
               in
               containerForwards ++ extraPortForwards;
           in
-          lib.concat (lib.mapAttrsToList mkForwardPorts enabledContainers);
+          lib.concatLists (lib.mapAttrsToList mkForwardPorts enabledContainers);
       };
 
       # Prevent NetworkManager from managing container interfaces
