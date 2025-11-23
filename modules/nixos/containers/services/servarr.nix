@@ -46,14 +46,20 @@ lib.mkMerge [
       config = {
         services =
           let
-            mkService = name: {
-              enable = true;
-              inherit (cfg) user group;
-              dataDir = "${cfg.containerDataDir}/${name}";
-              settings.server.port = cfg.containerPorts.${name};
-              environmentFiles = [ config.sops.templates."servarr-env".path ];
-              openFirewall = true;
-            };
+            mkService =
+              name:
+              lib.mkMerge [
+                {
+                  enable = true;
+                  dataDir = "${cfg.containerDataDir}/${name}";
+                  settings.server.port = cfg.containerPorts.${name};
+                  environmentFiles = [ config.sops.templates."servarr-env".path ];
+                  openFirewall = true;
+                }
+                (lib.mkIf (name != "prowlarr") {
+                  inherit (cfg) user group;
+                })
+              ];
           in
           lib.genAttrs services mkService;
       };
