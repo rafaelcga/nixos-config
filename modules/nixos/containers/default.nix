@@ -31,6 +31,12 @@ in
       description = "Host local IPv6 address";
     };
 
+    dataDir = lib.mkOption {
+      type = lib.types.str;
+      default = "/srv/containers";
+      description = "Default host directory where container data will be saved";
+    };
+
     services = lib.mkOption {
       type = lib.types.attrsOf (lib.types.submodule (import ./container-options.nix));
       default = { };
@@ -100,6 +106,19 @@ in
           in
           lib.mapAttrs mkForwardPorts enabledContainers;
 
+        bindConfigs =
+          let
+            mkBindMount =
+              name: containerConfig:
+              lib.optionalAttrs (containerConfig.containerDataDir != null) {
+                "${name}".bindMounts."${containerConfig.containerDataDir}" = {
+                  hostPath = "${cfg.dataDir}/${name}";
+                  isReadOnly = false;
+                };
+              };
+          in
+          lib.concatMapAttrs mkBindMount enabledContainers;
+
         addressConfigs =
           let
             sortedNames = lib.sort lib.lessThan (lib.attrNames enabledContainers);
@@ -117,6 +136,7 @@ in
       in
       lib.mkMerge [
         baseConfigs
+        bindConfigs
         portConfigs
         addressConfigs
       ];

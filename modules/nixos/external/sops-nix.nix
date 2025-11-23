@@ -60,7 +60,7 @@ in
           set -euo pipefail
 
           mkdir -p "$(dirname "${cfg.ageKeyFile}")"
-          ${ssh-to-age} -private-key -i "${cfg.sshKeyFile}" > "${cfg.ageKeyFile}"
+          ${ssh-to-age} -private-key -i "${cfg.sshKeyFile}" >"${cfg.ageKeyFile}"
         '';
     };
   };
