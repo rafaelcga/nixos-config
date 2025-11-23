@@ -118,11 +118,10 @@ in
               sortedPeers = lib.sort lib.lessThan (lib.attrNames flakeMeta.hosts);
               clientPeers = lib.remove cfg.serverHostName sortedPeers;
               # Using imap1, index starts from 1
-              mkValuePairs = index: client: {
-                name = client;
+              mkValuePairs = index: name: {
+                inherit name;
                 value = utils.addToLastOctet cfg.internalIp index;
               };
-
             in
             lib.listToAttrs (lib.imap1 mkValuePairs clientPeers);
 

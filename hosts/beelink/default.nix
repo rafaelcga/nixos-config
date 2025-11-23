@@ -31,7 +31,7 @@
     caddy.enable = true;
     crowdsec.enable = true;
     # Containers
-    containers.instances = {
+    containers.services = {
       servarr = {
         enable = true;
         localAddress = "172.22.0.6";

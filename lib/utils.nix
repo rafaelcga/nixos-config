@@ -13,38 +13,43 @@ in
     in
     lib.attrNames (lib.filterAttrs (_: type: type == "directory") dirContents);
 
-  updateLastOctet =
-    address: newLastOctet:
-    let
-      octets = lib.splitString "." address;
-      networkParts = lib.take 3 octets;
-
-      isValidAddress = lib.length octets == 4;
-      isValidResult = newLastOctet >= 0 && newLastOctet < 256;
-    in
-    if !isValidAddress then
-      throw "updateLastOctet: Invalid IP address format: `${address}`"
-    else if !isValidResult then
-      throw "updateLastOctet: Octet overflow"
-    else
-      lib.concatStringsSep "." (networkParts ++ [ (builtins.toString newLastOctet) ]);
-
   addToLastOctet =
     address: num:
     let
       octets = lib.splitString "." address;
-      networkParts = lib.take 3 octets;
+
+      restOctets = lib.take 3 octets;
       lastOctetStr = lib.last octets;
       newLastOctet = (lib.toInt lastOctetStr) + num;
 
       isValidAddress = lib.length octets == 4;
       isValidResult = newLastOctet >= 0 && newLastOctet < 256;
-
     in
     if !isValidAddress then
       throw "addToLastOctet: Invalid IP address format: `${address}`"
     else if !isValidResult then
       throw "addToLastOctet: Octet overflow"
     else
-      lib.concatStringsSep "." (networkParts ++ [ (builtins.toString newLastOctet) ]);
+      lib.concatStringsSep "." (restOctets ++ [ (builtins.toString newLastOctet) ]);
+
+  addToLastHextet =
+    address: num:
+    let
+      fullAddress = (lib.network.ipv6.fromString address).address;
+      hextets = lib.splitString ":" fullAddress;
+      numHextets = lib.length hextets;
+
+      restHextets = lib.take (numHextets - 1) hextets;
+      lastHextetStr = lib.last hextets;
+      newLastHextet = (lib.fromHexString lastHextetStr) + num;
+
+      isValidAddress = numHextets > 4;
+      isValidResult = newLastHextet >= 0 && newLastHextet < 65535;
+    in
+    if !isValidAddress then
+      throw "addToLastHextet: Invalid IP address format: `${address}`"
+    else if !isValidResult then
+      throw "addToLastHextet: Octet overflow"
+    else
+      lib.concatStringsSep ":" (restHextets ++ [ (lib.toHexString newLastHextet) ]);
 }

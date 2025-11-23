@@ -1,71 +1,12 @@
 { config, lib, ... }:
 let
-  cfg = config.modules.nixos.containers.instances.servarr;
+  cfg = config.modules.nixos.containers.services.servarr;
 
   services = lib.attrNames cfg.containerPorts;
 in
-{
-  options.modules.nixos.containers.instances.servarr = {
-    enable = lib.mkEnableOption "Enable container@servarr";
-
-    hostAddress = lib.mkOption {
-      type = lib.types.str;
-      default = "172.22.0.1"; # 172.22.0.0/24
-      description = "Host local IPv4 address";
-    };
-
-    hostAddress6 = lib.mkOption {
-      type = lib.types.str;
-      default = "fc00::1";
-      description = "Host local IPv6 address";
-    };
-
-    localAddress = lib.mkOption {
-      type = lib.types.str;
-      description = "Container local IPv4 address";
-    };
-
-    localAddress6 = lib.mkOption {
-      type = lib.types.str;
-      description = "Container local IPv6 address";
-    };
-
-    hostPort = lib.mkOption {
-      type = lib.types.nullOr lib.types.port;
-      default = null;
-      description = "Host port to map to exposed container port";
-    };
-
-    hostPorts = lib.mkOption {
-      type = lib.types.attrsOf (lib.types.nullOr lib.types.port);
-      default = { };
-      description = "Host ports to map to exposed services in the container";
-    };
-
-    containerPort = lib.mkOption {
-      type = lib.types.nullOr lib.types.port;
-      default = null;
-      internal = true;
-      description = "Exposed container port";
-    };
-
-    containerPorts = lib.mkOption {
-      type = lib.types.attrsOf (lib.types.nullOr lib.types.port);
-      default = { };
-      internal = true;
-      description = "Exposed container services mapped to their ports";
-    };
-
-    containerDataDir = lib.mkOption {
-      type = lib.types.nullOr lib.types.str;
-      default = null;
-      internal = true;
-      description = "Path of aggregated data from the container";
-    };
-  };
-
-  config = lib.mkIf cfg.enable {
-    modules.nixos.containers.instances.servarr = {
+lib.mkMerge [
+  {
+    modules.nixos.containers.services.servarr = {
       containerPorts = {
         lidarr = 8686;
         radarr = 7878;
@@ -74,7 +15,8 @@ in
       };
       containerDataDir = "/var/lib/servarr";
     };
-
+  }
+  (lib.mkIf cfg.enable {
     sops = {
       secrets =
         let
@@ -97,13 +39,6 @@ in
     containers.servarr = {
       autoStart = true;
       privateNetwork = true;
-
-      inherit (cfg)
-        hostAddress
-        localAddress
-        hostAddress6
-        localAddress6
-        ;
 
       bindMounts = {
         "${config.sops.templates."servarr-env".path}" = {
@@ -137,5 +72,5 @@ in
         system.stateVersion = config.system.stateVersion;
       };
     };
-  };
-}
+  })
+]

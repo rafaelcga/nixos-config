@@ -32,16 +32,6 @@ in
   options = {
     enable = lib.mkEnableOption "Enable container@${name}";
 
-    localAddress = lib.mkOption {
-      type = lib.types.str;
-      description = "Container local IPv4 address";
-    };
-
-    localAddress6 = lib.mkOption {
-      type = lib.types.str;
-      description = "Container local IPv6 address";
-    };
-
     hostPort = lib.mkOption {
       type = lib.types.nullOr lib.types.port;
       default = null;
