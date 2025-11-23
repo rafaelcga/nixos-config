@@ -7,6 +7,9 @@
 let
   cfg = config.modules.nixos.crowdsec;
 
+  rootDir = "/var/lib/crowdsec";
+  confDir = "/etc/crowdsec";
+
   bouncerOpts =
     { name, config, ... }:
     {
@@ -59,7 +62,7 @@ let
           Group = config.services.crowdsec.group;
           StateDirectory = serviceName;
           # Needs write permissions to add the bouncer
-          ReadWritePaths = [ "/var/lib/crowdsec" ];
+          ReadWritePaths = [ rootDir ];
           DynamicUser = true;
           LockPersonality = true;
           PrivateDevices = true;
@@ -250,7 +253,38 @@ in
             wantedBy = [ "multi-user.target" ];
             after = [ "crowdsec.service" ];
             wants = [ "crowdsec.service" ];
-            serviceConfig.Type = "oneshot";
+            serviceConfig = {
+              Type = "oneshot";
+              User = config.services.crowdsec.user;
+              Group = config.services.crowdsec.group;
+              ReadWritePaths = [
+                rootDir
+                confDir
+              ];
+              DynamicUser = true;
+              LockPersonality = true;
+              PrivateDevices = true;
+              ProcSubset = "pid";
+              ProtectClock = true;
+              ProtectControlGroups = true;
+              ProtectHome = true;
+              ProtectHostname = true;
+              ProtectKernelLogs = true;
+              ProtectKernelModules = true;
+              ProtectKernelTunables = true;
+              ProtectProc = "invisible";
+              RestrictNamespaces = true;
+              RestrictRealtime = true;
+              SystemCallArchitectures = "native";
+              RestrictAddressFamilies = "none";
+              CapabilityBoundingSet = [ "" ];
+              SystemCallFilter = [
+                "@system-service"
+                "~@privileged"
+                "~@resources"
+              ];
+              UMask = "0077";
+            };
             script =
               let
                 cscli = "/run/current-system/sw/bin/cscli";
