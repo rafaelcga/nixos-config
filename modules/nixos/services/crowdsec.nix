@@ -261,28 +261,6 @@ in
                 rootDir
                 confDir
               ];
-              DynamicUser = true;
-              LockPersonality = true;
-              PrivateDevices = true;
-              ProcSubset = "pid";
-              ProtectClock = true;
-              ProtectControlGroups = true;
-              ProtectHome = true;
-              ProtectHostname = true;
-              ProtectKernelLogs = true;
-              ProtectKernelModules = true;
-              ProtectKernelTunables = true;
-              ProtectProc = "invisible";
-              RestrictNamespaces = true;
-              RestrictRealtime = true;
-              SystemCallArchitectures = "native";
-              RestrictAddressFamilies = "none";
-              CapabilityBoundingSet = [ "" ];
-              SystemCallFilter = [
-                "@system-service"
-                "~@privileged"
-                "~@resources"
-              ];
               UMask = "0077";
             };
             script =
