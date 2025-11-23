@@ -8,11 +8,15 @@ let
   cfg = config.modules.nixos.containers;
 
   utils = import "${inputs.self}/lib/utils.nix" { inherit lib; };
+
+  enabledContainers =
+    let
+      isEnabled = _: containerConfig: containerConfig.enable;
+    in
+    lib.filterAttrs isEnabled cfg.services;
 in
 {
-  imports = [
-    ./servarr.nix
-  ];
+  imports = [ ./services ];
 
   options.modules.nixos.containers = {
     hostAddress = lib.mkOption {
@@ -34,7 +38,7 @@ in
     };
   };
 
-  config = {
+  config = lib.mkIf (enabledContainers != { }) {
     networking = {
       nat = {
         enable = true;
@@ -52,10 +56,25 @@ in
 
     containers =
       let
-        enabledContainers = lib.filterAttrs (_: service: service.enable) cfg.services;
-      in
-      lib.mkMerge [
-        (
+        baseConfigs =
+          let
+            mkBaseConfig = name: containerConfig: {
+              autoStart = true;
+              privateNetwork = true;
+
+              config = {
+                # Use systemd-resolved inside the container
+                # Workaround for bug https://github.com/NixOS/nixpkgs/issues/162686
+                networking.useHostResolvConf = lib.mkForce false;
+                services.resolved.enable = true;
+
+                system.stateVersion = config.system.stateVersion;
+              };
+            };
+          in
+          lib.mapAttrs mkBaseConfig enabledContainers;
+
+        addressConfigs =
           let
             sortedNames = lib.sort lib.lessThan (lib.attrNames enabledContainers);
             # Using imap1, index starts from 1
@@ -68,8 +87,11 @@ in
               };
             };
           in
-          lib.listToAttrs (lib.imap1 mkValuePairs sortedNames)
-        )
+          lib.listToAttrs (lib.imap1 mkValuePairs sortedNames);
+      in
+      lib.mkMerge [
+        baseConfigs
+        addressConfigs
       ];
   };
 }
