@@ -151,25 +151,28 @@ in
           ];
         };
 
-        systemd.services.caddy =
+        systemd.services =
           let
+            inherit (config.services.caddy) user group;
             envFile = "/run/${crowdsec.bouncers.caddy.bouncerName}/caddy.env";
           in
           {
-            wants = [ "crowdsec.service" ];
-            after = [ "crowdsec.service" ];
-            preStart =
-              let
-                cat = lib.getExe' pkgs.coreutils "cat";
-                echo = lib.getExe' pkgs.coreutils "echo";
-                mkdir = lib.getExe' pkgs.coreutils "mkdir";
-              in
-              ''
-                ${mkdir} -p "$(dirname "${envFile}")"
-                ${cat} ${config.sops.templates."caddy-env".path} >"${envFile}"
-                ${echo} "CROWDSEC_API_KEY=$(${cat} ${crowdsec.bouncers.caddy.apiKeyFile})" >>"${envFile}"
+            generate-caddy-env-file = {
+              wants = [ "crowdsec.service" ];
+              after = [ "crowdsec.service" ];
+              script = ''
+                mkdir -p "$(dirname "${envFile}")"
+                cat ${config.sops.templates."caddy-env".path} >"${envFile}"
+                echo "CROWDSEC_API_KEY=$(cat ${crowdsec.bouncers.caddy.apiKeyFile})" >>"${envFile}"
+                chown ${user}:${group} "${envFile}"
               '';
-            serviceConfig.EnvironmentFile = lib.mkForce envFile;
+            };
+
+            caddy = {
+              wants = [ "generate-caddy-env-file.service" ];
+              after = [ "generate-caddy-env-file.service" ];
+              serviceConfig.EnvironmentFile = lib.mkForce envFile;
+            };
           };
       })
     ]
