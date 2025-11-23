@@ -2,7 +2,6 @@
   inputs,
   config,
   lib,
-  userName,
   ...
 }:
 let
@@ -61,50 +60,15 @@ in
       };
     };
 
-    systemd.services =
+    systemd.tmpfiles.settings =
       let
-        mkDirService =
+        mkContainerDirs =
           name: containerConfig:
-          let
-            containerService = "container@${name}";
-            directoryService = "make-container-directories@${name}";
-            user = config.users.users.${userName};
-
-            getHostPath =
-              mountPoint: bindMount: if bindMount.hostPath == null then mountPoint else bindMount.hostPath;
-            hostPaths = lib.unique (lib.mapAttrsToList getHostPath config.containers.${name}.bindMounts);
-
-            mkDir = path: ''
-              if [[ ! -e "${path}" ]]; then
-                echo "Creating directory: ${path}"
-                mkdir -p "${path}"
-                if [[ "${path}" == "${user.home}"* ]]; then
-                  chown -R "${user.name}:${user.group}" "${path}"
-                fi
-              else
-                echo "Path already exists, skipping: ${path}"
-              fi
-            '';
-          in
-          {
-            "${containerService}" = {
-              after = [ "${directoryService}.service" ];
-              wants = [ "${directoryService}.service" ];
-            };
-
-            "${directoryService}" = {
-              description = "Create necessary host directories for ${containerService}";
-              partOf = [ "${containerService}.service" ];
-              serviceConfig.Type = "oneshot";
-              script = ''
-                set -euo pipefail
-
-                ${lib.concatMapStringsSep "\n" mkDir hostPaths}
-              '';
-            };
+          lib.nameValuePair "10-container-${name}" {
+            "${cfg.dataDir}/${name}".d = { };
           };
       in
-      lib.concatMapAttrs mkDirService enabledContainers;
+      lib.mapAttrs' mkContainerDirs enabledContainers;
 
     containers =
       let
