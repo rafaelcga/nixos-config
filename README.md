@@ -24,16 +24,16 @@ There are two ways to easily bootstrap an install of a system: using `disko` +
 `nixos-install` for local ISOs, and
 [`nixos-anywhere`](https://github.com/nix-community/nixos-anywhere) through SSH.
 
+Don't forget to regenerate the `hardware-configuration.nix` once you boot into the system
+and push it to the remote. Use `scripts/generate_hardware.sh`.
+
 ### Local ISO
 
 Use `scripts/local_install.sh`, passing `-n <hostname> -k <ssh_key_path>`. Then reboot.
 
-Don't forget to regenerate the `hardware-configuration.nix` once you boot into the system
-and clone the repo again. Use `scripts/generate_hardware.sh`.
-
 ### SSH
 
-_TODO_
+Use `scripts/remote_install.sh`, passing `-n <hostname> -k <ssh_key_path> <user@host>`. Then reboot.
 
 ## Maintenance
 
