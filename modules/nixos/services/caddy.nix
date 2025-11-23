@@ -163,13 +163,17 @@ in
           in
           {
             generate-caddy-env-file = {
+              wantedBy = [ "multi-user.target" ];
               wants = [ "${serviceName}.service" ];
               after = [ "${serviceName}.service" ];
               serviceConfig.Type = "oneshot";
               script = ''
+                set -euo pipefail
+
                 mkdir -p "$(dirname "${envFile}")"
                 cat ${config.sops.templates."caddy-env".path} >"${envFile}"
                 echo "CROWDSEC_API_KEY=$(cat ${apiKeyFile})" >>"${envFile}"
+
                 chown ${user}:${group} "${envFile}"
                 chmod 0600 "${envFile}"
               '';

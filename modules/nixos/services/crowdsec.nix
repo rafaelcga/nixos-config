@@ -88,10 +88,12 @@ let
         script =
           let
             jq = lib.getExe pkgs.jq;
+            cscli = "/run/current-system/sw/bin/cscli";
           in
           ''
-            cscli=/run/current-system/sw/bin/cscli
-            if $cscli bouncers list --output json \
+            set -euo pipefail
+
+            if ${cscli} bouncers list --output json \
               | ${jq} -e -- ${lib.escapeShellArg "any(.[]; .name == \"${bouncerName}\")"} >/dev/null; then
               # Bouncer already registered. Verify the API key is still present
               if [[ ! -f ${apiKeyFile} ]]; then
@@ -103,7 +105,7 @@ let
               # Remove any previously saved API key
               rm -f "${apiKeyFile}"
               # Register the bouncer and save the new API key
-              if ! $cscli bouncers add --output raw \
+              if ! ${cscli} bouncers add --output raw \
                 -- ${lib.escapeShellArg bouncerName} >${apiKeyFile}; then
                 # Failed to register the bouncer
                 rm -f "${apiKeyFile}"
@@ -178,7 +180,8 @@ in
           capi.credentialsFile = "/var/lib/crowdsec/online_api_credentials.yaml";
 
           console = {
-            tokenFile = config.sops.secrets."crowdsec/enroll_key".path;
+            # See https://github.com/NixOS/nixpkgs/issues/445342
+            # tokenFile = config.sops.secrets."crowdsec/enroll_key".path;
             configuration = {
               share_custom = true;
               share_manual_decisions = true;
@@ -240,6 +243,27 @@ in
       "crowdsec/enroll_key" = { };
     };
 
-    systemd.services = lib.mkMerge (lib.mapAttrsToList registerBouncer cfg.bouncers);
+    systemd.services = lib.mkMerge (
+      [
+        {
+          "enroll-crowdsec-console" = {
+            wantedBy = [ "multi-user.target" ];
+            after = [ "crowdsec.service" ];
+            wants = [ "crowdsec.service" ];
+            serviceConfig.Type = "oneshot";
+            script =
+              let
+                cscli = "/run/current-system/sw/bin/cscli";
+              in
+              ''
+                ${cscli} console enroll "$(cat ${
+                  config.sops.secrets."crowdsec/enroll_key".path
+                })" --name ${config.services.crowdsec.name}
+              '';
+          };
+        }
+      ]
+      ++ lib.mapAttrsToList registerBouncer cfg.bouncers
+    );
   };
 }
