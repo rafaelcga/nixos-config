@@ -75,26 +75,24 @@ in
       containerDataDir = "/var/lib/servarr";
     };
 
-    sops =
+    sops = {
+      secrets =
+        let
+          mkSecret = service: lib.nameValuePair "servarr/${service}" { };
+        in
+        lib.genAttrs' services mkSecret;
 
-      {
-        secrets =
-          let
-            mkSecret = service: lib.nameValuePair "servarr/${service}" { };
-          in
-          lib.genAttrs' services mkSecret;
-
-        templates."servarr-env".content =
-          let
-            mkApiKey =
-              service:
-              let
-                apiKey = config.sops.placeholder."servarr/${service}";
-              in
-              "${lib.toUpper service}__AUTH__APIKEY=${apiKey}";
-          in
-          lib.concatMapStringsSep "\n" mkApiKey services;
-      };
+      templates."servarr-env".content =
+        let
+          mkApiKey =
+            service:
+            let
+              apiKey = config.sops.placeholder."servarr/${service}";
+            in
+            "${lib.toUpper service}__AUTH__APIKEY=${apiKey}";
+        in
+        lib.concatMapStringsSep "\n" mkApiKey services;
+    };
 
     containers.servarr = {
       autoStart = true;
