@@ -1,4 +1,9 @@
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  userName,
+  ...
+}:
 let
   cfg = config.modules.nixos.containers.services.servarr;
 
@@ -46,19 +51,24 @@ lib.mkMerge [
       config = {
         services =
           let
-            mkService = name: {
-              enable = true;
-              dataDir = "${cfg.containerDataDir}/${name}";
-              settings = {
-                server.port = cfg.containerPorts.${name};
-                update = {
-                  mechanism = "builtIn";
-                  automatically = true;
+            mkService =
+              name:
+              {
+                enable = true;
+                dataDir = "${cfg.containerDataDir}/${name}";
+                settings = {
+                  server.port = cfg.containerPorts.${name};
+                  update = {
+                    mechanism = "builtIn";
+                    automatically = true;
+                  };
                 };
+                environmentFiles = [ config.sops.templates."servarr-env".path ];
+                openFirewall = true;
+              }
+              // lib.optionalAttrs (name != "prowlarr") {
+                user = userName;
               };
-              environmentFiles = [ config.sops.templates."servarr-env".path ];
-              openFirewall = true;
-            };
           in
           lib.genAttrs services mkService;
       };
