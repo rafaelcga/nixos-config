@@ -45,64 +45,6 @@ in
         enableIPv6 = true;
         externalInterface = config.modules.nixos.networking.defaultInterface;
         internalInterfaces = [ (if config.networking.nftables.enable then "ve-*" else "ve-+") ];
-        forwardPorts =
-          let
-            mkForwardPorts =
-              name: containerConfig:
-              let
-                inherit (config.containers.${name}) localAddress localAddress6;
-                loopbackIPs = [
-                  "127.0.0.1"
-                  "[::1]"
-                ];
-
-                containerForwards =
-                  let
-                    containerServices = lib.attrNames containerConfig.containerPorts;
-                    createForward =
-                      serviceName:
-                      let
-                        proto = "tcp";
-                        sourcePort = containerConfig.hostPorts.${serviceName};
-                        containerPort = containerConfig.containerPorts.${serviceName};
-                      in
-                      lib.optionals (sourcePort != null && containerPort != null) [
-                        {
-                          destination = "${localAddress}:${builtins.toString containerPort}";
-                          inherit proto sourcePort loopbackIPs;
-                        }
-                        {
-                          destination = "[${localAddress6}]:${builtins.toString containerPort}";
-                          inherit proto sourcePort loopbackIPs;
-                        }
-                      ];
-                  in
-                  lib.concatMap createForward containerServices;
-
-                extraPortForwards =
-                  let
-                    convertForwardPorts =
-                      forwardPort:
-                      let
-                        proto = forwardPort.protocol;
-                        sourcePort = forwardPort.hostPort;
-                      in
-                      [
-                        {
-                          destination = "${localAddress}:${builtins.toString forwardPort.containerPort}";
-                          inherit proto sourcePort loopbackIPs;
-                        }
-                        {
-                          destination = "[${localAddress6}]:${builtins.toString forwardPort.containerPort}";
-                          inherit proto sourcePort loopbackIPs;
-                        }
-                      ];
-                  in
-                  lib.concatMap convertForwardPorts containerConfig.extraForwardPorts;
-              in
-              containerForwards ++ extraPortForwards;
-          in
-          lib.concatLists (lib.mapAttrsToList mkForwardPorts enabledContainers);
       };
 
       # Prevent NetworkManager from managing container interfaces
@@ -132,6 +74,32 @@ in
           in
           lib.mapAttrs mkBaseConfig enabledContainers;
 
+        portConfigs =
+          let
+            mkForwardPorts =
+              _: containerConfig:
+              let
+                createForward =
+                  serviceName:
+                  let
+                    hostPort = containerConfig.hostPorts.${serviceName};
+                    containerPort = containerConfig.containerPorts.${serviceName};
+                  in
+                  lib.optionals (hostPort != null && containerPort != null) [
+                    {
+                      inherit hostPort containerPort;
+                      protocol = "tcp";
+                    }
+                  ];
+
+                serviceNames = lib.attrNames containerConfig.containerPorts;
+              in
+              {
+                forwardPorts = (lib.concatMap createForward serviceNames) ++ containerConfig.extraForwardPorts;
+              };
+          in
+          lib.mapAttrs mkForwardPorts enabledContainers;
+
         addressConfigs =
           let
             sortedNames = lib.sort lib.lessThan (lib.attrNames enabledContainers);
@@ -149,6 +117,7 @@ in
       in
       lib.mkMerge [
         baseConfigs
+        portConfigs
         addressConfigs
       ];
   };
