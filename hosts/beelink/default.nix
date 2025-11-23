@@ -30,5 +30,19 @@
     # Services
     caddy.enable = true;
     crowdsec.enable = true;
+    # Containers
+    containers.instances = {
+      servarr = {
+        enable = true;
+        localAddress = "172.22.0.6";
+        localAddress6 = "fc00::6";
+        hostPorts = {
+          lidarr = 8004;
+          radarr = 8005;
+          sonarr = 8006;
+          prowlarr = 8007;
+        };
+      };
+    };
   };
 }
