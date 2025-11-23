@@ -243,7 +243,10 @@ in
     };
 
     sops.secrets = {
-      "crowdsec/enroll_key" = { };
+      "crowdsec/enroll_key" = {
+        owner = config.services.crowdsec.user;
+        group = config.services.crowdsec.group;
+      };
     };
 
     systemd.services = lib.mkMerge (
