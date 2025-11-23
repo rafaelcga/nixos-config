@@ -160,6 +160,9 @@ in
             generate-caddy-env-file = {
               wants = [ "crowdsec.service" ];
               after = [ "crowdsec.service" ];
+              serviceConfig = {
+                Type = "oneshot";
+              };
               script = ''
                 mkdir -p "$(dirname "${envFile}")"
                 cat ${config.sops.templates."caddy-env".path} >"${envFile}"
