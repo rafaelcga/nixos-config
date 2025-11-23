@@ -2,13 +2,6 @@
 let
   cfg = config.modules.nixos.containers.instances.servarr;
 
-  mkApiKey =
-    service:
-    let
-      apiKey = config.sops.placeholder."servarr/${service}";
-    in
-    "${lib.toUpper service}__AUTH__APIKEY=${apiKey}";
-
   services = lib.attrNames cfg.containerPorts;
 in
 {
@@ -84,14 +77,26 @@ in
       containerDataDir = "/var/lib/servarr";
     };
 
-    sops = {
-      secrets =
-        let
-          mkSecret = service: lib.nameValuePair "servarr/${service}" { };
-        in
-        lib.genAttrs' services mkSecret;
-      templates."servarr-env".content = lib.concatMapStringsSep "\n" mkApiKey services;
-    };
+    sops =
+
+      {
+        secrets =
+          let
+            mkSecret = service: lib.nameValuePair "servarr/${service}" { };
+          in
+          lib.genAttrs' services mkSecret;
+
+        templates."servarr-env".content =
+          let
+            mkApiKey =
+              service:
+              let
+                apiKey = config.sops.placeholder."servarr/${service}";
+              in
+              "${lib.toUpper service}__AUTH__APIKEY=${apiKey}";
+          in
+          lib.concatMapStringsSep "\n" mkApiKey services;
+      };
 
     containers.servarr = {
       autoStart = true;
