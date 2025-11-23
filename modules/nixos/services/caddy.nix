@@ -160,14 +160,13 @@ in
             generate-caddy-env-file = {
               wants = [ "crowdsec.service" ];
               after = [ "crowdsec.service" ];
-              serviceConfig = {
-                Type = "oneshot";
-              };
+              serviceConfig.Type = "oneshot";
               script = ''
                 mkdir -p "$(dirname "${envFile}")"
                 cat ${config.sops.templates."caddy-env".path} >"${envFile}"
                 echo "CROWDSEC_API_KEY=$(cat ${crowdsec.bouncers.caddy.apiKeyFile})" >>"${envFile}"
                 chown ${user}:${group} "${envFile}"
+                chmod 0600 "${envFile}"
               '';
             };
 
