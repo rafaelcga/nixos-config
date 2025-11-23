@@ -154,17 +154,22 @@ in
         systemd.services =
           let
             inherit (config.services.caddy) user group;
-            envFile = "/run/${crowdsec.bouncers.caddy.bouncerName}/caddy.env";
+            inherit (crowdsec.bouncers.caddy)
+              bouncerName
+              apiKeyFile
+              serviceName
+              ;
+            envFile = "/run/${bouncerName}/caddy.env";
           in
           {
             generate-caddy-env-file = {
-              wants = [ "crowdsec.service" ];
-              after = [ "crowdsec.service" ];
+              wants = [ "${serviceName}.service" ];
+              after = [ "${serviceName}.service" ];
               serviceConfig.Type = "oneshot";
               script = ''
                 mkdir -p "$(dirname "${envFile}")"
                 cat ${config.sops.templates."caddy-env".path} >"${envFile}"
-                echo "CROWDSEC_API_KEY=$(cat ${crowdsec.bouncers.caddy.apiKeyFile})" >>"${envFile}"
+                echo "CROWDSEC_API_KEY=$(cat ${apiKeyFile})" >>"${envFile}"
                 chown ${user}:${group} "${envFile}"
                 chmod 0600 "${envFile}"
               '';

@@ -10,7 +10,7 @@ let
   bouncerOpts =
     { name, ... }:
     {
-      options = {
+      options = rec {
         enable = lib.mkEnableOption "Enable bouncer";
 
         bouncerName = lib.mkOption {
@@ -24,6 +24,14 @@ let
           default = "/var/lib/crowdsec-${name}-bouncer-register/api-key.cred";
           description = "Path to the API key generated to register bouncer";
         };
+
+        serviceName = lib.mkOption {
+          type = lib.types.str;
+          default = "${bouncerName}-register";
+          readOnly = true;
+          internal = true;
+          description = "Name of the service generating the API key";
+        };
       };
     };
 
@@ -35,8 +43,8 @@ let
         enable
         bouncerName
         apiKeyFile
+        serviceName
         ;
-      serviceName = "${bouncerName}-register";
     in
     {
       "${serviceName}" = lib.mkIf enable {
