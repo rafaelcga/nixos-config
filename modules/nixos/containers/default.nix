@@ -51,6 +51,8 @@ in
               name: containerConfig:
               let
                 inherit (config.containers.${name}) localAddress;
+                loopbackIPs = [ "127.0.0.1" ];
+
                 containerForwards =
                   let
                     containerServices = lib.attrNames containerConfig.containerPorts;
@@ -65,6 +67,7 @@ in
                           sourcePort = hostPort;
                           proto = "tcp";
                           destination = "${localAddress}:${builtins.toString containerPort}";
+                          inherit loopbackIPs;
                         }
                       ];
                   in
@@ -76,6 +79,7 @@ in
                       sourcePort = forwardPort.hostPort;
                       proto = forwardPort.protocol;
                       destination = "${localAddress}:${builtins.toString forwardPort.containerPort}";
+                      inherit loopbackIPs;
                     };
                   in
                   lib.map convertForwardPorts containerConfig.extraForwardPorts;
