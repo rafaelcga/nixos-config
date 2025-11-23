@@ -77,7 +77,6 @@ in
             mkBaseConfig = _: containerConfig: {
               autoStart = true;
               privateNetwork = true;
-              privateUsers = "pick";
 
               config = {
                 # Use systemd-resolved inside the container
