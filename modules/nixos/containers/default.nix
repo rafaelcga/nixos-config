@@ -89,23 +89,42 @@ in
             "fe80::/10"
           ];
 
+          isIpv4 = address: lib.hasInfix "." address;
+          isIpv6 = address: lib.hasInfix ":" address;
+
+          mkRoutes =
+            action:
+            let
+              templateRoute =
+                address:
+                let
+                  ip = lib.getExe pkgs.iproute2;
+                  command = "${ip}" + lib.optionalString (isIpv6 address) " -6";
+                  gateway = if isIpv4 address then cfg.hostAddress else cfg.hostAddress6;
+                in
+                "${command} route ${action} ${address} via ${gateway}";
+            in
+            lib.concatMapStringsSep "\n" templateRoute (localIpv4 ++ localIpv6);
+
           mkAllowRules =
             action:
             let
-              allowedIps = {
-                iptables = [ cfg.hostAddress ] ++ localIpv4;
-                ip6tables = [ cfg.hostAddress6 ] ++ localIpv6;
-              };
+              allowedIps = [
+                cfg.hostAddress
+                cfg.hostAddress6
+              ]
+              ++ localIpv4
+              ++ localIpv6;
 
-              mapRules =
-                binName: ips:
+              templateRule =
+                ip:
                 let
-                  iptables = lib.getExe' pkgs.iptables binName;
-                  templateRule = ip: "${iptables} ${action} OUTPUT -d ${ip} -j ACCEPT";
+                  binName = if isIpv4 ip then "iptables" else "ip6tables";
+                  iptablesBin = lib.getExe' pkgs.iptables binName;
                 in
-                lib.concatMapStringsSep "\n" templateRule ips;
+                "${iptablesBin} ${action} OUTPUT -d ${ip} -j ACCEPT";
             in
-            lib.concatStringsSep "\n" (lib.mapAttrsToList mapRules allowedIps);
+            lib.concatMapStringsSep "\n" templateRule allowedIps;
 
           mkKillSwitchRule =
             action:
@@ -113,11 +132,11 @@ in
               templateRule =
                 binName:
                 let
-                  iptables = lib.getExe' pkgs.iptables binName;
+                  iptablesBin = lib.getExe' pkgs.iptables binName;
                   wg = lib.getExe pkgs.wireguard-tools;
                 in
                 ''
-                  ${iptables} ${action} OUTPUT \
+                  ${iptablesBin} ${action} OUTPUT \
                     ! -o ${cfg.wireguardInterface} \
                     -m mark ! --mark $(${wg} show ${cfg.wireguardInterface} fwmark) \
                     -m addrtype ! --dst-type LOCAL \
@@ -130,11 +149,13 @@ in
             ];
 
           postUpFile = pkgs.writeShellScript "killswitch_postup.sh" ''
+            ${mkRoutes "add"}
             ${mkAllowRules "-A"}
             ${mkKillSwitchRule "-A"}
           '';
 
           preDownFile = pkgs.writeShellScript "killswitch_predown.sh" ''
+            ${mkRoutes "del"}
             ${mkAllowRules "-D"}
             ${mkKillSwitchRule "-D"}
           '';
@@ -251,17 +272,8 @@ in
                   };
 
                   config = {
-                    networking = {
-                      nat = {
-                        enable = true;
-                        enableIPv6 = true;
-                        externalInterface = cfg.wireguardInterface;
-                        internalInterfaces = [ "eth0+" ];
-                      };
-
-                      wg-quick.interfaces."${cfg.wireguardInterface}" = {
-                        configFile = config.sops.templates."${cfg.wireguardInterface}.conf".path;
-                      };
+                    networking.wg-quick.interfaces."${cfg.wireguardInterface}" = {
+                      configFile = config.sops.templates."${cfg.wireguardInterface}.conf".path;
                     };
                   };
                 })
