@@ -96,11 +96,6 @@ in
         internalInterfaces = [ (if config.networking.nftables.enable then "ve-*" else "ve-+") ];
       };
 
-      firewall = {
-        enable = true;
-        checkReversePath = "loose";
-      };
-
       # Prevent NetworkManager from managing container interfaces
       # https://nixos.org/manual/nixos/stable/#sec-container-networking
       networkmanager = lib.mkIf config.networking.networkmanager.enable {
@@ -190,37 +185,8 @@ in
                   };
 
                   config = {
-                    networking = {
-                      firewall = {
-                        enable = true;
-                        trustedInterfaces = [ cfg.wireguardInterface ];
-                      };
-
-                      interfaces."${cfg.wireguardInterface}" = {
-                        ipv4.routes = [
-                          {
-                            address = "192.168.0.0";
-                            prefixLength = 16;
-                            via = cfg.hostAddress;
-                          }
-                        ];
-                        ipv6.routes = [
-                          {
-                            address = "fc00::";
-                            prefixLength = 7;
-                            via = cfg.hostAddress6;
-                          }
-                          {
-                            address = "fe80::";
-                            prefixLength = 10;
-                            via = cfg.hostAddress6;
-                          }
-                        ];
-                      };
-
-                      wg-quick.interfaces."${cfg.wireguardInterface}" = {
-                        configFile = config.sops.templates."${cfg.wireguardInterface}.conf".path;
-                      };
+                    networking.wg-quick.interfaces."${cfg.wireguardInterface}" = {
+                      configFile = config.sops.templates."${cfg.wireguardInterface}.conf".path;
                     };
                   };
                 })
