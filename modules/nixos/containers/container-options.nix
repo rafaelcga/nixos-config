@@ -46,12 +46,12 @@ in
   options = {
     enable = lib.mkEnableOption "Enable container@${name}";
 
-    user = lib.mkOption {
+    name = lib.mkOption {
       type = lib.types.str;
       default = name;
       readOnly = true;
       internal = true;
-      description = "User name to be used within the container";
+      description = "Container name";
     };
 
     hostPort = lib.mkOption {

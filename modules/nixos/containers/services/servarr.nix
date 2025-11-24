@@ -59,8 +59,8 @@ lib.mkMerge [
                   openFirewall = true;
                 }
                 // lib.optionalAttrs (name != "prowlarr") {
-                  inherit (cfg) user;
-                  inherit (config.users.users.${cfg.user}) group;
+                  user = cfg.name;
+                  inherit (config.users.users.${cfg.name}) group;
                 };
             in
             lib.genAttrs services mkService;

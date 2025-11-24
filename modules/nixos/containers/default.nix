@@ -38,6 +38,12 @@ in
       description = "Default host directory where container data will be saved";
     };
 
+    containerUid = lib.mkOption {
+      type = lib.types.int;
+      default = 2000;
+      description = "UID of the container's user";
+    };
+
     services = lib.mkOption {
       type = lib.types.attrsOf (lib.types.submodule (import ./container-options.nix));
       default = { };
@@ -86,6 +92,7 @@ in
                 services.resolved.enable = true;
 
                 users.users."${name}" = {
+                  uid = cfg.containerUid;
                   inherit (config.users.users.${userName}) group;
                   isSystemUser = true;
                 };
