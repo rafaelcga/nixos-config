@@ -68,7 +68,7 @@ in
         "wireguard/proton/endpoint" = { };
       };
 
-      templates."wg-proton.conf".content =
+      templates."wg-containers.conf".content =
         let
           iptables = lib.getExe pkgs.iptables;
           ip6tables = lib.getExe' pkgs.iptables "ip6tables";
@@ -77,14 +77,14 @@ in
           postUpFile = pkgs.writeShellScript "killswitch_postup.sh" ''
             ${iptables} -A OUTPUT -d ${cfg.hostAddress} -j ACCEPT
             ${iptables} -A OUTPUT \
-              ! -o wg-proton \
-              -m mark ! --mark $(${wg} show wg-proton fwmark) \
+              ! -o wg-containers \
+              -m mark ! --mark $(${wg} show wg-containers fwmark) \
               -m addrtype ! --dst-type LOCAL \
               -j REJECT
             ${ip6tables} -A OUTPUT -d ${cfg.hostAddress6} -j ACCEPT
             ${ip6tables} -A OUTPUT \
-              ! -o wg-proton \
-              -m mark ! --mark $(${wg} show wg-proton fwmark) \
+              ! -o wg-containers \
+              -m mark ! --mark $(${wg} show wg-containers fwmark) \
               -m addrtype ! --dst-type LOCAL \
               -j REJECT
           '';
@@ -92,14 +92,14 @@ in
           preDownFile = pkgs.writeShellScript "killswitch_predown.sh" ''
             ${iptables} -D OUTPUT -d ${cfg.hostAddress} -j ACCEPT
             ${iptables} -D OUTPUT \
-              ! -o wg-proton \
-              -m mark ! --mark $(${wg} show wg-proton fwmark) \
+              ! -o wg-containers \
+              -m mark ! --mark $(${wg} show wg-containers fwmark) \
               -m addrtype ! --dst-type LOCAL \
               -j REJECT
             ${ip6tables} -D OUTPUT -d ${cfg.hostAddress6} -j ACCEPT
             ${ip6tables} -D OUTPUT \
-              ! -o wg-proton \
-              -m mark ! --mark $(${wg} show wg-proton fwmark) \
+              ! -o wg-containers \
+              -m mark ! --mark $(${wg} show wg-containers fwmark) \
               -m addrtype ! --dst-type LOCAL \
               -j REJECT
           '';
@@ -210,14 +210,14 @@ in
                   enableTun = true;
 
                   bindMounts = {
-                    "${config.sops.templates."wg-proton.conf".path}" = {
+                    "${config.sops.templates."wg-containers.conf".path}" = {
                       isReadOnly = true;
                     };
                   };
 
                   config = {
-                    networking.wg-quick.interfaces.wg-proton = {
-                      configFile = config.sops.templates."wg-proton.conf".path;
+                    networking.wg-quick.interfaces.wg-containers = {
+                      configFile = config.sops.templates."wg-containers.conf".path;
                     };
                   };
                 })
