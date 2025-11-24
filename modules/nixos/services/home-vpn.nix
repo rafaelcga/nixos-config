@@ -15,30 +15,33 @@ let
   iptables = lib.getExe pkgs.iptables;
   ip6tables = lib.getExe' pkgs.iptables "ip6tables";
 
+  mkForwardRules =
+    action:
+    let
+      ruleTemplate =
+        binName:
+        let
+          iptablesBin = lib.getExe' pkgs.iptables binName;
+        in
+        ''
+          ${iptablesBin} ${action} FORWARD -i ${cfg.interfaceName} -j ACCEPT
+          ${iptablesBin} ${action} FORWARD -o ${cfg.interfaceName} -j ACCEPT
+          ${iptablesBin} -t nat ${action} POSTROUTING \
+            -o ${defaultInterface} \
+            -j MASQUERADE
+        '';
+    in
+    lib.concatMapStringsSep "\n" ruleTemplate [
+      "iptables"
+      "ip6tables"
+    ];
+
   postUpFile = pkgs.writeShellScript "wg_server_postup.sh" ''
-    ${iptables} -A FORWARD -i ${cfg.interfaceName} -j ACCEPT
-    ${iptables} -A FORWARD -o ${cfg.interfaceName} -j ACCEPT
-    ${iptables} -t nat -A POSTROUTING \
-      -o ${defaultInterface} \
-      -j MASQUERADE
-    ${ip6tables} -A FORWARD -i ${cfg.interfaceName} -j ACCEPT
-    ${ip6tables} -A FORWARD -o ${cfg.interfaceName} -j ACCEPT
-    ${ip6tables} -t nat -A POSTROUTING \
-      -o ${defaultInterface} \
-      -j MASQUERADE
+    ${mkForwardRules "-A"}
   '';
 
   preDownFile = pkgs.writeShellScript "wg_server_predown.sh" ''
-    ${iptables} -D FORWARD -i ${cfg.interfaceName} -j ACCEPT
-    ${iptables} -D FORWARD -o ${cfg.interfaceName} -j ACCEPT
-    ${iptables} -t nat -D POSTROUTING \
-      -o ${defaultInterface} \
-      -j MASQUERADE
-    ${ip6tables} -D FORWARD -i ${cfg.interfaceName} -j ACCEPT
-    ${ip6tables} -D FORWARD -o ${cfg.interfaceName} -j ACCEPT
-    ${ip6tables} -t nat -D POSTROUTING \
-      -o ${defaultInterface} \
-      -j MASQUERADE
+    ${mkForwardRules "-D"}
   '';
 in
 {
