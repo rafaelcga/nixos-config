@@ -78,14 +78,37 @@ in
 
       templates."${cfg.wireguardInterface}.conf".content =
         let
-          ip = lib.getExe' pkgs.iproute2 "ip";
+          localIpv4 = [
+            "10.0.0.0/8"
+            "172.16.0.0/12"
+            "192.168.0.0/16"
+          ];
+          localIpv6 = [
+            "fc00::/7"
+            "fe80::/10"
+          ];
+
+          isIpv6 = address: lib.hasInfix ":" address;
+
+          mkLookupRules =
+            action:
+            let
+              ruleTemplate =
+                block:
+                let
+                  ip = lib.getExe' pkgs.iproute2 "ip";
+                  command = "${ip}" + lib.optionalString (isIpv6 block) " -6";
+                in
+                "${command} rule ${action} to ${block} lookup main prio 2500";
+            in
+            lib.concatMapStringsSep "\n" ruleTemplate (localIpv4 ++ localIpv6);
 
           postUpFile = pkgs.writeShellScript "wg_containers_postup.sh" ''
-            ${ip} rule add to 192.168.0.0/16 lookup main prio 2500
+            ${mkLookupRules "add"}
           '';
 
           preDownFile = pkgs.writeShellScript "wg_containers_predown.sh" ''
-            ${ip} rule del to 192.168.0.0/16 lookup main prio 2500
+            ${mkLookupRules "del"}
           '';
         in
         ''
