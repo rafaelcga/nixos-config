@@ -87,7 +87,8 @@ in
 
                 users.users.${name} = {
                   inherit (config.users.users.${userName}) uid group;
-                  isSystemUser = true;
+                  isNormalUser = true;
+                  createHome = lib.mkForce false;
                 };
 
                 system.stateVersion = config.system.stateVersion;
