@@ -7,11 +7,19 @@
         ]
       },
       "locked": {
+<<<<<<< HEAD
         "lastModified": 1763110997,
         "narHash": "sha256-S2vF+3D/9vna3/vBV7LHiGUbp+ltPsQhvccIyim6VQg=",
         "owner": "catppuccin",
         "repo": "nix",
         "rev": "e6928cdd3dd20636326c2756d2bc8fd1cd825768",
+=======
+        "lastModified": 1760953099,
+        "narHash": "sha256-sOKx2YcHa+lWEvaEOIGqLN2WWk1Wf5z6KM02tdfhMtw=",
+        "owner": "catppuccin",
+        "repo": "nix",
+        "rev": "f5b21876888265d2fee7fb0640d1b66a1c1c6503",
+>>>>>>> ec715cf (Update flake.lock)
         "type": "github"
       },
       "original": {
@@ -68,11 +76,19 @@
         ]
       },
       "locked": {
+<<<<<<< HEAD
         "lastModified": 1763416652,
         "narHash": "sha256-8EBEEvtzQ11LCxpQHMNEBQAGtQiCu/pqP9zSovDSbNM=",
         "owner": "nix-community",
         "repo": "home-manager",
         "rev": "ea164b7c9ccdc2321379c2ff78fd4317b4c41312",
+=======
+        "lastModified": 1761066098,
+        "narHash": "sha256-Fd65ryxzMRsNQ0MqaiT/b3TdinUOKUJ4PyCwnoKcvF0=",
+        "owner": "nix-community",
+        "repo": "home-manager",
+        "rev": "13b2744e117993dc5066c1710585dcb99877684f",
+>>>>>>> ec715cf (Update flake.lock)
         "type": "github"
       },
       "original": {
@@ -84,11 +100,19 @@
     },
     "nixpkgs": {
       "locked": {
+<<<<<<< HEAD
         "lastModified": 1763421233,
         "narHash": "sha256-Stk9ZYRkGrnnpyJ4eqt9eQtdFWRRIvMxpNRf4sIegnw=",
         "owner": "NixOS",
         "repo": "nixpkgs",
         "rev": "89c2b2330e733d6cdb5eae7b899326930c2c0648",
+=======
+        "lastModified": 1760878510,
+        "narHash": "sha256-K5Osef2qexezUfs0alLvZ7nQFTGS9DL2oTVsIXsqLgs=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "5e2a59a5b1a82f89f2c7e598302a9cacebb72a67",
+>>>>>>> ec715cf (Update flake.lock)
         "type": "github"
       },
       "original": {
@@ -139,11 +163,19 @@
         ]
       },
       "locked": {
+<<<<<<< HEAD
         "lastModified": 1763607916,
         "narHash": "sha256-VefBA1JWRXM929mBAFohFUtQJLUnEwZ2vmYUNkFnSjE=",
         "owner": "Mic92",
         "repo": "sops-nix",
         "rev": "877bb495a6f8faf0d89fc10bd142c4b7ed2bcc0b",
+=======
+        "lastModified": 1760998189,
+        "narHash": "sha256-ee2e1/AeGL5X8oy/HXsZQvZnae6XfEVdstGopKucYLY=",
+        "owner": "Mic92",
+        "repo": "sops-nix",
+        "rev": "5a7d18b5c55642df5c432aadb757140edfeb70b3",
+>>>>>>> ec715cf (Update flake.lock)
         "type": "github"
       },
       "original": {
