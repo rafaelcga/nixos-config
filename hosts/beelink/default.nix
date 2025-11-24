@@ -1,3 +1,4 @@
+{ config, userName, ... }:
 {
   modules.nixos = {
     # System
@@ -45,6 +46,18 @@
             hostPath = "/mnt/media";
             isReadOnly = false;
           };
+        };
+      };
+    };
+  };
+
+  systemd.tmpfiles.settings = {
+    "10-media-directory" = {
+      "/mnt/media" = {
+        d = {
+          user = userName;
+          inherit (config.users.users.${userName}) group;
+          mode = "2775";
         };
       };
     };
