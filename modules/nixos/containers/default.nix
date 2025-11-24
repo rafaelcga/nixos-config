@@ -98,7 +98,7 @@ in
               templateRoute =
                 address:
                 let
-                  ip = lib.getExe pkgs.iproute2;
+                  ip = lib.getExe' pkgs.iproute2 "ip";
                   command = "${ip}" + lib.optionalString (isIpv6 address) " -6";
                   gateway = if isIpv4 address then cfg.hostAddress else cfg.hostAddress6;
                 in
