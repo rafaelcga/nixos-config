@@ -54,13 +54,7 @@ lib.mkMerge [
                 {
                   enable = true;
                   dataDir = "${cfg.containerDataDir}/${name}";
-                  settings = {
-                    server.port = cfg.containerPorts.${name};
-                    update = {
-                      mechanism = "builtIn";
-                      automatically = true;
-                    };
-                  };
+                  settings.server.port = cfg.containerPorts.${name};
                   environmentFiles = [ cfgSops.templates."servarr-env".path ];
                   openFirewall = true;
                 }
