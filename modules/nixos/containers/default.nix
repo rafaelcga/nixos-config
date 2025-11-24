@@ -29,7 +29,7 @@ in
 
     hostAddress6 = lib.mkOption {
       type = lib.types.str;
-      default = "fc00::1";
+      default = "fc00::1"; # fc00::1/64
       description = "Host local IPv6 address";
     };
 
@@ -75,12 +75,14 @@ in
           wg = lib.getExe pkgs.wireguard-tools;
 
           postUpFile = pkgs.writeShellScript "killswitch_postup.sh" ''
-            ${iptables} -I OUTPUT \
+            ${iptables} -A OUTPUT -d ${cfg.hostAddress} -j ACCEPT
+            ${iptables} -A OUTPUT \
               ! -o wg-proton \
               -m mark ! --mark $(${wg} show wg-proton fwmark) \
               -m addrtype ! --dst-type LOCAL \
               -j REJECT
-            ${ip6tables} -I OUTPUT \
+            ${ip6tables} -A OUTPUT -d ${cfg.hostAddress6} -j ACCEPT
+            ${ip6tables} -A OUTPUT \
               ! -o wg-proton \
               -m mark ! --mark $(${wg} show wg-proton fwmark) \
               -m addrtype ! --dst-type LOCAL \
@@ -88,11 +90,13 @@ in
           '';
 
           preDownFile = pkgs.writeShellScript "killswitch_predown.sh" ''
+            ${iptables} -D OUTPUT -d ${cfg.hostAddress} -j ACCEPT
             ${iptables} -D OUTPUT \
               ! -o wg-proton \
               -m mark ! --mark $(${wg} show wg-proton fwmark) \
               -m addrtype ! --dst-type LOCAL \
               -j REJECT
+            ${ip6tables} -D OUTPUT -d ${cfg.hostAddress6} -j ACCEPT
             ${ip6tables} -D OUTPUT \
               ! -o wg-proton \
               -m mark ! --mark $(${wg} show wg-proton fwmark) \
