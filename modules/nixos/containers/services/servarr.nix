@@ -15,6 +15,7 @@ lib.mkMerge [
         prowlarr = 9696;
       };
       containerDataDir = "/var/lib/servarr";
+      behindVpn = true;
     };
   }
   (lib.mkIf cfg.enable {

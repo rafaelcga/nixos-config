@@ -2,6 +2,7 @@
   inputs,
   config,
   lib,
+  pkgs,
   userName,
   ...
 }:
@@ -52,6 +53,60 @@ in
   };
 
   config = lib.mkIf (enabledContainers != { }) {
+    sops = {
+      secrets = {
+        "wireguard/proton/public_key" = { };
+        "wireguard/proton/private_key" = { };
+        "wireguard/proton/endpoint" = { };
+      };
+
+      templates."containers/wg0.conf".content =
+        let
+          iptables = lib.getExe pkgs.iptables;
+          ip6tables = lib.getExe' pkgs.iptables "ip6tables";
+          wg = lib.getExe pkgs.wireguard-tools;
+
+          postUpFile = pkgs.writeShellScript "killswitch_postup.sh" ''
+            ${iptables} -I OUTPUT \
+              ! -o wg0 \
+              -m mark ! --mark $(${wg} show wg0 fwmark) \
+              -m addrtype ! --dst-type LOCAL \
+              -j REJECT
+            ${ip6tables} -I OUTPUT \
+              ! -o wg0 \
+              -m mark ! --mark $(${wg} show wg0 fwmark) \
+              -m addrtype ! --dst-type LOCAL \
+              -j REJECT
+          '';
+
+          preDownFile = pkgs.writeShellScript "killswitch_predown.sh" ''
+            ${iptables} -D OUTPUT \
+              ! -o wg0 \
+              -m mark ! --mark $(${wg} show wg0 fwmark) \
+              -m addrtype ! --dst-type LOCAL \
+              -j REJECT
+            ${ip6tables} -D OUTPUT \
+              ! -o wg0 \
+              -m mark ! --mark $(${wg} show wg0 fwmark) \
+              -m addrtype ! --dst-type LOCAL \
+              -j REJECT
+          '';
+        in
+        ''
+          [Interface]
+          PrivateKey = ${config.sops.placeholder."wireguard/proton/private_key"}
+          Address = 10.2.0.2/32
+          DNS = 10.2.0.1
+          PostUp = ${postUpFile}
+          PreDown = ${preDownFile}
+
+          [Peer]
+          PublicKey = ${config.sops.placeholder."wireguard/proton/public_key"}
+          AllowedIPs = 0.0.0.0/0, ::/0
+          Endpoint = ${config.sops.placeholder."wireguard/proton/endpoint"}
+        '';
+    };
+
     networking = {
       nat = {
         enable = true;
@@ -87,70 +142,76 @@ in
       let
         baseConfigs =
           let
-            mkBaseConfig = name: containerConfig: {
-              autoStart = true;
-              privateNetwork = true;
-              privateUsers = "identity";
+            mkBaseConfig =
+              name: containerConfig:
+              lib.mkMerge [
+                {
+                  autoStart = true;
+                  privateNetwork = true;
+                  privateUsers = "identity";
 
-              config = {
-                # Use systemd-resolved inside the container
-                # Workaround for bug https://github.com/NixOS/nixpkgs/issues/162686
-                networking.useHostResolvConf = lib.mkForce false;
-                services.resolved.enable = true;
+                  forwardPorts =
+                    let
+                      mkForwardPort =
+                        serviceName:
+                        let
+                          hostPort = containerConfig.hostPorts.${serviceName};
+                          containerPort = containerConfig.containerPorts.${serviceName};
+                        in
+                        lib.optionals (hostPort != null && containerPort != null) [
+                          {
+                            inherit hostPort containerPort;
+                            protocol = "tcp";
+                          }
+                        ];
 
-                users.users."${name}" = {
-                  uid = cfg.containerUid;
-                  inherit (config.users.users.${userName}) group;
-                  isSystemUser = true;
-                };
+                      serviceNames = lib.attrNames containerConfig.containerPorts;
+                    in
+                    (lib.concatMap mkForwardPort serviceNames) ++ containerConfig.extraForwardPorts;
 
-                system.stateVersion = config.system.stateVersion;
-              };
-            };
-          in
-          lib.mapAttrs mkBaseConfig enabledContainers;
-
-        portConfigs =
-          let
-            mkForwardPorts =
-              _: containerConfig:
-              let
-                createForward =
-                  serviceName:
-                  let
-                    hostPort = containerConfig.hostPorts.${serviceName};
-                    containerPort = containerConfig.containerPorts.${serviceName};
-                  in
-                  lib.optionals (hostPort != null && containerPort != null) [
-                    {
-                      inherit hostPort containerPort;
-                      protocol = "tcp";
-                    }
+                  bindMounts = lib.mkMerge [
+                    (lib.mkIf (containerConfig.containerDataDir != null) {
+                      "${containerConfig.containerDataDir}" = {
+                        hostPath = "${cfg.dataDir}/${name}";
+                        isReadOnly = false;
+                      };
+                    })
+                    containerConfig.bindMounts
                   ];
 
-                serviceNames = lib.attrNames containerConfig.containerPorts;
-              in
-              {
-                forwardPorts = (lib.concatMap createForward serviceNames) ++ containerConfig.extraForwardPorts;
-              };
-          in
-          lib.mapAttrs mkForwardPorts enabledContainers;
+                  config = {
+                    # Use systemd-resolved inside the container
+                    # Workaround for bug https://github.com/NixOS/nixpkgs/issues/162686
+                    networking.useHostResolvConf = lib.mkForce false;
+                    services.resolved.enable = true;
 
-        bindConfigs =
-          let
-            mkBindMounts = name: containerConfig: {
-              bindMounts = lib.mkMerge [
-                (lib.mkIf (containerConfig.containerDataDir != null) {
-                  "${containerConfig.containerDataDir}" = {
-                    hostPath = "${cfg.dataDir}/${name}";
-                    isReadOnly = false;
+                    users.users."${name}" = {
+                      uid = cfg.containerUid;
+                      inherit (config.users.users.${userName}) group;
+                      isSystemUser = true;
+                    };
+
+                    system.stateVersion = config.system.stateVersion;
+                  };
+                }
+                (lib.mkIf containerConfig.behindVpn {
+                  enableTun = true;
+
+                  bindMounts = {
+                    "${config.sops.templates."containers/wg0.conf".path}" = {
+                      isReadOnly = true;
+                    };
+                  };
+
+                  config = {
+                    networking.wg-quick.interfaces.wg0 = {
+                      configFile = config.sops.templates."containers/wg0.conf".path;
+                    };
                   };
                 })
-                containerConfig.bindMounts
               ];
-            };
           in
-          lib.mapAttrs mkBindMounts enabledContainers;
+          lib.mapAttrs mkBaseConfig enabledContainers;
 
         addressConfigs =
           let
@@ -169,8 +230,6 @@ in
       in
       lib.mkMerge [
         baseConfigs
-        bindConfigs
-        portConfigs
         addressConfigs
       ];
   };
