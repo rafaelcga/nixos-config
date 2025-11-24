@@ -86,7 +86,7 @@ in
                 services.resolved.enable = true;
 
                 users.users."${name}" = {
-                  inherit (config.users.users.${userName}) group;
+                  inherit (config.users.users.${userName}) uid group;
                   isSystemUser = true;
                 };
 
