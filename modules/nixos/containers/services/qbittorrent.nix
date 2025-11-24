@@ -1,4 +1,9 @@
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  userName,
+  ...
+}:
 let
   cfg = config.modules.nixos.containers.services.qbittorrent;
 in
@@ -45,6 +50,8 @@ lib.mkMerge [
                   TempPath = tempPath;
                 };
                 WebUI = {
+                  Username = userName;
+                  Password_PBKDF2 = "@ByteArray(4quLRWi4zO+tAPClYLWbaw==:P5PWcrBP/z/uZhVGn18vCK4ryKT/xvL4nAFxx/qlUPX2/9DWF7Q0L0jZR7Ii4863PH6YQj8s8d7U0Otjuuv2+Q==)";
                   HostHeaderValidation = false;
                   CSRFProtection = false;
                   AlternativeUIEnabled = true;
