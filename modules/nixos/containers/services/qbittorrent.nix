@@ -12,7 +12,7 @@ lib.mkMerge [
     modules.nixos.containers.services.qbittorrent = {
       containerPort = 8080;
       containerDataDir = "/var/lib/qBittorrent/";
-      # behindVpn = true;
+      behindVpn = true;
     };
   }
   (lib.mkIf cfg.enable {

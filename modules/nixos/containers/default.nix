@@ -84,7 +84,7 @@ in
         [Peer]
         PublicKey = ${config.sops.placeholder."wireguard/proton/public_key"}
         AllowedIPs = 0.0.0.0/0, ::/0
-        Endpoint = ${config.sops.placeholder."wireguard/proton/endpoint"}
+        Endpoint = ${config.sops.placeholder."wireguard/proton/endpoint"}:51820
       '';
     };
 
@@ -94,6 +94,11 @@ in
         enableIPv6 = true;
         externalInterface = config.modules.nixos.networking.defaultInterface;
         internalInterfaces = [ (if config.networking.nftables.enable then "ve-*" else "ve-+") ];
+      };
+
+      firewall = {
+        enable = true;
+        checkReversePath = "loose";
       };
 
       # Prevent NetworkManager from managing container interfaces
@@ -185,8 +190,15 @@ in
                   };
 
                   config = {
-                    networking.wg-quick.interfaces."${cfg.wireguardInterface}" = {
-                      configFile = config.sops.templates."${cfg.wireguardInterface}.conf".path;
+                    networking = {
+                      firewall = {
+                        enable = true;
+                        trustedInterfaces = [ cfg.wireguardInterface ];
+                      };
+
+                      wg-quick.interfaces."${cfg.wireguardInterface}" = {
+                        configFile = config.sops.templates."${cfg.wireguardInterface}.conf".path;
+                      };
                     };
                   };
                 })
