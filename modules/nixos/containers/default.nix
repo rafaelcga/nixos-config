@@ -2,7 +2,6 @@
   inputs,
   config,
   lib,
-  pkgs,
   userName,
   ...
 }:
@@ -55,7 +54,7 @@ in
 
     wireguardInterface = lib.mkOption {
       type = lib.types.str;
-      default = "wg-containers";
+      default = "wg-proton";
       readOnly = true;
       internal = true;
       description = "Name of the WireGuard interface in the containers";
