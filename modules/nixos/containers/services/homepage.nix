@@ -10,6 +10,7 @@ let
 
   utils = import "${inputs.self}/lib/utils.nix" { inherit lib; };
 
+  hostLocalIp = config.modules.nixos.networking.staticIp;
   apiKeyName = service: "HOMEPAGE_VAR_${lib.toUpper service}_API_KEY";
 
   serviceData = {
@@ -45,7 +46,6 @@ lib.mkMerge [
 
       templates."homepage-env".content =
         let
-          hostLocalIp = config.modules.nixos.networking.staticIp;
           mkEnvVar =
             service: data:
             let
@@ -83,8 +83,8 @@ lib.mkMerge [
                 service: data:
                 let
                   containerConfig = cfg_containers.${data.container};
-                  port = builtins.toString containerConfig.containerPorts.${service};
-                  href = "${config.containers.${data.container}.localAddress}:${port}";
+                  port = builtins.toString containerConfig.hostPorts.${service};
+                  href = "${hostLocalIp}:${port}";
                 in
                 {
                   "${utils.capitalizeFirst service}" = lib.mkIf containerConfig.enable {
