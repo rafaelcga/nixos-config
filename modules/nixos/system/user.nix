@@ -11,12 +11,6 @@ let
 in
 {
   options.modules.nixos.user = {
-    uid = lib.mkOption {
-      type = lib.types.int;
-      default = 1000;
-      description = "The account UID";
-    };
-
     shell = lib.mkOption {
       type = lib.types.enum [
         "bash"
@@ -35,7 +29,6 @@ in
 
     users.users.${userName} = lib.mkMerge [
       {
-        inherit (cfg) uid;
         shell = pkgs.${cfg.shell};
         isNormalUser = true;
         hashedPasswordFile = config.sops.secrets."passwords/user".path;
