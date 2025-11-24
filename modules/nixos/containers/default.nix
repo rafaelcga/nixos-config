@@ -196,6 +196,28 @@ in
                         trustedInterfaces = [ cfg.wireguardInterface ];
                       };
 
+                      interfaces.eth0 = {
+                        ipv4.routes = [
+                          {
+                            address = "192.168.0.0";
+                            prefixLength = 16;
+                            via = cfg.hostAddress;
+                          }
+                        ];
+                        ipv6.routes = [
+                          {
+                            address = "fc00::";
+                            prefixLength = 7;
+                            via = cfg.hostAddress6;
+                          }
+                          {
+                            address = "fe80::";
+                            prefixLength = 10;
+                            via = cfg.hostAddress6;
+                          }
+                        ];
+                      };
+
                       wg-quick.interfaces."${cfg.wireguardInterface}" = {
                         configFile = config.sops.templates."${cfg.wireguardInterface}.conf".path;
                       };
