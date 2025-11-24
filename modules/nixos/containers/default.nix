@@ -70,38 +70,63 @@ in
 
       templates."wg-containers.conf".content =
         let
-          iptables = lib.getExe pkgs.iptables;
-          ip6tables = lib.getExe' pkgs.iptables "ip6tables";
-          wg = lib.getExe pkgs.wireguard-tools;
+          mkAllowRules =
+            action:
+            let
+              allowedIps = {
+                iptables = [
+                  cfg.hostAddress
+                  "10.0.0.0/8"
+                  "172.16.0.0/12"
+                  "192.168.0.0/16"
+                ];
+                ip6tables = [
+                  cfg.hostAddress6
+                  "fc00::/7"
+                  "fe80::/10"
+                ];
+              };
+
+              mapRules =
+                binName: ips:
+                let
+                  iptables = lib.getExe' pkgs.iptables binName;
+                  templateRule = ip: "${iptables} ${action} OUTPUT -d ${ip} -j ACCEPT";
+                in
+                lib.concatMapStringsSep "\n" templateRule ips;
+            in
+            lib.concatStringsSep "\n" (lib.mapAttrsToList mapRules allowedIps);
+
+          mkKillSwitchRule =
+            action:
+            let
+              templateRule =
+                binName:
+                let
+                  iptables = lib.getExe' pkgs.iptables binName;
+                  wg = lib.getExe pkgs.wireguard-tools;
+                in
+                ''
+                  ${iptables} ${action} OUTPUT \
+                    ! -o wg-containers \
+                    -m mark ! --mark $(${wg} show wg-containers fwmark) \
+                    -m addrtype ! --dst-type LOCAL \
+                    -j REJECT
+                '';
+            in
+            lib.concatMapStringsSep "\n" templateRule [
+              "iptables"
+              "ip6tables"
+            ];
 
           postUpFile = pkgs.writeShellScript "killswitch_postup.sh" ''
-            ${iptables} -A OUTPUT -d ${cfg.hostAddress} -j ACCEPT
-            ${iptables} -A OUTPUT \
-              ! -o wg-containers \
-              -m mark ! --mark $(${wg} show wg-containers fwmark) \
-              -m addrtype ! --dst-type LOCAL \
-              -j REJECT
-            ${ip6tables} -A OUTPUT -d ${cfg.hostAddress6} -j ACCEPT
-            ${ip6tables} -A OUTPUT \
-              ! -o wg-containers \
-              -m mark ! --mark $(${wg} show wg-containers fwmark) \
-              -m addrtype ! --dst-type LOCAL \
-              -j REJECT
+            ${mkAllowRules "-A"}
+            ${mkKillSwitchRule "-A"}
           '';
 
           preDownFile = pkgs.writeShellScript "killswitch_predown.sh" ''
-            ${iptables} -D OUTPUT -d ${cfg.hostAddress} -j ACCEPT
-            ${iptables} -D OUTPUT \
-              ! -o wg-containers \
-              -m mark ! --mark $(${wg} show wg-containers fwmark) \
-              -m addrtype ! --dst-type LOCAL \
-              -j REJECT
-            ${ip6tables} -D OUTPUT -d ${cfg.hostAddress6} -j ACCEPT
-            ${ip6tables} -D OUTPUT \
-              ! -o wg-containers \
-              -m mark ! --mark $(${wg} show wg-containers fwmark) \
-              -m addrtype ! --dst-type LOCAL \
-              -j REJECT
+            ${mkAllowRules "-D"}
+            ${mkKillSwitchRule "-D"}
           '';
         in
         ''
