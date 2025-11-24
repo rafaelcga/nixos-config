@@ -48,6 +48,10 @@
           };
         };
       };
+      qbittorrent = {
+        enable = true;
+        hostPort = 8008;
+      };
     };
   };
 
