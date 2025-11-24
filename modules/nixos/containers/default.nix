@@ -75,24 +75,28 @@ in
       let
         baseConfigs =
           let
-            mkBaseConfig = name: containerConfig: {
+            mkBaseConfig = _: containerConfig: {
               autoStart = true;
               privateNetwork = true;
 
-              config =
-                let
-                  inherit (config.users.users.${userName}) group;
-                in
-                {
-                  # Use systemd-resolved inside the container
-                  # Workaround for bug https://github.com/NixOS/nixpkgs/issues/162686
-                  networking.useHostResolvConf = lib.mkForce false;
-                  services.resolved.enable = true;
+              config = {
+                # Use systemd-resolved inside the container
+                # Workaround for bug https://github.com/NixOS/nixpkgs/issues/162686
+                networking.useHostResolvConf = lib.mkForce false;
+                services.resolved.enable = true;
 
-                  users.groups.${group} = { };
-
-                  system.stateVersion = config.system.stateVersion;
+                users = {
+                  users."${containerConfig.user}" = {
+                    inherit (containerConfig) group;
+                    isSystemUser = true;
+                  };
+                  groups."${containerConfig.group}" = {
+                    inherit (config.users.groups."${containerConfig.group}") gid;
+                  };
                 };
+
+                system.stateVersion = config.system.stateVersion;
+              };
             };
           in
           lib.mapAttrs mkBaseConfig enabledContainers;

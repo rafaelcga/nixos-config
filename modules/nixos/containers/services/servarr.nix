@@ -66,9 +66,9 @@ lib.mkMerge [
                 environmentFiles = [ config.sops.templates."servarr-env".path ];
                 openFirewall = true;
               }
-              // (lib.optionalAttrs (name != "prowlarr") {
-                inherit (config.users.users.${userName}) group;
-              });
+              // lib.optionalAttrs (name != "prowlarr") {
+                inherit (cfg) user group;
+              };
           in
           lib.genAttrs services mkService;
       };

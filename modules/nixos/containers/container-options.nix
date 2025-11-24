@@ -2,6 +2,7 @@
   config,
   lib,
   name,
+  userName,
   ...
 }:
 let
@@ -47,6 +48,22 @@ in
 {
   options = {
     enable = lib.mkEnableOption "Enable container@${name}";
+
+    user = lib.mkOption {
+      type = lib.types.str;
+      default = name;
+      readonly = true;
+      internal = true;
+      description = "User name for use in container services";
+    };
+
+    group = lib.mkOption {
+      type = lib.types.str;
+      default = config.users.users.${userName}.group;
+      readonly = true;
+      internal = true;
+      description = "User group for use in container services";
+    };
 
     hostPort = lib.mkOption {
       type = lib.types.nullOr lib.types.port;
