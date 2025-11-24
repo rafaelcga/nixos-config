@@ -12,9 +12,6 @@ let
 
   utils = import "${inputs.self}/lib/utils.nix" { inherit lib; };
 
-  iptables = lib.getExe pkgs.iptables;
-  ip6tables = lib.getExe' pkgs.iptables "ip6tables";
-
   mkForwardRules =
     action:
     let
