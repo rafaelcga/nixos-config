@@ -45,6 +45,7 @@ lib.mkMerge [
 
       templates."homepage-env".content =
         let
+          hostLocalIp = config.modules.nixos.networking.staticIp;
           mkEnvVar =
             service: data:
             let
@@ -54,10 +55,12 @@ lib.mkMerge [
             in
             lib.optionalString cfg_containers.${data.container}.enable envVar;
         in
-        lib.concatStringsSep "\n" [
+        lib.concatStringsSep "\n" (
           (lib.mapAttrsToList mkEnvVar serviceData)
-          "HOMEPAGE_ALLOWED_HOSTS=${config.modules.nixos.networking.staticIp}:${builtins.toString cfg.hostPort}"
-        ];
+          ++ [
+            "HOMEPAGE_ALLOWED_HOSTS=${hostLocalIp}:${builtins.toString cfg.hostPort}"
+          ]
+        );
     };
 
     containers.homepage = {
