@@ -52,7 +52,7 @@ in
     user = lib.mkOption {
       type = lib.types.str;
       default = name;
-      readonly = true;
+      readOnly = true;
       internal = true;
       description = "User name for use in container services";
     };
@@ -60,7 +60,7 @@ in
     group = lib.mkOption {
       type = lib.types.str;
       default = config.users.users.${userName}.group;
-      readonly = true;
+      readOnly = true;
       internal = true;
       description = "User group for use in container services";
     };
