@@ -46,6 +46,7 @@ lib.mkMerge [
                 };
                 WebUI = {
                   HostHeaderValidation = false;
+                  CSRFProtection = false;
                   AlternativeUIEnabled = true;
                   RootFolder = "${pkgs.vuetorrent}/share/vuetorrent";
                 };
