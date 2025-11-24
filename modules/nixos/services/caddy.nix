@@ -24,24 +24,6 @@ let
     '')
   ];
 
-  secrets = {
-    "web_domain" = { };
-    "porkbun/api_key" = { };
-    "porkbun/api_secret_key" = { };
-    "crowdsec/bouncers/caddy_key" = lib.mkIf crowdsec.enable { };
-  };
-
-  envFile = lib.concatStringsSep "\n" [
-    ''
-      DOMAIN=${config.sops.placeholder."web_domain"}
-      PORKBUN_API_KEY=${config.sops.placeholder."porkbun/api_key"}
-      PORKBUN_API_SECRET_KEY=${config.sops.placeholder."porkbun/api_secret_key"}
-    ''
-    (lib.optionalString crowdsec.enable ''
-      CROWDSEC_API_KEY=${config.sops.placeholder."crowdsec/bouncers/caddy_key"}
-    '')
-  ];
-
   commonBlock = ''
     encode
 
@@ -83,17 +65,16 @@ let
           appsec
         '')
       ];
-      hostConfig = {
-        extraConfig = ''
-          ${commonBlock}
-          route {
-              ${preProxyBlock}
-              reverse_proxy ${host.originHost}:${host.originPort}
-          }
-        '';
-      };
     in
-    lib.nameValuePair "${name}.{$DOMAIN}" hostConfig;
+    lib.nameValuePair "${name}.{$DOMAIN}" {
+      extraConfig = ''
+        ${commonBlock}
+        route {
+            ${preProxyBlock}
+            reverse_proxy ${host.originHost}:${host.originPort}
+        }
+      '';
+    };
 
   virtualHostOpts = {
     options = {
@@ -140,11 +121,22 @@ in
         ];
 
         sops = {
-          inherit secrets;
-          templates."caddy-env".content = envFile;
+          secrets = {
+            "web_domain" = { };
+            "porkbun/api_key" = { };
+            "porkbun/api_secret_key" = { };
+          };
+
+          templates."caddy-env".content = ''
+            DOMAIN=${config.sops.placeholder."web_domain"}
+            PORKBUN_API_KEY=${config.sops.placeholder."porkbun/api_key"}
+            PORKBUN_API_SECRET_KEY=${config.sops.placeholder."porkbun/api_secret_key"}
+          '';
         };
       }
       (lib.mkIf crowdsec.enable {
+        modules.nixos.crowdsec.bouncers.caddy.enable = true;
+
         services.crowdsec = {
           hub.collections = [ "crowdsecurity/caddy" ];
           localConfig.acquisitions = [
@@ -157,6 +149,41 @@ in
             }
           ];
         };
+
+        systemd.services =
+          let
+            inherit (config.services.caddy) user group;
+            inherit (crowdsec.bouncers.caddy)
+              bouncerName
+              apiKeyFile
+              serviceName
+              ;
+            envFile = "/run/${bouncerName}/caddy.env";
+          in
+          {
+            generate-caddy-env-file = {
+              wantedBy = [ "multi-user.target" ];
+              wants = [ "${serviceName}.service" ];
+              after = [ "${serviceName}.service" ];
+              serviceConfig.Type = "oneshot";
+              script = ''
+                set -euo pipefail
+
+                mkdir -p "$(dirname "${envFile}")"
+                cat ${config.sops.templates."caddy-env".path} >"${envFile}"
+                echo "CROWDSEC_API_KEY=$(cat ${apiKeyFile})" >>"${envFile}"
+
+                chown ${user}:${group} "${envFile}"
+                chmod 0600 "${envFile}"
+              '';
+            };
+
+            caddy = {
+              wants = [ "generate-caddy-env-file.service" ];
+              after = [ "generate-caddy-env-file.service" ];
+              serviceConfig.EnvironmentFile = lib.mkForce envFile;
+            };
+          };
       })
     ]
   );

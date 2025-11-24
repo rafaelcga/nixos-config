@@ -53,16 +53,23 @@ in
         firewall.enable = true;
       };
 
-      services.resolved = {
-        enable = true;
-        dnssec = "allow-downgrade";
-        # Quad9 as fallback
-        fallbackDns = [
-          "9.9.9.9"
-          "149.112.112.112"
-          "2620:fe::fe"
-          "2620:fe::9"
-        ];
+      services = {
+        resolved = {
+          enable = true;
+          dnssec = "allow-downgrade";
+          # Quad9 as fallback
+          fallbackDns = [
+            "9.9.9.9"
+            "149.112.112.112"
+            "2620:fe::fe"
+            "2620:fe::9"
+          ];
+        };
+
+        openssh = {
+          enable = true;
+          settings.PermitRootLogin = "no";
+        };
       };
 
       users.users.${userName}.extraGroups = [ "networkmanager" ];

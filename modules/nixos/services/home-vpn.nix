@@ -12,33 +12,33 @@ let
 
   utils = import "${inputs.self}/lib/utils.nix" { inherit lib; };
 
-  iptables = "${pkgs.iptables}/bin/iptables";
-  ip6tables = "${pkgs.iptables}/bin/ip6tables";
+  mkForwardRules =
+    action:
+    let
+      ruleTemplate =
+        binName:
+        let
+          iptablesBin = lib.getExe' pkgs.iptables binName;
+        in
+        ''
+          ${iptablesBin} ${action} FORWARD -i ${cfg.interfaceName} -j ACCEPT
+          ${iptablesBin} ${action} FORWARD -o ${cfg.interfaceName} -j ACCEPT
+          ${iptablesBin} -t nat ${action} POSTROUTING \
+            -o ${defaultInterface} \
+            -j MASQUERADE
+        '';
+    in
+    lib.concatMapStringsSep "\n" ruleTemplate [
+      "iptables"
+      "ip6tables"
+    ];
 
   postUpFile = pkgs.writeShellScript "wg_server_postup.sh" ''
-    ${iptables} -A FORWARD -i ${cfg.interfaceName} -j ACCEPT
-    ${iptables} -A FORWARD -o ${cfg.interfaceName} -j ACCEPT
-    ${iptables} -t nat -A POSTROUTING \
-      -o ${defaultInterface} \
-      -j MASQUERADE
-    ${ip6tables} -A FORWARD -i ${cfg.interfaceName} -j ACCEPT
-    ${ip6tables} -A FORWARD -o ${cfg.interfaceName} -j ACCEPT
-    ${ip6tables} -t nat -A POSTROUTING \
-      -o ${defaultInterface} \
-      -j MASQUERADE
+    ${mkForwardRules "-A"}
   '';
 
   preDownFile = pkgs.writeShellScript "wg_server_predown.sh" ''
-    ${iptables} -D FORWARD -i ${cfg.interfaceName} -j ACCEPT
-    ${iptables} -D FORWARD -o ${cfg.interfaceName} -j ACCEPT
-    ${iptables} -t nat -D POSTROUTING \
-      -o ${defaultInterface} \
-      -j MASQUERADE
-    ${ip6tables} -D FORWARD -i ${cfg.interfaceName} -j ACCEPT
-    ${ip6tables} -D FORWARD -o ${cfg.interfaceName} -j ACCEPT
-    ${ip6tables} -t nat -D POSTROUTING \
-      -o ${defaultInterface} \
-      -j MASQUERADE
+    ${mkForwardRules "-D"}
   '';
 in
 {
@@ -118,11 +118,10 @@ in
               sortedPeers = lib.sort lib.lessThan (lib.attrNames flakeMeta.hosts);
               clientPeers = lib.remove cfg.serverHostName sortedPeers;
               # Using imap1, index starts from 1
-              mkValuePairs = index: client: {
-                name = client;
+              mkValuePairs = index: name: {
+                inherit name;
                 value = utils.addToLastOctet cfg.internalIp index;
               };
-
             in
             lib.listToAttrs (lib.imap1 mkValuePairs clientPeers);
 

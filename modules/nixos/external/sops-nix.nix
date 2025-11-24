@@ -54,13 +54,13 @@ in
       };
       script =
         let
-          ssh-to-age = "${pkgs.ssh-to-age}/bin/ssh-to-age";
+          ssh-to-age = lib.getExe pkgs.ssh-to-age;
         in
         ''
           set -euo pipefail
 
           mkdir -p "$(dirname "${cfg.ageKeyFile}")"
-          ${ssh-to-age} -private-key -i "${cfg.sshKeyFile}" > "${cfg.ageKeyFile}"
+          ${ssh-to-age} -private-key -i "${cfg.sshKeyFile}" >"${cfg.ageKeyFile}"
         '';
     };
   };

@@ -21,7 +21,7 @@ in
 
     systemd.services =
       let
-        flatpak = "${pkgs.flatpak}/bin/flatpak";
+        flatpak = lib.getExe pkgs.flatpak;
       in
       {
         add-flathub-repo = {

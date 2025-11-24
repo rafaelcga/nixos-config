@@ -35,8 +35,8 @@ stdenv.mkDerivation rec {
   postInstall = ''
     for f in $(find "$out/lib/udev/rules.d" -type f -name '*'); do
       substituteInPlace "$f" \
-        --replace "/usr/bin/bash" "${bash}/bin/bash" \
-        --replace "/usr/bin/hdparm" "${hdparm}/bin/hdparm"
+        --replace "/usr/bin/bash" "${lib.getExe bash}" \
+        --replace "/usr/bin/hdparm" "${lib.getExe hdparm}"
     done
   '';
 

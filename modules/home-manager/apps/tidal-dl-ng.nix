@@ -126,7 +126,7 @@ let
 
       path_binary_ffmpeg = lib.mkOption {
         type = lib.types.str;
-        default = "${pkgs.ffmpeg}/bin/ffmpeg";
+        default = lib.getExe pkgs.ffmpeg;
         description = ''
           Path to FFmpeg binary file (executable). Only necessary if FFmpeg
           not set in $PATH.
@@ -339,8 +339,8 @@ in
         Type = "oneshot";
         ExecStart =
           let
-            mkdir = "${pkgs.coreutils}/bin/mkdir";
-            jq = "${pkgs.jq}/bin/jq";
+            mkdir = lib.getExe' pkgs.coreutils "mkdir";
+            jq = lib.getExe pkgs.jq;
             escapedJsonString = lib.escapeShellArg (builtins.toJSON cfg.settings);
           in
           pkgs.writeShellScript "tidal_settings_script.sh" ''
