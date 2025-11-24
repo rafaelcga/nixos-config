@@ -68,7 +68,7 @@ lib.mkMerge [
                   openFirewall = true;
                 }
                 // lib.optionalAttrs (name != "prowlarr") {
-                  inherit (cfg) user;
+                  user = user.name;
                   inherit (user) group;
                 };
             in
