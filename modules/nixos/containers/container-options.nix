@@ -134,7 +134,7 @@ in
       type = lib.types.nullOr lib.types.str;
       default = null;
       internal = true;
-      description = "Path of aggregated data from the container to bind to";
+      description = "Path of aggregated data from the container to mount at ${cfg.dataDir}";
     };
 
     gpuPassthrough = lib.mkOption {
