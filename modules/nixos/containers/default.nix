@@ -79,19 +79,20 @@ in
               autoStart = true;
               privateNetwork = true;
 
-              config = {
-                # Use systemd-resolved inside the container
-                # Workaround for bug https://github.com/NixOS/nixpkgs/issues/162686
-                networking.useHostResolvConf = lib.mkForce false;
-                services.resolved.enable = true;
-
-                users.users.${name} = {
+              config =
+                let
                   inherit (config.users.users.${userName}) group;
-                  isSystemUser = true;
-                };
+                in
+                {
+                  # Use systemd-resolved inside the container
+                  # Workaround for bug https://github.com/NixOS/nixpkgs/issues/162686
+                  networking.useHostResolvConf = lib.mkForce false;
+                  services.resolved.enable = true;
 
-                system.stateVersion = config.system.stateVersion;
-              };
+                  users.groups.${group} = { };
+
+                  system.stateVersion = config.system.stateVersion;
+                };
             };
           in
           lib.mapAttrs mkBaseConfig enabledContainers;
