@@ -244,7 +244,7 @@ in
                 (lib.mkIf containerConfig.behindVpn {
                   enableTun = true;
 
-                  nat = {
+                  networking.nat = {
                     enable = true;
                     enableIPv6 = true;
                     externalInterface = cfg.wireguardInterface;
