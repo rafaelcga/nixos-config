@@ -76,103 +76,17 @@ in
         "wireguard/proton/endpoint" = { };
       };
 
-      templates."${cfg.wireguardInterface}.conf".content =
-        let
-          localIpv4 = [
-            "10.0.0.0/8"
-            "172.16.0.0/12"
-            "192.168.0.0/16"
-          ];
+      templates."${cfg.wireguardInterface}.conf".content = ''
+        [Interface]
+        PrivateKey = ${config.sops.placeholder."wireguard/proton/private_key"}
+        Address = 10.2.0.2/32
+        DNS = 10.2.0.1
 
-          localIpv6 = [
-            "fc00::/7"
-            "fe80::/10"
-          ];
-
-          isIpv4 = address: lib.hasInfix "." address;
-          isIpv6 = address: lib.hasInfix ":" address;
-
-          mkRoutes =
-            action:
-            let
-              templateRoute =
-                address:
-                let
-                  ip = lib.getExe' pkgs.iproute2 "ip";
-                  command = "${ip}" + lib.optionalString (isIpv6 address) " -6";
-                  gateway = if isIpv4 address then cfg.hostAddress else cfg.hostAddress6;
-                in
-                "${command} route ${action} ${address} via ${gateway}";
-            in
-            lib.concatMapStringsSep "\n" templateRoute (localIpv4 ++ localIpv6);
-
-          mkAllowRules =
-            action:
-            let
-              allowedIps = [
-                cfg.hostAddress
-                cfg.hostAddress6
-              ]
-              ++ localIpv4
-              ++ localIpv6;
-
-              templateRule =
-                ip:
-                let
-                  binName = if isIpv4 ip then "iptables" else "ip6tables";
-                  iptablesBin = lib.getExe' pkgs.iptables binName;
-                in
-                "${iptablesBin} ${action} OUTPUT -d ${ip} -j ACCEPT";
-            in
-            lib.concatMapStringsSep "\n" templateRule allowedIps;
-
-          mkKillSwitchRule =
-            action:
-            let
-              templateRule =
-                binName:
-                let
-                  iptablesBin = lib.getExe' pkgs.iptables binName;
-                  wg = lib.getExe pkgs.wireguard-tools;
-                in
-                ''
-                  ${iptablesBin} ${action} OUTPUT \
-                    ! -o ${cfg.wireguardInterface} \
-                    -m mark ! --mark $(${wg} show ${cfg.wireguardInterface} fwmark) \
-                    -m addrtype ! --dst-type LOCAL \
-                    -j REJECT
-                '';
-            in
-            lib.concatMapStringsSep "\n" templateRule [
-              "iptables"
-              "ip6tables"
-            ];
-
-          postUpFile = pkgs.writeShellScript "killswitch_postup.sh" ''
-            ${mkRoutes "add"}
-            ${mkAllowRules "-A"}
-            ${mkKillSwitchRule "-A"}
-          '';
-
-          preDownFile = pkgs.writeShellScript "killswitch_predown.sh" ''
-            ${mkRoutes "del"}
-            ${mkAllowRules "-D"}
-            ${mkKillSwitchRule "-D"}
-          '';
-        in
-        ''
-          [Interface]
-          PrivateKey = ${config.sops.placeholder."wireguard/proton/private_key"}
-          Address = 10.2.0.2/32
-          DNS = 10.2.0.1
-          PostUp = ${postUpFile}
-          PreDown = ${preDownFile}
-
-          [Peer]
-          PublicKey = ${config.sops.placeholder."wireguard/proton/public_key"}
-          AllowedIPs = 0.0.0.0/0, ::/0
-          Endpoint = ${config.sops.placeholder."wireguard/proton/endpoint"}
-        '';
+        [Peer]
+        PublicKey = ${config.sops.placeholder."wireguard/proton/public_key"}
+        AllowedIPs = 0.0.0.0/0, ::/0
+        Endpoint = ${config.sops.placeholder."wireguard/proton/endpoint"}
+      '';
     };
 
     networking = {
