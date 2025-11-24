@@ -196,7 +196,7 @@ in
                         trustedInterfaces = [ cfg.wireguardInterface ];
                       };
 
-                      interfaces.eth0 = {
+                      interfaces."${cfg.wireguardInterface}" = {
                         ipv4.routes = [
                           {
                             address = "192.168.0.0";
