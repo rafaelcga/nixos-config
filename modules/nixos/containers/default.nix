@@ -2,6 +2,7 @@
   inputs,
   config,
   lib,
+  pkgs,
   userName,
   ...
 }:
@@ -75,17 +76,31 @@ in
         "wireguard/proton/endpoint" = { };
       };
 
-      templates."${cfg.wireguardInterface}.conf".content = ''
-        [Interface]
-        PrivateKey = ${config.sops.placeholder."wireguard/proton/private_key"}
-        Address = 10.2.0.2/32
-        DNS = 10.2.0.1
+      templates."${cfg.wireguardInterface}.conf".content =
+        let
+          ip = lib.getExe' pkgs.iproute2 "ip";
 
-        [Peer]
-        PublicKey = ${config.sops.placeholder."wireguard/proton/public_key"}
-        AllowedIPs = 0.0.0.0/0, ::/0
-        Endpoint = ${config.sops.placeholder."wireguard/proton/endpoint"}:51820
-      '';
+          postUpFile = pkgs.writeShellScript "wg_containers_postup.sh" ''
+            ${ip} rule add to 192.168.0.0/16 lookup main prio 2500
+          '';
+
+          preDownFile = pkgs.writeShellScript "wg_containers_predown.sh" ''
+            ${ip} rule del to 192.168.0.0/16 lookup main prio 2500
+          '';
+        in
+        ''
+          [Interface]
+          PrivateKey = ${config.sops.placeholder."wireguard/proton/private_key"}
+          Address = 10.2.0.2/32
+          DNS = 10.2.0.1
+          PostUp = ${postUpFile}
+          PreDown = ${preDownFile}
+
+          [Peer]
+          PublicKey = ${config.sops.placeholder."wireguard/proton/public_key"}
+          AllowedIPs = 0.0.0.0/0, ::/0
+          Endpoint = ${config.sops.placeholder."wireguard/proton/endpoint"}:51820
+        '';
     };
 
     networking = {
