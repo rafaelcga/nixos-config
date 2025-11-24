@@ -45,6 +45,7 @@ lib.mkMerge [
                   TempPath = tempPath;
                 };
                 WebUI = {
+                  HostHeaderValidation = false;
                   AlternativeUIEnabled = true;
                   RootFolder = "${pkgs.vuetorrent}/share/vuetorrent";
                 };
