@@ -34,7 +34,7 @@
     # Containers
     containers.services = {
       servarr = {
-        enable = false;
+        enable = true;
         hostPorts = {
           lidarr = 8004;
           radarr = 8005;
