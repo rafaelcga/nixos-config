@@ -244,13 +244,6 @@ in
                 (lib.mkIf containerConfig.behindVpn {
                   enableTun = true;
 
-                  networking.nat = {
-                    enable = true;
-                    enableIPv6 = true;
-                    externalInterface = cfg.wireguardInterface;
-                    internalInterfaces = [ (if config.networking.nftables.enable then "eth0*" else "eth0+") ];
-                  };
-
                   bindMounts = {
                     "${config.sops.templates."${cfg.wireguardInterface}.conf".path}" = {
                       isReadOnly = true;
@@ -258,8 +251,17 @@ in
                   };
 
                   config = {
-                    networking.wg-quick.interfaces."${cfg.wireguardInterface}" = {
-                      configFile = config.sops.templates."${cfg.wireguardInterface}.conf".path;
+                    networking = {
+                      nat = {
+                        enable = true;
+                        enableIPv6 = true;
+                        externalInterface = cfg.wireguardInterface;
+                        internalInterfaces = [ (if config.networking.nftables.enable then "eth0*" else "eth0+") ];
+                      };
+
+                      wg-quick.interfaces."${cfg.wireguardInterface}" = {
+                        configFile = config.sops.templates."${cfg.wireguardInterface}.conf".path;
+                      };
                     };
                   };
                 })
