@@ -54,7 +54,10 @@ lib.mkMerge [
             in
             lib.optionalString cfg_containers.${data.container}.enable envVar;
         in
-        lib.concatStringsSep "\n" (lib.mapAttrsToList mkEnvVar serviceData);
+        lib.concatStringsSep "\n" [
+          (lib.mapAttrsToList mkEnvVar serviceData)
+          "HOMEPAGE_ALLOWED_HOSTS=${config.modules.nixos.networking.staticIp}:${builtins.toString cfg.hostPort}"
+        ];
     };
 
     containers.homepage = {
