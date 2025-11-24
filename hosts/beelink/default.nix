@@ -32,6 +32,10 @@
     crowdsec.enable = true;
     # Containers
     containers.services = {
+      homepage = {
+        enable = true;
+        hostPort = 8000;
+      };
       jellyfin = {
         enable = true;
         hostPort = 8003;
