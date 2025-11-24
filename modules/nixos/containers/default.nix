@@ -256,7 +256,7 @@ in
                         enable = true;
                         enableIPv6 = true;
                         externalInterface = cfg.wireguardInterface;
-                        internalInterfaces = [ (if config.networking.nftables.enable then "eth0*" else "eth0+") ];
+                        internalInterfaces = [ "eth0+" ];
                       };
 
                       wg-quick.interfaces."${cfg.wireguardInterface}" = {
