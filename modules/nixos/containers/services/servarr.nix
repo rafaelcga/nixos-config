@@ -46,9 +46,6 @@ lib.mkMerge [
 
       config =
         { config, ... }:
-        let
-          user = config.users.users.${cfg.user};
-        in
         {
           services =
             let
@@ -68,8 +65,8 @@ lib.mkMerge [
                   openFirewall = true;
                 }
                 // lib.optionalAttrs (name != "prowlarr") {
-                  user = user.name;
-                  inherit (user) group;
+                  inherit (cfg) user;
+                  inherit (config.users.users.${cfg.user}) group;
                 };
             in
             lib.genAttrs services mkService;
