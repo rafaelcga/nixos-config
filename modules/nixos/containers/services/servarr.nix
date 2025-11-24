@@ -45,27 +45,25 @@ lib.mkMerge [
         };
       };
 
-      config =
-        { config, ... }:
-        {
-          services =
-            let
-              mkService =
-                name:
-                {
-                  enable = true;
-                  dataDir = "${cfg.containerDataDir}/${name}";
-                  settings.server.port = cfg.containerPorts.${name};
-                  environmentFiles = [ cfgSops.templates."servarr-env".path ];
-                  openFirewall = true;
-                }
-                // lib.optionalAttrs (name != "prowlarr") {
-                  user = cfg.name;
-                  inherit (config.users.users.${cfg.name}) group;
-                };
-            in
-            lib.genAttrs services mkService;
-        };
+      config = {
+        services =
+          let
+            mkService =
+              name:
+              {
+                enable = true;
+                dataDir = "${cfg.containerDataDir}/${name}";
+                settings.server.port = cfg.containerPorts.${name};
+                environmentFiles = [ cfgSops.templates."servarr-env".path ];
+                openFirewall = true;
+              }
+              // lib.optionalAttrs (name != "prowlarr") {
+                user = cfg.user.name;
+                inherit (cfg.user) group;
+              };
+          in
+          lib.genAttrs services mkService;
+      };
     };
   })
 ]

@@ -42,11 +42,19 @@ in
     containerUid = lib.mkOption {
       type = lib.types.int;
       default = 2000;
-      description = "UID of the container's user";
+      description = "Container's main user account UID";
+    };
+
+    containerGroup = lib.mkOption {
+      type = lib.types.str;
+      default = config.users.users.${userName}.group;
+      readOnly = true;
+      internal = true;
+      description = "Container's main user account group";
     };
 
     services = lib.mkOption {
-      type = lib.types.attrsOf (lib.types.submodule (import ./container-options.nix));
+      type = lib.types.attrsOf (lib.types.submodule (import ./container-options.nix { inherit cfg; }));
       default = { };
       description = "Enabled containers";
     };
@@ -124,7 +132,7 @@ in
 
     users.users.container = {
       uid = cfg.containerUid;
-      inherit (config.users.users.${userName}) group;
+      group = cfg.containerGroup;
       isSystemUser = true;
     };
 
@@ -187,7 +195,7 @@ in
 
                     users.users."${name}" = {
                       uid = cfg.containerUid;
-                      inherit (config.users.users.${userName}) group;
+                      group = cfg.containerGroup;
                       isSystemUser = true;
                     };
 

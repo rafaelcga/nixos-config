@@ -13,7 +13,7 @@ lib.mkMerge [
   (lib.mkIf cfg.enable {
     containers.qbittorrent = {
       config =
-        { config, pkgs, ... }:
+        { pkgs, ... }:
         let
           savePath = "${cfg.containerDataDir}/downloads";
           tempPath = "${savePath}/incomplete";
@@ -21,8 +21,8 @@ lib.mkMerge [
         {
           services.qbittorrent = {
             enable = true;
-            user = cfg.name;
-            inherit (config.users.users.${cfg.name}) group;
+            user = cfg.user.name;
+            inherit (cfg.user) group;
 
             webuiPort = cfg.containerPort;
             profileDir = cfg.containerDataDir;
