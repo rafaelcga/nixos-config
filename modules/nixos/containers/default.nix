@@ -93,8 +93,8 @@ in
             action:
             let
               allowedIps = {
-                iptables = [ cfg.hostAddress ] + localIpv4;
-                ip6tables = [ cfg.hostAddress6 ] + localIpv6;
+                iptables = [ cfg.hostAddress ] ++ localIpv4;
+                ip6tables = [ cfg.hostAddress6 ] ++ localIpv6;
               };
 
               mapRules =
