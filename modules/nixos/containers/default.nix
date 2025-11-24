@@ -53,6 +53,14 @@ in
       description = "Container's main user account group";
     };
 
+    wireguardInterface = lib.mkOption {
+      type = lib.types.str;
+      default = "wg-containers";
+      readOnly = true;
+      internal = true;
+      description = "Name of the WireGuard interface in the containers";
+    };
+
     services = lib.mkOption {
       type = lib.types.attrsOf (lib.types.submodule (import ./container-options.nix { inherit cfg; }));
       default = { };
@@ -68,23 +76,25 @@ in
         "wireguard/proton/endpoint" = { };
       };
 
-      templates."wg-containers.conf".content =
+      templates."${cfg.wireguardInterface}.conf".content =
         let
+          localIpv4 = [
+            "10.0.0.0/8"
+            "172.16.0.0/12"
+            "192.168.0.0/16"
+          ];
+
+          localIpv6 = [
+            "fc00::/7"
+            "fe80::/10"
+          ];
+
           mkAllowRules =
             action:
             let
               allowedIps = {
-                iptables = [
-                  cfg.hostAddress
-                  "10.0.0.0/8"
-                  "172.16.0.0/12"
-                  "192.168.0.0/16"
-                ];
-                ip6tables = [
-                  cfg.hostAddress6
-                  "fc00::/7"
-                  "fe80::/10"
-                ];
+                iptables = [ cfg.hostAddress ] + localIpv4;
+                ip6tables = [ cfg.hostAddress6 ] + localIpv6;
               };
 
               mapRules =
@@ -108,8 +118,8 @@ in
                 in
                 ''
                   ${iptables} ${action} OUTPUT \
-                    ! -o wg-containers \
-                    -m mark ! --mark $(${wg} show wg-containers fwmark) \
+                    ! -o ${cfg.wireguardInterface} \
+                    -m mark ! --mark $(${wg} show ${cfg.wireguardInterface} fwmark) \
                     -m addrtype ! --dst-type LOCAL \
                     -j REJECT
                 '';
@@ -234,15 +244,22 @@ in
                 (lib.mkIf containerConfig.behindVpn {
                   enableTun = true;
 
+                  nat = {
+                    enable = true;
+                    enableIPv6 = true;
+                    externalInterface = cfg.wireguardInterface;
+                    internalInterfaces = [ (if config.networking.nftables.enable then "eth0*" else "eth0+") ];
+                  };
+
                   bindMounts = {
-                    "${config.sops.templates."wg-containers.conf".path}" = {
+                    "${config.sops.templates."${cfg.wireguardInterface}.conf".path}" = {
                       isReadOnly = true;
                     };
                   };
 
                   config = {
-                    networking.wg-quick.interfaces.wg-containers = {
-                      configFile = config.sops.templates."wg-containers.conf".path;
+                    networking.wg-quick.interfaces."${cfg.wireguardInterface}" = {
+                      configFile = config.sops.templates."${cfg.wireguardInterface}.conf".path;
                     };
                   };
                 })
