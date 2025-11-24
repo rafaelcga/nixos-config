@@ -68,7 +68,7 @@ in
         "wireguard/proton/endpoint" = { };
       };
 
-      templates."containers/wg0.conf".content =
+      templates."wg-proton.conf".content =
         let
           iptables = lib.getExe pkgs.iptables;
           ip6tables = lib.getExe' pkgs.iptables "ip6tables";
@@ -76,26 +76,26 @@ in
 
           postUpFile = pkgs.writeShellScript "killswitch_postup.sh" ''
             ${iptables} -I OUTPUT \
-              ! -o wg0 \
-              -m mark ! --mark $(${wg} show wg0 fwmark) \
+              ! -o wg-proton \
+              -m mark ! --mark $(${wg} show wg-proton fwmark) \
               -m addrtype ! --dst-type LOCAL \
               -j REJECT
             ${ip6tables} -I OUTPUT \
-              ! -o wg0 \
-              -m mark ! --mark $(${wg} show wg0 fwmark) \
+              ! -o wg-proton \
+              -m mark ! --mark $(${wg} show wg-proton fwmark) \
               -m addrtype ! --dst-type LOCAL \
               -j REJECT
           '';
 
           preDownFile = pkgs.writeShellScript "killswitch_predown.sh" ''
             ${iptables} -D OUTPUT \
-              ! -o wg0 \
-              -m mark ! --mark $(${wg} show wg0 fwmark) \
+              ! -o wg-proton \
+              -m mark ! --mark $(${wg} show wg-proton fwmark) \
               -m addrtype ! --dst-type LOCAL \
               -j REJECT
             ${ip6tables} -D OUTPUT \
-              ! -o wg0 \
-              -m mark ! --mark $(${wg} show wg0 fwmark) \
+              ! -o wg-proton \
+              -m mark ! --mark $(${wg} show wg-proton fwmark) \
               -m addrtype ! --dst-type LOCAL \
               -j REJECT
           '';
@@ -206,14 +206,14 @@ in
                   enableTun = true;
 
                   bindMounts = {
-                    "${config.sops.templates."containers/wg0.conf".path}" = {
+                    "${config.sops.templates."wg-proton.conf".path}" = {
                       isReadOnly = true;
                     };
                   };
 
                   config = {
-                    networking.wg-quick.interfaces.wg0 = {
-                      configFile = config.sops.templates."containers/wg0.conf".path;
+                    networking.wg-quick.interfaces.wg-proton = {
+                      configFile = config.sops.templates."wg-proton.conf".path;
                     };
                   };
                 })
