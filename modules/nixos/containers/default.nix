@@ -78,6 +78,7 @@ in
 
       templates."${cfg.wireguardInterface}.conf".content =
         let
+          # Not added 10.0.0.0/8, as it contains the VPN IPs themselves
           localIpv4 = [
             "172.16.0.0/12"
             "192.168.0.0/16"
@@ -88,6 +89,22 @@ in
           ];
 
           isIpv6 = address: lib.hasInfix ":" address;
+
+          mkAllowLan =
+            action:
+            let
+              ruleTemplate =
+                block:
+                let
+                  binName = if (isIpv6 block) then "ip6tables" else "iptables";
+                  iptablesBin = lib.getExe' pkgs.iptables binName;
+                in
+                ''
+                  ${iptablesBin} ${action} INPUT -s ${block} -j ACCEPT
+                  ${iptablesBin} ${action} OUTPUT -d ${block} -j ACCEPT
+                '';
+            in
+            lib.concatMapStringsSep "\n" ruleTemplate (localIpv4 ++ localIpv6);
 
           mkLookupRules =
             action:
@@ -126,11 +143,13 @@ in
 
           postUpFile = pkgs.writeShellScript "wg_containers_postup.sh" ''
             ${mkLookupRules "add"}
+            ${mkAllowLan "-I"} # Insert on top
             ${mkKillSwitch "-A"}
           '';
 
           preDownFile = pkgs.writeShellScript "wg_containers_predown.sh" ''
             ${mkLookupRules "del"}
+            ${mkAllowLan "-D"}
             ${mkKillSwitch "-D"}
           '';
         in
