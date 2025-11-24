@@ -67,6 +67,12 @@ in
       };
     };
 
+    users.users.container = {
+      uid = cfg.containerUid;
+      inherit (config.users.users.${userName}) group;
+      isSystemUser = true;
+    };
+
     systemd.tmpfiles.settings =
       let
         mkContainerDirs =
@@ -84,6 +90,7 @@ in
             mkBaseConfig = name: containerConfig: {
               autoStart = true;
               privateNetwork = true;
+              privateUsers = "identity";
 
               config = {
                 # Use systemd-resolved inside the container
