@@ -102,12 +102,36 @@ in
             in
             lib.concatMapStringsSep "\n" ruleTemplate (localIpv4 ++ localIpv6);
 
+          mkKillSwitch =
+            action:
+            let
+              ruleTemplate =
+                binName:
+                let
+                  wg = lib.getExe pkgs.wireguard-tools;
+                  iptablesBin = lib.getExe' pkgs.iptables binName;
+                in
+                ''
+                  ${iptablesBin} ${action} OUTPUT \
+                    ! -o ${cfg.wireguardInterface} \
+                    -m mark ! --mark $(${wg} show ${cfg.wireguardInterface} fwmark) \
+                    -m addrtype ! --dst-type LOCAL \
+                    -j REJECT
+                '';
+            in
+            lib.concatMapStringsSep "\n" ruleTemplate [
+              "iptables"
+              "ip6tables"
+            ];
+
           postUpFile = pkgs.writeShellScript "wg_containers_postup.sh" ''
             ${mkLookupRules "add"}
+            ${mkKillSwitch "-A"}
           '';
 
           preDownFile = pkgs.writeShellScript "wg_containers_predown.sh" ''
             ${mkLookupRules "del"}
+            ${mkKillSwitch "-D"}
           '';
         in
         ''
