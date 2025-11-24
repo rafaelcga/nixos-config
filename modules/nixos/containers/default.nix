@@ -2,6 +2,7 @@
   inputs,
   config,
   lib,
+  userName,
   ...
 }:
 let
@@ -74,7 +75,7 @@ in
       let
         baseConfigs =
           let
-            mkBaseConfig = _: containerConfig: {
+            mkBaseConfig = name: containerConfig: {
               autoStart = true;
               privateNetwork = true;
 
@@ -83,6 +84,11 @@ in
                 # Workaround for bug https://github.com/NixOS/nixpkgs/issues/162686
                 networking.useHostResolvConf = lib.mkForce false;
                 services.resolved.enable = true;
+
+                users.users.${name} = {
+                  inherit (config.users.users.${userName}) uid group;
+                  isSystemUser = true;
+                };
 
                 system.stateVersion = config.system.stateVersion;
               };
