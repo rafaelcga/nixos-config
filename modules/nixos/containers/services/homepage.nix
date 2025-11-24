@@ -78,7 +78,7 @@ lib.mkMerge [
                 let
                   containerConfig = cfg_containers.${data.container};
                   port = builtins.toString containerConfig.containerPorts.${service};
-                  href = "${containerConfig.localAddress}:${port}";
+                  href = "${config.containers.${data.container}.localAddress}:${port}";
                 in
                 {
                   "${utils.capitalizeFirst service}" = lib.mkIf containerConfig.enable {
