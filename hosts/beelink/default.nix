@@ -6,7 +6,6 @@
       staticIp = "192.168.1.2";
       defaultInterface = "enp1s0";
     };
-    ssh.enable = true;
     upgrade.enable = true;
     zram.enable = true;
     # Hardware
