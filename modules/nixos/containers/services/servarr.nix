@@ -1,11 +1,7 @@
-{
-  config,
-  lib,
-  userName,
-  ...
-}:
+{ config, lib, ... }:
 let
   cfg = config.modules.nixos.containers.services.servarr;
+  cfgSops = config.sops;
 
   services = lib.attrNames cfg.containerPorts;
 in
@@ -34,7 +30,7 @@ lib.mkMerge [
           mkApiKey =
             service:
             let
-              apiKey = config.sops.placeholder."servarr/${service}";
+              apiKey = cfgSops.placeholder."servarr/${service}";
             in
             "${lib.toUpper service}__AUTH__APIKEY=${apiKey}";
         in
@@ -43,35 +39,41 @@ lib.mkMerge [
 
     containers.servarr = {
       bindMounts = {
-        "${config.sops.templates."servarr-env".path}" = {
+        "${cfgSops.templates."servarr-env".path}" = {
           isReadOnly = true;
         };
       };
 
-      config = {
-        services =
-          let
-            mkService =
-              name:
-              {
-                enable = true;
-                dataDir = "${cfg.containerDataDir}/${name}";
-                settings = {
-                  server.port = cfg.containerPorts.${name};
-                  update = {
-                    mechanism = "builtIn";
-                    automatically = true;
+      config =
+        { config, ... }:
+        let
+          user = config.users.users.${cfg.user};
+        in
+        {
+          services =
+            let
+              mkService =
+                name:
+                {
+                  enable = true;
+                  dataDir = "${cfg.containerDataDir}/${name}";
+                  settings = {
+                    server.port = cfg.containerPorts.${name};
+                    update = {
+                      mechanism = "builtIn";
+                      automatically = true;
+                    };
                   };
+                  environmentFiles = [ cfgSops.templates."servarr-env".path ];
+                  openFirewall = true;
+                }
+                // lib.optionalAttrs (name != "prowlarr") {
+                  inherit (cfg) user;
+                  inherit (user) group;
                 };
-                environmentFiles = [ config.sops.templates."servarr-env".path ];
-                openFirewall = true;
-              }
-              // lib.optionalAttrs (name != "prowlarr") {
-                inherit (cfg) user group;
-              };
-          in
-          lib.genAttrs services mkService;
-      };
+            in
+            lib.genAttrs services mkService;
+        };
     };
   })
 ]

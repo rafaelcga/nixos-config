@@ -75,7 +75,7 @@ in
       let
         baseConfigs =
           let
-            mkBaseConfig = _: containerConfig: {
+            mkBaseConfig = name: containerConfig: {
               autoStart = true;
               privateNetwork = true;
 
@@ -85,14 +85,9 @@ in
                 networking.useHostResolvConf = lib.mkForce false;
                 services.resolved.enable = true;
 
-                users = {
-                  users."${containerConfig.user}" = {
-                    inherit (containerConfig) group;
-                    isSystemUser = true;
-                  };
-                  groups."${containerConfig.group}" = {
-                    inherit (config.users.groups."${containerConfig.group}") gid;
-                  };
+                users.users."${name}" = {
+                  inherit (config.users.users.${userName}) group;
+                  isSystemUser = true;
                 };
 
                 system.stateVersion = config.system.stateVersion;

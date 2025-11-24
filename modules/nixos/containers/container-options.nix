@@ -2,12 +2,9 @@
   config,
   lib,
   name,
-  userName,
   ...
 }:
 let
-  cfg = config.modules.nixos.containers;
-
   portOpts = {
     options = {
       protocol = lib.mkOption {
@@ -54,15 +51,7 @@ in
       default = name;
       readOnly = true;
       internal = true;
-      description = "User name for use in container services";
-    };
-
-    group = lib.mkOption {
-      type = lib.types.str;
-      default = config.users.users.${userName}.group;
-      readOnly = true;
-      internal = true;
-      description = "User group for use in container services";
+      description = "User name to be used within the container";
     };
 
     hostPort = lib.mkOption {
@@ -108,7 +97,7 @@ in
       type = lib.types.nullOr lib.types.str;
       default = null;
       internal = true;
-      description = "Path of aggregated data from the container to bind to ${cfg.dataDir}";
+      description = "Path of aggregated data from the container to bind to";
     };
 
     gpuPassthrough = lib.mkOption {
