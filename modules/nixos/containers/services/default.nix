@@ -1,6 +1,7 @@
 {
   imports = [
-    ./servarr.nix
+    ./jellyfin.nix
     ./qbittorrent.nix
+    ./servarr.nix
   ];
 }

@@ -32,6 +32,17 @@
     crowdsec.enable = true;
     # Containers
     containers.services = {
+      jellyfin = {
+        enable = true;
+        hostPort = 8003;
+        gpuPassthrough = true;
+        bindMounts = {
+          "/media" = {
+            hostPath = "/mnt/media";
+            isReadOnly = true;
+          };
+        };
+      };
       servarr = {
         enable = true;
         hostPorts = {
