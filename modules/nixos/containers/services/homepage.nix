@@ -2,6 +2,7 @@
   inputs,
   config,
   lib,
+  userName,
   ...
 }:
 let
@@ -11,19 +12,86 @@ let
   utils = import "${inputs.self}/lib/utils.nix" { inherit lib; };
 
   hostLocalIp = config.modules.nixos.networking.staticIp;
-  apiKeyName = service: "HOMEPAGE_VAR_${lib.toUpper service}_API_KEY";
 
   serviceData = {
     lidarr = {
       container = "servarr";
-      secret = "servarr/lidarr";
+      apiAuth = "key";
       widgetFields = [
         "wanted"
         "queued"
         "artists"
       ];
+      extraConfig = { };
+    };
+    radarr = {
+      container = "servarr";
+      apiAuth = "key";
+      widgetFields = [
+        "wanted"
+        "queued"
+        "movies"
+      ];
+      extraConfig = { };
+    };
+    sonarr = {
+      container = "servarr";
+      apiAuth = "key";
+      widgetFields = [
+        "wanted"
+        "queued"
+        "series"
+      ];
+      extraConfig = { };
+    };
+    prowlarr = {
+      container = "servarr";
+      apiAuth = "key";
+      widgetFields = [
+        "numberOfGrabs"
+        "numberOfQueries"
+        "numberOfFailGrabs"
+        "numberOfFailQueries"
+      ];
+      extraConfig = { };
+    };
+    qbittorrent = {
+      container = "qbittorrent";
+      apiAuth = "password";
+      widgetFields = [
+        "leech"
+        "download"
+        "seed"
+        "upload"
+      ];
+      extraConfig = {
+        enableLeechProgress = true;
+        enableLeechSize = true;
+      };
     };
   };
+
+  getSecretName =
+    service:
+    let
+      inherit (serviceData.${service}) container apiAuth;
+      secretName = {
+        key = "${container}/${service}";
+        password = "passwords/services";
+      };
+    in
+    secretName.${apiAuth};
+
+  getEnvVarName =
+    service:
+    let
+      inherit (serviceData.${service}) apiAuth;
+      suffix = {
+        key = "API_KEY";
+        password = "PASSWORD";
+      };
+    in
+    "HOMEPAGE_VAR_${lib.toUpper service}_${suffix.${apiAuth}}";
 in
 lib.mkMerge [
   {
@@ -39,7 +107,7 @@ lib.mkMerge [
           mkSecret =
             service: data:
             lib.optionalAttrs cfg_containers.${data.container}.enable {
-              "${data.secret}" = { };
+              "${getSecretName service}" = { };
             };
         in
         lib.concatMapAttrs mkSecret serviceData;
@@ -48,12 +116,9 @@ lib.mkMerge [
         let
           mkEnvVar =
             service: data:
-            let
-              envVar = ''
-                ${apiKeyName service}=${config.sops.placeholder.${data.secret}}
-              '';
-            in
-            lib.optionalString cfg_containers.${data.container}.enable envVar;
+            lib.optionalString cfg_containers.${data.container}.enable ''
+              ${getEnvVarName service}=${config.sops.placeholder.${getSecretName service}}
+            '';
         in
         lib.concatStringsSep "\n" (
           (lib.mapAttrsToList mkEnvVar serviceData)
@@ -90,12 +155,21 @@ lib.mkMerge [
                   "${utils.capitalizeFirst service}" = lib.mkIf containerConfig.enable {
                     icon = "${service}.png";
                     inherit href;
-                    widget = {
-                      type = service;
-                      url = href;
-                      key = "{{${apiKeyName service}}";
-                      fields = data.widgetFields;
-                    };
+                    widget = lib.mkMerge [
+                      {
+                        type = service;
+                        url = href;
+                        fields = data.widgetFields;
+                      }
+                      (lib.mkIf (data.apiAuth == "key") {
+                        key = "{{${getEnvVarName service}}";
+                      })
+                      (lib.mkIf (data.apiAuth == "password") {
+                        username = userName;
+                        password = "{{${getEnvVarName service}}";
+                      })
+                      data.extraConfig
+                    ];
                   };
                 };
 
