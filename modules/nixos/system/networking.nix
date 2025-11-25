@@ -70,6 +70,16 @@ in
           enable = true;
           settings.PermitRootLogin = "no";
         };
+
+        fail2ban = {
+          enable = true;
+          maxretry = 5;
+          bantime = "24h";
+          bantime-increment = {
+            enable = true;
+            maxtime = "168h";
+          };
+        };
       };
 
       users.users.${userName}.extraGroups = [ "networkmanager" ];
