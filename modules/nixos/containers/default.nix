@@ -165,7 +165,7 @@ in
             ${mkAllowEndpoint "-D"}
             ${mkKillSwitch "-D"}
           '';
-          # Use PersistentKeepalive = 25 to avoid the tunnel from dying
+          # Use PersistentKeepalive to avoid the tunnel from dying
         in
         ''
           [Interface]
@@ -179,7 +179,7 @@ in
           PublicKey = ${config.sops.placeholder."wireguard/proton/public_key"}
           AllowedIPs = 0.0.0.0/0, ::/0
           Endpoint = ${config.sops.placeholder."wireguard/proton/endpoint"}:51820
-          PersistentKeepalive = 25
+          PersistentKeepalive = 15
         '';
     };
 
