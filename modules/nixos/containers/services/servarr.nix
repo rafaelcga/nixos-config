@@ -18,9 +18,11 @@ lib.mkMerge [
       containerDataDir = "/var/lib/servarr";
       behindVpn = true;
 
-      bindMounts."${cfg_containers.qbittorrent.containerDataDir}/downloads" = {
-        hostPath = "${config.modules.nixos.containers.dataDir}/qbittorrent/downloads";
-        isReadOnly = false;
+      bindMounts = lib.mkIf cfg_containers.qbittorrent.enable {
+        "${cfg_containers.qbittorrent.containerDataDir}/downloads" = {
+          hostPath = "${config.modules.nixos.containers.dataDir}/qbittorrent/downloads";
+          isReadOnly = false;
+        };
       };
     };
   }
