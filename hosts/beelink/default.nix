@@ -40,11 +40,9 @@
         enable = true;
         hostPort = 8003;
         gpuPassthrough = true;
-        bindMounts = {
-          "/media" = {
-            hostPath = "/mnt/media";
-            isReadOnly = true;
-          };
+        bindMounts."/media" = {
+          hostPath = "/mnt/media";
+          isReadOnly = true;
         };
       };
       servarr = {
@@ -55,11 +53,9 @@
           sonarr = 8006;
           prowlarr = 8007;
         };
-        bindMounts = {
-          "/media" = {
-            hostPath = "/mnt/media";
-            isReadOnly = false;
-          };
+        bindMounts."/media" = {
+          hostPath = "/mnt/media";
+          isReadOnly = false;
         };
       };
       qbittorrent = {

@@ -1,6 +1,7 @@
 { config, lib, ... }:
 let
-  cfg = config.modules.nixos.containers.services.servarr;
+  cfg_containers = config.modules.nixos.containers.services;
+  cfg = cfg_containers.servarr;
   cfgSops = config.sops;
 
   services = lib.attrNames cfg.containerPorts;
@@ -16,6 +17,11 @@ lib.mkMerge [
       };
       containerDataDir = "/var/lib/servarr";
       behindVpn = true;
+
+      bindMounts."${cfg_containers.qbittorrent.containerDataDir}/downloads" = {
+        hostPath = "${config.modules.nixos.containers.dataDir}/qbittorrent/downloads";
+        isReadOnly = false;
+      };
     };
   }
   (lib.mkIf cfg.enable {
