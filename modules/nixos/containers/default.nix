@@ -11,6 +11,13 @@ let
 
   utils = import "${inputs.self}/lib/utils.nix" { inherit lib; };
 
+  hostBridge = "br-containers";
+  wireguardInterface = "wg-proton";
+  prefixLength = {
+    ipv4 = 24;
+    ipv6 = 64;
+  };
+
   enabledContainers =
     let
       isEnabled = _: containerConfig: containerConfig.enable;
@@ -53,14 +60,6 @@ in
       description = "Container's main user account group";
     };
 
-    wireguardInterface = lib.mkOption {
-      type = lib.types.str;
-      default = "wg-proton";
-      readOnly = true;
-      internal = true;
-      description = "Name of the WireGuard interface in the containers";
-    };
-
     services = lib.mkOption {
       type = lib.types.attrsOf (lib.types.submodule (import ./container-options.nix { inherit cfg; }));
       default = { };
@@ -76,7 +75,7 @@ in
         "wireguard/proton/endpoint" = { };
       };
 
-      templates."${cfg.wireguardInterface}.conf".content =
+      templates."${wireguardInterface}.conf".content =
         let
           # Not added 10.0.0.0/8, as it contains the VPN IPs themselves
           localIpv4 = [
@@ -130,8 +129,8 @@ in
                 in
                 ''
                   ${iptablesBin} ${action} OUTPUT \
-                    ! -o ${cfg.wireguardInterface} \
-                    -m mark ! --mark $(${wg} show ${cfg.wireguardInterface} fwmark) \
+                    ! -o ${wireguardInterface} \
+                    -m mark ! --mark $(${wg} show ${wireguardInterface} fwmark) \
                     -m addrtype ! --dst-type LOCAL \
                     -j REJECT
                 '';
@@ -173,7 +172,19 @@ in
         enable = true;
         enableIPv6 = true;
         externalInterface = config.modules.nixos.networking.defaultInterface;
-        internalInterfaces = [ (if config.networking.nftables.enable then "ve-*" else "ve-+") ];
+        internalInterfaces = [ hostBridge ];
+      };
+
+      bridges."${hostBridge}".interfaces = [ ];
+      interfaces."${hostBridge}" = {
+        ipv4 = {
+          address = cfg.hostAddress;
+          prefixLength = prefixLength.ipv4;
+        };
+        ipv6 = {
+          address = cfg.hostAddress6;
+          prefixLength = prefixLength.ipv6;
+        };
       };
 
       # Prevent NetworkManager from managing container interfaces
@@ -259,14 +270,14 @@ in
                   enableTun = true;
 
                   bindMounts = {
-                    "${config.sops.templates."${cfg.wireguardInterface}.conf".path}" = {
+                    "${config.sops.templates."${wireguardInterface}.conf".path}" = {
                       isReadOnly = true;
                     };
                   };
 
                   config = {
-                    networking.wg-quick.interfaces."${cfg.wireguardInterface}" = {
-                      configFile = config.sops.templates."${cfg.wireguardInterface}.conf".path;
+                    networking.wg-quick.interfaces."${wireguardInterface}" = {
+                      configFile = config.sops.templates."${wireguardInterface}.conf".path;
                     };
                   };
                 })
@@ -278,14 +289,24 @@ in
           let
             sortedNames = lib.sort lib.lessThan (lib.attrNames enabledContainers);
             # Using imap1, index starts from 1
-            mkValuePairs = index: name: {
-              inherit name;
-              value = {
-                inherit (cfg) hostAddress hostAddress6;
-                localAddress = utils.addToLastOctet cfg.hostAddress index;
-                localAddress6 = utils.addToLastHextet cfg.hostAddress6 index;
+            mkValuePairs =
+              index: name:
+              let
+                localIpv4 = utils.addToLastOctet cfg.hostAddress index;
+                localIpv6 = utils.addToLastHextet cfg.hostAddress6 index;
+              in
+              {
+                inherit name;
+                value = {
+                  inherit hostBridge;
+                  localAddress = "${localIpv4}/${builtins.toString prefixLength.ipv4}";
+                  localAddress6 = "${localIpv6}/${builtins.toString prefixLength.ipv6}";
+
+                  config = {
+                    networking.defaultGateway = cfg.hostAddress;
+                  };
+                };
               };
-            };
           in
           lib.listToAttrs (lib.imap1 mkValuePairs sortedNames);
       in
