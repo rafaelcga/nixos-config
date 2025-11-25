@@ -118,6 +118,18 @@ in
             in
             lib.concatMapStringsSep "\n" ruleTemplate (localIpv4 ++ localIpv6);
 
+          mkAllowEndpoint =
+            action:
+            let
+              iptables = lib.getExe' pkgs.iptables "iptables";
+            in
+            ''
+              ${iptables} ${action} OUTPUT \
+                -d ${config.sops.placeholder."wireguard/proton/endpoint"} \
+                -p udp --dport 51820 \
+                -j ACCEPT
+            '';
+
           mkKillSwitch =
             action:
             let
@@ -143,12 +155,14 @@ in
           postUpFile = pkgs.writeShellScript "wg_containers_postup.sh" ''
             ${mkLookupRules "add"}
             ${mkAllowLan "-I"} # Insert on top
+            ${mkAllowEndpoint "-I"}
             ${mkKillSwitch "-A"}
           '';
 
           preDownFile = pkgs.writeShellScript "wg_containers_predown.sh" ''
             ${mkLookupRules "del"}
             ${mkAllowLan "-D"}
+            ${mkAllowEndpoint "-D"}
             ${mkKillSwitch "-D"}
           '';
           # Use PersistentKeepalive = 25 to avoid the tunnel from dying
