@@ -131,6 +131,8 @@ in
               "10-make-container-dirs" = lib.mapAttrs' settingTemplate enabledContainers;
             };
 
+          # Make user-defined dirs 775 and files 664 so that containers can
+          # modify them (container's user and main user share user group)
           chmodBindMounts =
             let
               hostPaths =
