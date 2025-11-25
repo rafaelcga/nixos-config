@@ -24,21 +24,6 @@ lib.mkMerge [
           tempPath = "${savePath}/incomplete";
         in
         {
-          systemd.tmpfiles.settings =
-            let
-              dirConfig = {
-                user = cfg.user.name;
-                inherit (cfg.user) group;
-                mode = "2775";
-              };
-            in
-            {
-              "10-qbittorrent-download-dirs" = {
-                "${savePath}".d = dirConfig;
-                "${tempPath}".d = dirConfig;
-              };
-            };
-
           services.qbittorrent = {
             enable = true;
             user = cfg.user.name;
