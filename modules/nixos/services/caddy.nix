@@ -133,6 +133,15 @@ in
             PORKBUN_API_SECRET_KEY=${config.sops.placeholder."porkbun/api_secret_key"}
           '';
         };
+
+        systemd.tmpfiles.settings = {
+          "10-caddy-logs" = {
+            "${config.services.caddy.logDir}".d = {
+              inherit (config.services.caddy) user group;
+              mode = "2775";
+            };
+          };
+        };
       }
       (lib.mkIf crowdsec.enable {
         modules.nixos.crowdsec.bouncers.caddy.enable = true;
