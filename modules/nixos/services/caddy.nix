@@ -27,17 +27,6 @@ let
   commonBlock = ''
     encode
 
-    log {
-        output file ${config.services.caddy.logDir}/access.log {
-            roll_size 100MiB
-            roll_keep 5
-            roll_keep_for 14d
-        }
-        format console {
-            time_format rfc3339
-        }
-    }
-
     header {
         Content-Security-Policy "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; object-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://www.youtube.com blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' wss:; worker-src 'self' blob:; media-src 'self' data: blob: https://www.youtube.com;"
         Permissions-Policy "accelerometer=(), ambient-light-sensor=(), battery=(), bluetooth=(), gyroscope=(), hid=(), interest-cohort=(), magnetometer=(), serial=(), usb=(), xr-spatial-tracking=()"
@@ -74,6 +63,7 @@ let
             reverse_proxy ${host.originHost}:${host.originPort}
         }
       '';
+      logFormat = null;
     };
 
   virtualHostOpts = {
@@ -112,6 +102,16 @@ in
           environmentFile = config.sops.templates."caddy-env".path;
           package = pkgs.local.caddy-with-plugins;
           virtualHosts = lib.mapAttrs' mkVirtualHost cfg.virtualHosts;
+          logFormat = ''
+            output file ${config.services.caddy.logDir}/access.log {
+                roll_size 100MiB
+                roll_keep 5
+                roll_keep_for 14d
+            }
+            format console {
+                time_format rfc3339
+            }
+          '';
         };
 
         # HTTP/HTTPS ports
