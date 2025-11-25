@@ -194,7 +194,10 @@ in
       # Prevent NetworkManager from managing container interfaces
       # https://nixos.org/manual/nixos/stable/#sec-container-networking
       networkmanager = lib.mkIf config.networking.networkmanager.enable {
-        unmanaged = [ "interface-name:ve-*" ];
+        unmanaged = [
+          "interface-name:ve-*"
+          "interface-name:${hostBridge}"
+        ];
       };
     };
 
@@ -204,15 +207,28 @@ in
       isSystemUser = true;
     };
 
-    systemd.tmpfiles.settings =
-      let
-        mkContainerDirs =
-          name: containerConfig:
-          lib.nameValuePair "10-container-${name}" {
-            "${cfg.dataDir}/${name}".d = { };
-          };
-      in
-      lib.mapAttrs' mkContainerDirs enabledContainers;
+    systemd = {
+      services =
+        let
+          mkWaitForBridge =
+            name: containerConfig:
+            lib.nameValuePair "container@${name}" {
+              after = [ "network-addresses-${hostBridge}.service" ];
+              requires = [ "network-addresses-${hostBridge}.service" ];
+            };
+        in
+        lib.mapAttrs' mkWaitForBridge enabledContainers;
+
+      tmpfiles.settings =
+        let
+          mkContainerDirs =
+            name: containerConfig:
+            lib.nameValuePair "10-container-${name}" {
+              "${cfg.dataDir}/${name}".d = { };
+            };
+        in
+        lib.mapAttrs' mkContainerDirs enabledContainers;
+    };
 
     containers =
       let
