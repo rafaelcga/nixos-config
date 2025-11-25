@@ -36,6 +36,10 @@
         enable = true;
         hostPort = 8000;
       };
+      ddns-updater = {
+        enable = true;
+        hostPort = 8002;
+      };
       jellyfin = {
         enable = true;
         hostPort = 8003;
