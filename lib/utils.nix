@@ -52,4 +52,6 @@ in
       throw "addToLastHextet: Octet overflow"
     else
       lib.concatStringsSep ":" (restHextets ++ [ (lib.toHexString newLastHextet) ]);
+
+  removeMask = block: lib.take 1 (lib.splitString "/" block);
 }

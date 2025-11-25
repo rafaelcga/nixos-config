@@ -148,17 +148,21 @@ lib.mkMerge [
                 service: data:
                 let
                   containerConfig = cfg_containers.${data.container};
-                  port = builtins.toString containerConfig.hostPorts.${service};
-                  href = "http://${hostLocalIp}:${port}";
+                  containerIp = utils.removeMask config.containers.${data.container}.localAddress;
+                  localPort = builtins.toString containerConfig.hostPorts.${service};
+                  containerPort = builtins.toString containerConfig.containerPorts.${service};
+
+                  hrefLocal = "http://${hostLocalIp}:${localPort}";
+                  hrefContainer = "http://${containerIp}:${containerPort}";
                 in
                 {
                   "${utils.capitalizeFirst service}" = lib.mkIf containerConfig.enable {
                     icon = "${service}.png";
-                    inherit href;
+                    href = hrefLocal;
                     widget = lib.mkMerge [
                       {
                         type = service;
-                        url = href;
+                        url = hrefContainer;
                         fields = data.widgetFields;
                       }
                       (lib.mkIf (data.apiAuth == "key") {
