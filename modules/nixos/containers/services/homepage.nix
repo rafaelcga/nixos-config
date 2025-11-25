@@ -121,7 +121,7 @@ lib.mkMerge [
             '';
         in
         lib.concatStringsSep "\n" (
-          (lib.mapAttrsToList mkEnvVar serviceData)
+          lib.mapAttrsToList mkEnvVar serviceData
           ++ [
             "HOMEPAGE_ALLOWED_HOSTS=${hostLocalIp}:${builtins.toString cfg.hostPort}"
           ]

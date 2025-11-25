@@ -168,6 +168,7 @@ in
                 PublicKey = ${config.sops.placeholder."wireguard/home_vpn/${cfg.serverHostName}/public_key"}
                 Endpoint = vpn.${config.sops.placeholder."web_domain"}:${builtins.toString cfg.listenPort}
                 AllowedIPs = 0.0.0.0/0, ::/0
+                PersistentKeepalive = 25
               '';
         in
         lib.concatStringsSep "\n\n" [
