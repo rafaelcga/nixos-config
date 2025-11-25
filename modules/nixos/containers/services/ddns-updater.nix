@@ -45,6 +45,15 @@ lib.mkMerge [
           enable = true;
           environment = {
             CONFIG_FILEPATH = config.sops.templates."ddns-updater/config.json".path;
+            PERIOD = "5m";
+            UPDATE_COOLDOWN_PERIOD = "5m";
+            PUBLICIP_FETCHERS = "all";
+            PUBLICIP_HTTP_PROVIDERS = "all";
+            PUBLICIPV4_HTTP_PROVIDERS = "all";
+            PUBLICIPV6_HTTP_PROVIDERS = "all";
+            PUBLICIP_DNS_PROVIDERS = "all";
+            PUBLICIP_DNS_TIMEOUT = "3s";
+            HTTP_TIMEOUT = "10s";
             LISTENING_ADDRESS = ":${builtins.toString cfg.containerPort}";
             TZ = "Europe/Madrid";
           };
