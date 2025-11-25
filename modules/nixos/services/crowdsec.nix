@@ -152,13 +152,13 @@ in
       in
       {
         "10-crowdsec" = {
-          "/var/lib/crowdsec" = {
+          "${rootDir}" = {
             d = {
               inherit user group;
               mode = "0755";
             };
           };
-          "/var/lib/crowdsec/online_api_credentials.yaml" = {
+          "${rootDir}/online_api_credentials.yaml" = {
             f = {
               inherit user group;
               mode = "0750";
@@ -179,8 +179,8 @@ in
           };
 
           # See https://github.com/NixOS/nixpkgs/issues/445342
-          lapi.credentialsFile = "/var/lib/crowdsec/local_api_credentials.yaml";
-          capi.credentialsFile = "/var/lib/crowdsec/online_api_credentials.yaml";
+          lapi.credentialsFile = "${rootDir}/local_api_credentials.yaml";
+          capi.credentialsFile = "${rootDir}/online_api_credentials.yaml";
 
           console = {
             # See https://github.com/NixOS/nixpkgs/issues/445342
