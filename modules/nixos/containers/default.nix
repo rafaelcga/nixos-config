@@ -177,14 +177,18 @@ in
 
       bridges."${hostBridge}".interfaces = [ ];
       interfaces."${hostBridge}" = {
-        ipv4 = {
-          address = cfg.hostAddress;
-          prefixLength = prefixLength.ipv4;
-        };
-        ipv6 = {
-          address = cfg.hostAddress6;
-          prefixLength = prefixLength.ipv6;
-        };
+        ipv4.addresses = [
+          {
+            address = cfg.hostAddress;
+            prefixLength = prefixLength.ipv4;
+          }
+        ];
+        ipv6.addresses = [
+          {
+            address = cfg.hostAddress6;
+            prefixLength = prefixLength.ipv6;
+          }
+        ];
       };
 
       # Prevent NetworkManager from managing container interfaces
