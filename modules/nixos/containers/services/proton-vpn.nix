@@ -15,15 +15,20 @@ let
 
   containersBehindVpn =
     let
-      isBehindVpn = _: containerConfig: (containerConfig.enable && containerConfig.behindVpn);
+      doKeep =
+        name: containerConfig:
+        let
+          isNotItself = name != cfg.name;
+          isBehindVpn = containerConfig.enable && containerConfig.behindVpn;
+        in
+        isNotItself && isBehindVpn;
     in
-    lib.filterAttrs isBehindVpn cfg_containers;
+    lib.filterAttrs doKeep cfg_containers;
 in
 lib.mkMerge [
   {
     modules.nixos.containers.services.proton-vpn = {
       enable = containersBehindVpn != { };
-      behindVpn = lib.mkForce false;
     };
   }
   (lib.mkIf cfg.enable {
@@ -132,9 +137,12 @@ lib.mkMerge [
       let
         mkWaitForVpn =
           name: containerConfig:
+          let
+            vpnContainer = "container@proton-vpn.service";
+          in
           lib.nameValuePair "container@${name}" {
-            after = [ "container@proton-vpn" ];
-            requires = [ "container@proton-vpn" ];
+            after = [ vpnContainer ];
+            requires = [ vpnContainer ];
           };
       in
       lib.mapAttrs' mkWaitForVpn containersBehindVpn;
