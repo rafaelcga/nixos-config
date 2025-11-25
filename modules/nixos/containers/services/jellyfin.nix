@@ -6,6 +6,8 @@
 }:
 let
   cfg = config.modules.nixos.containers.services.jellyfin;
+
+  utils = import "${inputs.self}/lib/utils.nix" { inherit lib; };
 in
 lib.mkMerge [
   {
@@ -45,7 +47,7 @@ lib.mkMerge [
 
     modules.nixos.caddy = lib.mkIf config.modules.nixos.caddy.enable {
       virtualHosts.jellyfin = {
-        originHost = config.containers.jellyfin.localAddress;
+        originHost = utils.removeMask config.containers.jellyfin.localAddress;
         originPort = cfg.containerPort;
       };
     };
