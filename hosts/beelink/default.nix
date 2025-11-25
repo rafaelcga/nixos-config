@@ -59,7 +59,7 @@
         };
       };
       qbittorrent = {
-        enable = false;
+        enable = true;
         hostPort = 8008;
       };
     };
