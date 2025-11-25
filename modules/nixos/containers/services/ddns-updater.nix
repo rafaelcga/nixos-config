@@ -16,18 +16,21 @@ lib.mkMerge [
         "porkbun/api_secret_key" = { };
       };
       # https://github.com/qdm12/ddns-updater/blob/master/docs/porkbun.md
-      templates."ddns-updater/config.json".content = ''
-        {
-          "settings": [
-            {
-              "provider": "porkbun",
-              "domain": "*.${config.sops.placeholder."web_domain"}",
-              "api_key": "${config.sops.placeholder."porkbun/api_key"}",
-              "secret_api_key": "${config.sops.placeholder."porkbun/api_secret_key"}"
-            }
-          ]
-        }
-      '';
+      templates."ddns-updater/config.json" = {
+        owner = "container";
+        content = ''
+          {
+            "settings": [
+              {
+                "provider": "porkbun",
+                "domain": "*.${config.sops.placeholder."web_domain"}",
+                "api_key": "${config.sops.placeholder."porkbun/api_key"}",
+                "secret_api_key": "${config.sops.placeholder."porkbun/api_secret_key"}"
+              }
+            ]
+          }
+        '';
+      };
     };
 
     containers.ddns-updater = {
