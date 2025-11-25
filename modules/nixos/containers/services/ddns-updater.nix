@@ -47,6 +47,14 @@ lib.mkMerge [
           };
         };
 
+        systemd.services.ddns-updater = {
+          serviceConfig = {
+            DynamicUser = lib.mkForce false;
+            User = cfg.user.name;
+            Group = cfg.user.group;
+          };
+        };
+
         networking.firewall.allowedTCPPorts = [ cfg.containerPort ];
       };
     };
