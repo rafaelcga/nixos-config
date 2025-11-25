@@ -1,4 +1,3 @@
-{ config, userName, ... }:
 {
   modules.nixos = {
     # System
@@ -65,19 +64,6 @@
       qbittorrent = {
         enable = true;
         hostPort = 8008;
-      };
-    };
-  };
-
-  systemd.tmpfiles.settings = {
-    "10-media-directory" = {
-      "/mnt/media" = {
-        d = {
-          user = userName;
-          inherit (config.users.users.${userName}) group;
-          mode = "2775";
-        };
-        "A+".argument = "default:group::rwx";
       };
     };
   };

@@ -124,12 +124,51 @@ in
       tmpfiles.settings =
         let
           mkContainerDirs =
-            name: containerConfig:
-            lib.nameValuePair "10-container-${name}" {
-              "${cfg.dataDir}/${name}".d = { };
+            let
+              settingTemplate = name: _: lib.nameValuePair "${cfg.dataDir}/${name}" { d = { }; };
+            in
+            {
+              "10-make-container-dirs" = lib.mapAttrs' settingTemplate enabledContainers;
+            };
+
+          chmodBindMounts =
+            let
+              hostPaths =
+                let
+                  withBindMounts = lib.filterAttrs (
+                    _: containerConfig: containerConfig.bindMounts != { }
+                  ) enabledContainers;
+
+                  getHostPaths =
+                    bindMounts:
+                    lib.mapAttrsToList (mountPoint: mountConfig: mountConfig.hostPath or mountPoint) bindMounts;
+
+                  allHostPaths = lib.concatMap (containerConfig: getHostPaths containerConfig.bindMounts) (
+                    lib.attrValues withBindMounts
+                  );
+                in
+                lib.unique allHostPaths;
+
+              settingsTemplate = path: {
+                name = path;
+                value = {
+                  d = {
+                    user = userName;
+                    inherit (config.users.users.${userName}) group;
+                    mode = "2775";
+                  };
+                  "A+".argument = "default:group::rwx";
+                };
+              };
+            in
+            {
+              "10-chmod-container-binds" = lib.listToAttrs (lib.map settingsTemplate hostPaths);
             };
         in
-        lib.mapAttrs' mkContainerDirs enabledContainers;
+        lib.mkMerge [
+          mkContainerDirs
+          chmodBindMounts
+        ];
     };
 
     containers =
