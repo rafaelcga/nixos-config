@@ -77,6 +77,7 @@
           inherit (config.users.users.${userName}) group;
           mode = "2775";
         };
+        "A+".argument = "default:group::rw";
       };
     };
   };
