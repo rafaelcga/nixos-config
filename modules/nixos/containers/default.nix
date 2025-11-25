@@ -2,7 +2,6 @@
   inputs,
   config,
   lib,
-  pkgs,
   userName,
   ...
 }:
@@ -12,7 +11,6 @@ let
   utils = import "${inputs.self}/lib/utils.nix" { inherit lib; };
 
   hostBridge = "br-containers";
-  wireguardInterface = "wg-proton";
   prefixLength = {
     ipv4 = 24;
     ipv6 = 64;
@@ -68,107 +66,6 @@ in
   };
 
   config = lib.mkIf (enabledContainers != { }) {
-    sops = {
-      secrets = {
-        "wireguard/proton/public_key" = { };
-        "wireguard/proton/private_key" = { };
-        "wireguard/proton/endpoint" = { };
-      };
-
-      templates."${wireguardInterface}.conf".content =
-        let
-          # Not added 10.0.0.0/8, as it contains the VPN IPs themselves
-          localIpv4 = [
-            "172.16.0.0/12"
-            "192.168.0.0/16"
-          ];
-          localIpv6 = [
-            "fc00::/7"
-            "fe80::/10"
-          ];
-
-          isIpv6 = address: lib.hasInfix ":" address;
-
-          mkAllowLan =
-            action:
-            let
-              ruleTemplate =
-                block:
-                let
-                  binName = if (isIpv6 block) then "ip6tables" else "iptables";
-                  iptablesBin = lib.getExe' pkgs.iptables binName;
-                in
-                ''
-                  ${iptablesBin} ${action} INPUT -s ${block} -j ACCEPT
-                  ${iptablesBin} ${action} OUTPUT -d ${block} -j ACCEPT
-                '';
-            in
-            lib.concatMapStringsSep "\n" ruleTemplate (localIpv4 ++ localIpv6);
-
-          mkLookupRules =
-            action:
-            let
-              ruleTemplate =
-                block:
-                let
-                  ip = lib.getExe' pkgs.iproute2 "ip";
-                  command = "${ip}" + lib.optionalString (isIpv6 block) " -6";
-                in
-                "${command} rule ${action} to ${block} lookup main prio 2500";
-            in
-            lib.concatMapStringsSep "\n" ruleTemplate (localIpv4 ++ localIpv6);
-
-          mkKillSwitch =
-            action:
-            let
-              ruleTemplate =
-                binName:
-                let
-                  wg = lib.getExe pkgs.wireguard-tools;
-                  iptablesBin = lib.getExe' pkgs.iptables binName;
-                in
-                ''
-                  ${iptablesBin} ${action} OUTPUT \
-                    ! -o ${wireguardInterface} \
-                    -m mark ! --mark $(${wg} show ${wireguardInterface} fwmark) \
-                    -m addrtype ! --dst-type LOCAL \
-                    -j REJECT
-                '';
-            in
-            lib.concatMapStringsSep "\n" ruleTemplate [
-              "iptables"
-              "ip6tables"
-            ];
-
-          postUpFile = pkgs.writeShellScript "wg_containers_postup.sh" ''
-            ${mkLookupRules "add"}
-            ${mkAllowLan "-I"} # Insert on top
-            ${mkKillSwitch "-A"}
-          '';
-
-          preDownFile = pkgs.writeShellScript "wg_containers_predown.sh" ''
-            ${mkLookupRules "del"}
-            ${mkAllowLan "-D"}
-            ${mkKillSwitch "-D"}
-          '';
-          # Use PersistentKeepalive to avoid the tunnel from dying
-        in
-        ''
-          [Interface]
-          PrivateKey = ${config.sops.placeholder."wireguard/proton/private_key"}
-          Address = 10.2.0.2/32
-          DNS = 10.2.0.1
-          PostUp = ${postUpFile}
-          PreDown = ${preDownFile}
-
-          [Peer]
-          PublicKey = ${config.sops.placeholder."wireguard/proton/public_key"}
-          AllowedIPs = 0.0.0.0/0, ::/0
-          Endpoint = ${config.sops.placeholder."wireguard/proton/endpoint"}:51820
-          PersistentKeepalive = 25
-        '';
-    };
-
     networking = {
       nat = {
         enable = true;
@@ -236,74 +133,55 @@ in
       let
         baseConfigs =
           let
-            mkBaseConfig =
-              name: containerConfig:
-              lib.mkMerge [
-                {
-                  autoStart = true;
-                  privateNetwork = true;
-                  privateUsers = "identity";
+            mkBaseConfig = name: containerConfig: {
+              autoStart = true;
+              privateNetwork = true;
+              privateUsers = "identity";
 
-                  forwardPorts =
+              forwardPorts =
+                let
+                  mkForwardPort =
+                    serviceName:
                     let
-                      mkForwardPort =
-                        serviceName:
-                        let
-                          hostPort = containerConfig.hostPorts.${serviceName};
-                          containerPort = containerConfig.containerPorts.${serviceName};
-                        in
-                        lib.optionals (hostPort != null && containerPort != null) [
-                          {
-                            inherit hostPort containerPort;
-                            protocol = "tcp";
-                          }
-                        ];
-
-                      serviceNames = lib.attrNames containerConfig.containerPorts;
+                      hostPort = containerConfig.hostPorts.${serviceName};
+                      containerPort = containerConfig.containerPorts.${serviceName};
                     in
-                    (lib.concatMap mkForwardPort serviceNames) ++ containerConfig.extraForwardPorts;
+                    lib.optionals (hostPort != null && containerPort != null) [
+                      {
+                        inherit hostPort containerPort;
+                        protocol = "tcp";
+                      }
+                    ];
 
-                  bindMounts = lib.mkMerge [
-                    (lib.mkIf (containerConfig.containerDataDir != null) {
-                      "${containerConfig.containerDataDir}" = {
-                        hostPath = "${cfg.dataDir}/${name}";
-                        isReadOnly = false;
-                      };
-                    })
-                    containerConfig.bindMounts
-                  ];
+                  serviceNames = lib.attrNames containerConfig.containerPorts;
+                in
+                (lib.concatMap mkForwardPort serviceNames) ++ containerConfig.extraForwardPorts;
 
-                  config = {
-                    # Use systemd-resolved inside the container
-                    # Workaround for bug https://github.com/NixOS/nixpkgs/issues/162686
-                    networking.useHostResolvConf = lib.mkForce false;
-                    services.resolved.enable = true;
-
-                    users.users."${name}" = {
-                      uid = cfg.containerUid;
-                      group = cfg.containerGroup;
-                      isSystemUser = true;
-                    };
-
-                    system.stateVersion = config.system.stateVersion;
-                  };
-                }
-                (lib.mkIf containerConfig.behindVpn {
-                  enableTun = true;
-
-                  bindMounts = {
-                    "${config.sops.templates."${wireguardInterface}.conf".path}" = {
-                      isReadOnly = true;
-                    };
-                  };
-
-                  config = {
-                    networking.wg-quick.interfaces."${wireguardInterface}" = {
-                      configFile = config.sops.templates."${wireguardInterface}.conf".path;
-                    };
+              bindMounts = lib.mkMerge [
+                (lib.mkIf (containerConfig.containerDataDir != null) {
+                  "${containerConfig.containerDataDir}" = {
+                    hostPath = "${cfg.dataDir}/${name}";
+                    isReadOnly = false;
                   };
                 })
+                containerConfig.bindMounts
               ];
+
+              config = {
+                # Use systemd-resolved inside the container
+                # Workaround for bug https://github.com/NixOS/nixpkgs/issues/162686
+                networking.useHostResolvConf = lib.mkForce false;
+                services.resolved.enable = true;
+
+                users.users."${name}" = {
+                  uid = cfg.containerUid;
+                  group = cfg.containerGroup;
+                  isSystemUser = true;
+                };
+
+                system.stateVersion = config.system.stateVersion;
+              };
+            };
           in
           lib.mapAttrs mkBaseConfig enabledContainers;
 
