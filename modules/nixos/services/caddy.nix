@@ -104,6 +104,7 @@ in
           virtualHosts = lib.mapAttrs' mkVirtualHost cfg.virtualHosts;
           logFormat = ''
             output file ${config.services.caddy.logDir}/access.log {
+                mode 644
                 roll_size 100MiB
                 roll_keep 5
                 roll_keep_for 14d
@@ -138,7 +139,7 @@ in
           "10-caddy-logs" = {
             "${config.services.caddy.logDir}".d = {
               inherit (config.services.caddy) user group;
-              mode = "2775";
+              mode = "0755";
             };
           };
         };
