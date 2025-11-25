@@ -53,5 +53,5 @@ in
     else
       lib.concatStringsSep ":" (restHextets ++ [ (lib.toHexString newLastHextet) ]);
 
-  removeMask = block: lib.take 1 (lib.splitString "/" block);
+  removeMask = block: lib.elemAt (lib.splitString "/" block) 0;
 }
