@@ -158,7 +158,7 @@ in
               mode = "0755";
             };
           };
-          "${rootDir}/online_api_credentials.yaml" = {
+          "${rootDir}/capi.yaml" = {
             f = {
               inherit user group;
               mode = "0750";
@@ -179,8 +179,8 @@ in
           };
 
           # See https://github.com/NixOS/nixpkgs/issues/445342
-          lapi.credentialsFile = "${rootDir}/local_api_credentials.yaml";
-          capi.credentialsFile = "${rootDir}/online_api_credentials.yaml";
+          lapi.credentialsFile = "${rootDir}/lapi.yaml";
+          capi.credentialsFile = "${rootDir}/capi.yaml";
 
           console = {
             # See https://github.com/NixOS/nixpkgs/issues/445342
