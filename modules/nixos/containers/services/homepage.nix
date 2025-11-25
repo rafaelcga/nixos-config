@@ -159,21 +159,25 @@ lib.mkMerge [
                   "${utils.capitalizeFirst service}" = lib.mkIf containerConfig.enable {
                     icon = "${service}.png";
                     href = hrefLocal;
-                    widget = lib.mkMerge [
-                      {
-                        type = service;
-                        url = hrefContainer;
-                        fields = data.widgetFields;
-                      }
-                      (lib.mkIf (data.apiAuth == "key") {
-                        key = "{{${getEnvVarName service}}";
-                      })
-                      (lib.mkIf (data.apiAuth == "password") {
-                        username = userName;
-                        password = "{{${getEnvVarName service}}";
-                      })
-                      data.extraConfig
-                    ];
+                    widget =
+                      let
+                        envVarSub = "{{" + (getEnvVarName service) + "}}";
+                      in
+                      lib.mkMerge [
+                        {
+                          type = service;
+                          url = hrefContainer;
+                          fields = data.widgetFields;
+                        }
+                        (lib.mkIf (data.apiAuth == "key") {
+                          key = envVarSub;
+                        })
+                        (lib.mkIf (data.apiAuth == "password") {
+                          username = userName;
+                          password = envVarSub;
+                        })
+                        data.extraConfig
+                      ];
                   };
                 };
 
