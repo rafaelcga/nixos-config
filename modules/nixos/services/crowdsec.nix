@@ -9,6 +9,8 @@ let
 
   rootDir = "/var/lib/crowdsec";
   confDir = "/etc/crowdsec";
+  logDir = "/var/log/crowdsec";
+
   lapiFile = "${rootDir}/lapi.yaml";
   capiFile = "${rootDir}/capi.yaml";
 
@@ -154,6 +156,10 @@ in
       in
       {
         "10-crowdsec" = {
+          "${logDir}".d = {
+            inherit user group;
+            mode = "0755";
+          };
           "${capiFile}".f = {
             inherit user group;
             mode = "0750";
@@ -240,7 +246,7 @@ in
         enable = true;
         settings = {
           log_mode = "file";
-          log_dir = "/var/log";
+          log_dir = logDir;
           deny_log = true;
           iptables_chains = [
             "INPUT"
@@ -283,6 +289,14 @@ in
                   config.sops.secrets."crowdsec/enroll_key".path
                 })" --name ${config.services.crowdsec.name}
               '';
+          };
+
+          crowdsec-firewall-bouncer = {
+            serviceConfig = {
+              DynamicUser = lib.mkForce false;
+              User = config.services.crowdsec.user;
+              Group = config.services.crowdsec.group;
+            };
           };
         }
       ]
