@@ -156,6 +156,10 @@ in
       in
       {
         "10-crowdsec" = {
+          "${rootDir}".d = {
+            inherit user group;
+            mode = "0755";
+          };
           "${logDir}".d = {
             inherit user group;
             mode = "0755";
