@@ -7,7 +7,8 @@
 }:
 let
   cfg = config.modules.nixos.fonts;
-  user = config.users.users.${userName};
+
+  fontDir = "/run/current-system/sw/share/X11/fonts";
 in
 {
   options.modules.nixos.fonts = {
@@ -29,26 +30,9 @@ in
       ];
     };
 
-    systemd.services.link-system-fonts = {
-      description = "Links the nix-store font directory to $XDG_DATA_HOME/fonts";
-      wantedBy = [ "multi-user.target" ];
-      serviceConfig = {
-        Type = "oneshot";
-        User = user.name;
-        Group = user.group;
-      };
-      script = ''
-        set -euo pipefail
-
-        FONT_DIR="''${XDG_DATA_HOME:-$HOME/.local/share}/fonts"
-        mkdir -p "$(dirname "$FONT_DIR")"
-
-        if [[ -d "$FONT_DIR" ]] && [[ ! -L "$FONT_DIR" ]]; then
-          rm -rf "$FONT_DIR"
-        fi
-
-        ln -snf "/run/current-system/sw/share/X11/fonts" "$FONT_DIR"
-      '';
+    home-manager.users.${userName}.config.xdg.dataFile."fonts" = {
+      source = fontDir;
+      force = true;
     };
   };
 }
