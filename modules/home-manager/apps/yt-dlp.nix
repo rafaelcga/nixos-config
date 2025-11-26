@@ -13,7 +13,7 @@ let
     # Download options
     concurrent-fragments = 8;
     throttled-rate = "1M";
-    # cookies-from-browser = "firefox";
+    cookies-from-browser = "firefox";
     # Playlist options
     ignore-errors = true;
     continue = true;
