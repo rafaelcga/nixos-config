@@ -239,6 +239,8 @@ in
       crowdsec-firewall-bouncer = {
         enable = true;
         settings = {
+          log_mode = "file";
+          log_dir = "/var/log";
           deny_log = true;
           iptables_chains = [
             "INPUT"
