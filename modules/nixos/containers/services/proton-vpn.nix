@@ -141,9 +141,9 @@ lib.mkMerge [
           let
             vpnContainer = "container@proton-vpn.service";
           in
-          lib.nameValuePair "container@${name}" {
+          lib.nameValuePair "container@${name}" rec {
             after = [ vpnContainer ];
-            requires = [ vpnContainer ];
+            requires = after;
           };
       in
       lib.mapAttrs' mkWaitForVpn containersBehindVpn;

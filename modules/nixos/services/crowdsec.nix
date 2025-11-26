@@ -57,11 +57,11 @@ let
         ;
     in
     {
-      "${serviceName}" = lib.mkIf enable {
+      "${serviceName}" = lib.mkIf enable rec {
         description = "Register the CrowdSec Bouncer to the local CrowdSec service";
         wantedBy = [ "multi-user.target" ];
         after = [ "crowdsec.service" ];
-        wants = [ "crowdsec.service" ];
+        wants = after;
 
         serviceConfig =
           let

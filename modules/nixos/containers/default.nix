@@ -115,9 +115,9 @@ in
             let
               serviceName = "network-addresses-${hostBridge}.service";
             in
-            lib.nameValuePair "container@${name}" {
+            lib.nameValuePair "container@${name}" rec {
               after = [ serviceName ];
-              requires = [ serviceName ];
+              requires = after;
             };
         in
         lib.mapAttrs' mkWaitForBridge enabledContainers;

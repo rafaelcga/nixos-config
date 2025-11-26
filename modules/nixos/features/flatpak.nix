@@ -24,10 +24,10 @@ in
         flatpak = lib.getExe pkgs.flatpak;
       in
       {
-        add-flathub-repo = {
+        add-flathub-repo = rec {
           description = "Adds Flathub repository";
           after = [ "network-online.target" ];
-          wants = [ "network-online.target" ];
+          wants = after;
           wantedBy = [ "multi-user.target" ];
           serviceConfig = {
             Type = "oneshot";
