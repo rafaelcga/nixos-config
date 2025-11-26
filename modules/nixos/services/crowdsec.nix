@@ -6,6 +6,9 @@
 }:
 let
   cfg = config.modules.nixos.crowdsec;
+  cfg_crowdsec = config.services.crowdsec;
+
+  format = pkgs.formats.yaml { };
 
   rootDir = "/var/lib/crowdsec";
   confDir = "/etc/crowdsec";
@@ -62,8 +65,8 @@ let
 
         serviceConfig = {
           Type = "oneshot";
-          User = config.services.crowdsec.user;
-          Group = config.services.crowdsec.group;
+          User = cfg_crowdsec.user;
+          Group = cfg_crowdsec.group;
           StateDirectory = serviceName;
           # Needs write permissions to add the bouncer
           ReadWritePaths = [ rootDir ];
@@ -152,7 +155,7 @@ in
     # See https://github.com/nixos/nixpkgs/issues/446764
     systemd.tmpfiles.settings =
       let
-        inherit (config.services.crowdsec) user group;
+        inherit (cfg_crowdsec) user group;
       in
       {
         "10-crowdsec" = {
@@ -170,6 +173,12 @@ in
           };
         };
       };
+
+    # Generate the config.yaml for cscli to read in certain operations
+    environment.etc."crowdsec/config.yaml" = {
+      source = format.generate "crowdsec/config.yaml" cfg_crowdsec.settings.general;
+      mode = "0660";
+    };
 
     services = {
       crowdsec = {
@@ -266,8 +275,8 @@ in
 
     sops.secrets = {
       "crowdsec/enroll_key" = {
-        owner = config.services.crowdsec.user;
-        group = config.services.crowdsec.group;
+        owner = cfg_crowdsec.user;
+        group = cfg_crowdsec.group;
       };
     };
 
@@ -280,8 +289,8 @@ in
             wants = after;
             serviceConfig = {
               Type = "oneshot";
-              User = config.services.crowdsec.user;
-              Group = config.services.crowdsec.group;
+              User = cfg_crowdsec.user;
+              Group = cfg_crowdsec.group;
               ReadWritePaths = [
                 rootDir
                 confDir
@@ -295,7 +304,7 @@ in
               ''
                 ${cscli} console enroll "$(cat ${
                   config.sops.secrets."crowdsec/enroll_key".path
-                })" --name ${config.services.crowdsec.name}
+                })" --name ${cfg_crowdsec.name}
               '';
           };
 
@@ -304,8 +313,8 @@ in
             wants = after;
             serviceConfig = {
               DynamicUser = lib.mkForce false;
-              User = config.services.crowdsec.user;
-              Group = config.services.crowdsec.group;
+              User = cfg_crowdsec.user;
+              Group = cfg_crowdsec.group;
             };
           };
         }
