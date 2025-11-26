@@ -7,6 +7,7 @@
 }:
 let
   cfg = config.modules.nixos.containers;
+  user = config.users.users.${userName};
 
   utils = import "${inputs.self}/lib/utils.nix" { inherit lib; };
 
@@ -52,7 +53,7 @@ in
 
     containerGroup = lib.mkOption {
       type = lib.types.str;
-      default = config.users.users.${userName}.group;
+      default = user.group;
       readOnly = true;
       internal = true;
       description = "Container's main user account group";
@@ -155,8 +156,8 @@ in
                 name = path;
                 value = {
                   d = {
-                    user = userName;
-                    inherit (config.users.users.${userName}) group;
+                    user = user.name;
+                    inherit (user) group;
                     mode = "2775";
                   };
                   "A+".argument = "default:group::rwx";

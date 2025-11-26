@@ -8,6 +8,7 @@
 }:
 let
   cfg = config.modules.nixos.user;
+  user = config.users.users.${userName};
 in
 {
   options.modules.nixos.user = {
@@ -25,7 +26,12 @@ in
     programs.${cfg.shell}.enable = true;
     environment.shells = [ pkgs.${cfg.shell} ];
 
-    sops.secrets."passwords/user".neededForUsers = true;
+    sops.secrets."passwords/user" = {
+      owner = user.name;
+      inherit (user) group;
+      mode = "0400";
+      neededForUsers = true;
+    };
 
     users.users.${userName} = lib.mkMerge [
       {
