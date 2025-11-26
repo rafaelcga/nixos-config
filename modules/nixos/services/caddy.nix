@@ -173,10 +173,10 @@ in
             genServiceName = "generate-caddy-env-file";
           in
           {
-            "${genServiceName}" = {
+            "${genServiceName}" = rec {
               wantedBy = [ "multi-user.target" ];
-              wants = [ "${serviceName}.service" ];
               after = [ "${serviceName}.service" ];
+              wants = after;
               serviceConfig.Type = "oneshot";
               script = ''
                 set -euo pipefail
@@ -190,9 +190,9 @@ in
               '';
             };
 
-            caddy = {
+            caddy = rec {
               after = [ "${genServiceName}.service" ];
-              wants = [ "${genServiceName}.service" ];
+              wants = after;
               requires = [ "crowdsec.service" ];
               serviceConfig.EnvironmentFile = lib.mkForce envFile;
             };

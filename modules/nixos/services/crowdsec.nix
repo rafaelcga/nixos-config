@@ -274,10 +274,10 @@ in
     systemd.services = lib.mkMerge (
       [
         {
-          "enroll-crowdsec-console" = {
+          "enroll-crowdsec-console" = rec {
             wantedBy = [ "multi-user.target" ];
             after = [ "crowdsec.service" ];
-            wants = [ "crowdsec.service" ];
+            wants = after;
             serviceConfig = {
               Type = "oneshot";
               User = config.services.crowdsec.user;
@@ -299,9 +299,9 @@ in
               '';
           };
 
-          crowdsec-firewall-bouncer = {
-            after = [ "crowdsec-firewall-bouncer-register" ];
-            wants = [ "crowdsec-firewall-bouncer-register" ];
+          crowdsec-firewall-bouncer = rec {
+            after = [ "crowdsec-firewall-bouncer-register.service" ];
+            wants = after;
             serviceConfig = {
               DynamicUser = lib.mkForce false;
               User = config.services.crowdsec.user;
