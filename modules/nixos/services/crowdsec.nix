@@ -300,6 +300,8 @@ in
           };
 
           crowdsec-firewall-bouncer = {
+            after = [ "crowdsec-firewall-bouncer-register" ];
+            wants = [ "crowdsec-firewall-bouncer-register" ];
             serviceConfig = {
               DynamicUser = lib.mkForce false;
               User = config.services.crowdsec.user;
