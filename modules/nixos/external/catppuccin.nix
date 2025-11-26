@@ -8,7 +8,7 @@
   ...
 }:
 let
-  inherit (hmConfig.modules.home-manager) papirus plasma-manager;
+  inherit (hmConfig.modules.home-manager) papirus;
 
   cfg = config.modules.nixos.catppuccin;
 in
@@ -99,13 +99,6 @@ in
               themeConfig
               (lib.mkIf papirus.enable {
                 catppuccin.gtk.icon.enable = true;
-              })
-              (lib.mkIf plasma-manager.enable {
-                home.packages = [ pkgs.catppuccin-kde ];
-                modules.home-manager.plasma-manager = {
-                  colorScheme = lib.mkForce cfg.colorScheme;
-                  splashTheme = lib.mkForce cfg.themeName;
-                };
               })
             ];
           };

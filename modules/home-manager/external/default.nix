@@ -1,5 +1,1 @@
-{
-  imports = [
-    ./plasma-manager.nix
-  ];
-}
+{ }
