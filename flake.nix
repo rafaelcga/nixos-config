@@ -15,14 +15,14 @@
           fractal = {
             user = "rafael";
             system = "x86_64-linux";
-            stateVersion = "25.11";
           };
           beelink = {
             user = "rafael";
             system = "x86_64-linux";
-            stateVersion = "25.11";
           };
         };
+
+        stateVersion = "25.11";
       };
     in
     flake-parts.lib.mkFlake

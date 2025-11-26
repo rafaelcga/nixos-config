@@ -5,9 +5,6 @@
   hostName,
   ...
 }:
-let
-  cfg = flakeMeta.hosts.${hostName};
-in
 {
   imports =
     let
@@ -18,10 +15,10 @@ in
 
   networking.hostName = hostName;
 
-  system.stateVersion = cfg.stateVersion;
+  system.stateVersion = flakeMeta.stateVersion;
 
   nixpkgs = {
-    hostPlatform = cfg.system;
+    hostPlatform = flakeMeta.hosts.${hostName}.system;
     config.allowUnfree = true;
   };
 
