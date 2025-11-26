@@ -122,6 +122,7 @@ lib.mkMerge [
           PrivateKey = ${config.sops.placeholder."wireguard/proton/private_key"}
           Address = 10.2.0.2/32
           DNS = 10.2.0.1
+          MTU = 1420
           PostUp = ${postUpFile}
           PreDown = ${preDownFile}
 
@@ -129,7 +130,7 @@ lib.mkMerge [
           PublicKey = ${config.sops.placeholder."wireguard/proton/public_key"}
           AllowedIPs = 0.0.0.0/0, ::/0
           Endpoint = ${config.sops.placeholder."wireguard/proton/endpoint"}:51820
-          PersistentKeepalive = 25
+          PersistentKeepalive = 15
         '';
     };
 
