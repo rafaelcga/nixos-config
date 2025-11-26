@@ -177,6 +177,7 @@ in
     # Generate the config.yaml for cscli to read in certain operations
     environment.etc."crowdsec/config.yaml" = {
       source = format.generate "crowdsec/config.yaml" cfg_crowdsec.settings.general;
+      inherit (cfg_crowdsec) user group;
       mode = "0660";
     };
 
