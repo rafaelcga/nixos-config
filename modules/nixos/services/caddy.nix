@@ -17,9 +17,9 @@ let
     ''
     (lib.optionalString crowdsec.enable ''
       crowdsec {
-          api_url http://localhost:${crowdsec.lapiPort}
+          api_url http://127.0.0.1:${crowdsec.lapiPort}
           api_key {$CROWDSEC_API_KEY}
-          appsec_url http://localhost:${crowdsec.appsecPort}
+          appsec_url http://127.0.0.1:${crowdsec.appsecPort}
       }
     '')
   ];
