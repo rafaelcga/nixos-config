@@ -1,4 +1,4 @@
-name: Update flake.lock
+name: Update Flake
 
 on:
   schedule:
@@ -6,15 +6,14 @@ on:
   workflow_dispatch:
 
 jobs:
-  nix-flake-update:
-    name: Update flake.lock and PR
+  update-and-pr:
+    name: Update and create PR
     runs-on: ubuntu-latest
     permissions:
       contents: write
       id-token: write
       issues: write
       pull-requests: write
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -28,7 +27,17 @@ jobs:
           github_access_token: ${{ secrets.GH_TOKEN }}
 
       - name: Update flake.lock
-        uses: DeterminateSystems/update-flake-lock@main
+        run: nix flake update
+
+      - name: Run local packages update script
+        run: ./scripts/update_pkgs.sh
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.GH_TOKEN }}
-          pr-title: "Update Nix flake inputs"
+          commit-message: "chore: updated flake"
+          title: "Updated Flake"
+          body: Automated update of the `flake.lock` and local Nix packages.
+          branch: "nix-flake-update"
+          delete-branch: true
