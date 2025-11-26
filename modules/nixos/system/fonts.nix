@@ -7,6 +7,7 @@
 }:
 let
   cfg = config.modules.nixos.fonts;
+  user = config.users.users.${userName};
 
   fontDir = "/run/current-system/sw/share/X11/fonts";
 in
@@ -30,9 +31,12 @@ in
       ];
     };
 
-    home-manager.users.${userName}.config.xdg.dataFile."fonts" = {
-      source = fontDir;
-      force = true;
+    systemd.tmpfiles.settings = {
+      "10-link-system-fonts" = {
+        "${user.home}/.local/share/fonts"."L+" = {
+          argument = fontDir;
+        };
+      };
     };
   };
 }
