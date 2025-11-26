@@ -91,7 +91,7 @@ let
         script =
           let
             jq = lib.getExe pkgs.jq;
-            cscli = "/run/current-system/sw/bin/cscli";
+            cscli = lib.getExe' pkgs.crowdsec "cscli";
           in
           ''
             set -euo pipefail
@@ -268,7 +268,7 @@ in
             };
             script =
               let
-                cscli = lib.getExe pkgs.crowdsec;
+                cscli = lib.getExe' pkgs.crowdsec "cscli";
               in
               ''
                 ${cscli} console enroll "$(cat ${
