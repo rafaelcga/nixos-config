@@ -168,10 +168,12 @@ in
               apiKeyFile
               serviceName
               ;
+
             envFile = "/run/${bouncerName}/caddy.env";
+            genServiceName = "generate-caddy-env-file";
           in
           {
-            generate-caddy-env-file = {
+            "${genServiceName}" = {
               wantedBy = [ "multi-user.target" ];
               wants = [ "${serviceName}.service" ];
               after = [ "${serviceName}.service" ];
@@ -189,8 +191,11 @@ in
             };
 
             caddy = {
-              wants = [ "generate-caddy-env-file.service" ];
-              after = [ "generate-caddy-env-file.service" ];
+              after = [ "${genServiceName}.service" ];
+              requires = [
+                "${genServiceName}.service"
+                "crowdsec.service"
+              ];
               serviceConfig.EnvironmentFile = lib.mkForce envFile;
             };
           };

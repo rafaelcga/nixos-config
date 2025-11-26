@@ -9,6 +9,8 @@ let
 
   rootDir = "/var/lib/crowdsec";
   confDir = "/etc/crowdsec";
+  lapiFile = "${rootDir}/lapi.yaml";
+  capiFile = "${rootDir}/capi.yaml";
 
   bouncerOpts =
     { name, config, ... }:
@@ -152,17 +154,9 @@ in
       in
       {
         "10-crowdsec" = {
-          "${rootDir}" = {
-            d = {
-              inherit user group;
-              mode = "0755";
-            };
-          };
-          "${rootDir}/capi.yaml" = {
-            f = {
-              inherit user group;
-              mode = "0750";
-            };
+          "${capiFile}".f = {
+            inherit user group;
+            mode = "0750";
           };
         };
       };
@@ -179,8 +173,8 @@ in
           };
 
           # See https://github.com/NixOS/nixpkgs/issues/445342
-          lapi.credentialsFile = "${rootDir}/lapi.yaml";
-          capi.credentialsFile = "${rootDir}/capi.yaml";
+          lapi.credentialsFile = lapiFile;
+          capi.credentialsFile = capiFile;
 
           console = {
             # See https://github.com/NixOS/nixpkgs/issues/445342
