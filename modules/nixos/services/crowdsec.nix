@@ -11,8 +11,8 @@ let
   confDir = "/etc/crowdsec";
   logDir = "/var/log/crowdsec";
 
-  lapiFile = "${rootDir}/lapi.yaml";
-  capiFile = "${rootDir}/capi.yaml";
+  lapiFile = "${rootDir}/lapi_credentials.yaml";
+  capiFile = "${rootDir}/capi_credentials.yaml";
 
   bouncerOpts =
     { name, config, ... }:
