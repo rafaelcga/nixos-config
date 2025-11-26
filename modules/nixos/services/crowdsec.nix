@@ -201,39 +201,51 @@ in
           "crowdsecurity/appsec-crs"
         ];
 
-        localConfig.acquisitions = [
-          {
-            source = "file";
-            filenames = [
-              "/var/log/auth.log"
-              "/var/log/syslog"
-            ];
-            labels = {
-              type = "syslog";
-            };
-          }
+        localConfig.acquisitions =
           # crowdsecurity/linux-lpe
-          {
-            source = "journalctl";
-            journalctl_filter = [
-              "-k"
-            ];
-            labels = {
-              type = "syslog";
-            };
-          }
-          {
-            source = "appsec";
-            listen_addr = "127.0.0.1:${cfg.appsecPort}";
-            appsec_configs = [ "crowdsecurity/appsec-default" ];
-            labels = {
-              type = "appsec";
-            };
-          }
-        ];
+          (
+            let
+              acquisTemplate = filter: {
+                source = "journalctl";
+                journalctl_filter = [ "_TRANSPORT=${filter}" ];
+                labels.type = "syslog";
+              };
+            in
+            lib.map acquisTemplate [
+              "journal"
+              "syslog"
+              "stdout"
+              "kernel"
+            ]
+          )
+          ++ [
+            {
+              source = "journalctl";
+              journalctl_filter = [
+                "--facility=auth"
+                "--facility=authpriv"
+              ];
+              labels.type = "syslog";
+            }
+            {
+              source = "appsec";
+              listen_addr = "127.0.0.1:${cfg.appsecPort}";
+              appsec_configs = [ "crowdsecurity/appsec-default" ];
+              labels.type = "appsec";
+            }
+          ];
       };
 
-      crowdsec-firewall-bouncer.enable = true;
+      crowdsec-firewall-bouncer = {
+        enable = true;
+        settings = {
+          deny_log = true;
+          iptables_chains = [
+            "INPUT"
+            "FORWARD"
+          ];
+        };
+      };
     };
 
     sops.secrets = {

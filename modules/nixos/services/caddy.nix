@@ -192,10 +192,8 @@ in
 
             caddy = {
               after = [ "${genServiceName}.service" ];
-              requires = [
-                "${genServiceName}.service"
-                "crowdsec.service"
-              ];
+              wants = [ "${genServiceName}.service" ];
+              requires = [ "crowdsec.service" ];
               serviceConfig.EnvironmentFile = lib.mkForce envFile;
             };
           };
