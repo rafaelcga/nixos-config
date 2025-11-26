@@ -1,4 +1,5 @@
 {
+  inputs,
   config,
   lib,
   pkgs,
@@ -8,6 +9,8 @@
 let
   cfg = config.modules.nixos.flatpak;
   user = config.users.users.${userName};
+
+  utils = import "${inputs.self}/lib/utils.nix" { inherit lib; };
 in
 {
   options.modules.nixos.flatpak = {
@@ -26,7 +29,7 @@ in
       {
         add-flathub-repo = rec {
           description = "Adds Flathub repository";
-          after = [ "network-online.target" ];
+          after = utils.waitOnline config;
           wants = after;
           wantedBy = [ "multi-user.target" ];
           serviceConfig = {

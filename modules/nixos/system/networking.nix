@@ -82,6 +82,9 @@ in
         };
       };
 
+      systemd.network.wait-online.enable =
+        config.systemd.network.enable && !config.networking.networkmanager.enable;
+
       users.users.${userName}.extraGroups = [ "networkmanager" ];
     }
     (lib.mkIf (cfg.staticIp != null) {
