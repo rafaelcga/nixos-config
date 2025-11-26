@@ -247,6 +247,10 @@ in
         settings = {
           log_mode = "file";
           log_dir = logDir;
+          log_compression = true;
+          log_max_size = 100;
+          log_max_backups = 3;
+          log_max_age = 30;
           deny_log = true;
           iptables_chains = [
             "INPUT"
