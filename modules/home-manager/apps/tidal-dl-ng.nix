@@ -345,8 +345,8 @@ in
         Install.WantedBy = [ "default.target" ];
         Service = {
           Type = "oneshot";
-          ExecStartPre = "${mkdir} -p ${configDir}";
-          ExecStart = "${cp} -f ${settingsFile} '${configDir}/settings.json'";
+          ExecStartPre = "${mkdir} -p \"${configDir}\"";
+          ExecStart = "${cp} -f \"${settingsFile}\" \"${configDir}/settings.json\"";
         };
       };
   };
