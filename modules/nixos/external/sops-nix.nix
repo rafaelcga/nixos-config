@@ -47,21 +47,18 @@ in
     systemd.services.generate-sops-age-key = {
       description = "Generates age key from private SSH for sops CLI";
       wantedBy = [ "multi-user.target" ];
-      serviceConfig = {
-        Type = "oneshot";
-        User = user.name;
-        Group = user.group;
-      };
-      script =
+      serviceConfig =
         let
+          mkdir = lib.getExe' pkgs.coreutils "mkdir";
           ssh-to-age = lib.getExe pkgs.ssh-to-age;
         in
-        ''
-          set -euo pipefail
-
-          mkdir -p "$(dirname "${cfg.ageKeyFile}")"
-          ${ssh-to-age} -private-key -i "${cfg.sshKeyFile}" >"${cfg.ageKeyFile}"
-        '';
+        {
+          Type = "oneshot";
+          User = user.name;
+          Group = user.group;
+          ExecStartPre = "${mkdir} -p \"${builtins.dirOf cfg.ageKeyFile}\"";
+          ExecStart = "${ssh-to-age} -private-key -i \"${cfg.sshKeyFile}\" -o \"${cfg.ageKeyFile}\"";
+        };
     };
   };
 }

@@ -45,14 +45,12 @@ in
             Type = "oneshot";
             User = user.name;
             Group = user.group;
+            ExecStart = [
+              "${flatpak} --user override --filesystem=\"${user.home}/.local/share/fonts:ro\""
+              "${flatpak} --user override --filesystem=\"${user.home}/.local/share/icons:ro\""
+              "${flatpak} --user override --filesystem=\"/nix/store:ro\""
+            ];
           };
-          script = ''
-            set -euo pipefail
-
-            ${flatpak} --user override --filesystem="$HOME/.local/share/fonts:ro"
-            ${flatpak} --user override --filesystem="$HOME/.local/share/icons:ro"
-            ${flatpak} --user override --filesystem="/nix/store:ro"
-          '';
         };
       };
   };

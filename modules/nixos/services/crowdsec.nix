@@ -63,66 +63,65 @@ let
         after = [ "crowdsec.service" ];
         wants = [ "crowdsec.service" ];
 
-        serviceConfig = {
-          Type = "oneshot";
-          User = cfg_crowdsec.user;
-          Group = cfg_crowdsec.group;
-          StateDirectory = serviceName;
-          # Needs write permissions to add the bouncer
-          ReadWritePaths = [ rootDir ];
-          DynamicUser = true;
-          LockPersonality = true;
-          PrivateDevices = true;
-          ProcSubset = "pid";
-          ProtectClock = true;
-          ProtectControlGroups = true;
-          ProtectHome = true;
-          ProtectHostname = true;
-          ProtectKernelLogs = true;
-          ProtectKernelModules = true;
-          ProtectKernelTunables = true;
-          ProtectProc = "invisible";
-          RestrictNamespaces = true;
-          RestrictRealtime = true;
-          SystemCallArchitectures = "native";
-          RestrictAddressFamilies = "none";
-          CapabilityBoundingSet = [ "" ];
-          SystemCallFilter = [
-            "@system-service"
-            "~@privileged"
-            "~@resources"
-          ];
-          UMask = "0077";
-        };
-
-        script =
+        serviceConfig =
           let
             jq = lib.getExe pkgs.jq;
             cscli = "/run/current-system/sw/bin/cscli";
           in
-          ''
-            set -euo pipefail
+          {
+            Type = "oneshot";
+            User = cfg_crowdsec.user;
+            Group = cfg_crowdsec.group;
+            StateDirectory = serviceName;
+            # Needs write permissions to add the bouncer
+            ReadWritePaths = [ rootDir ];
+            DynamicUser = true;
+            LockPersonality = true;
+            PrivateDevices = true;
+            ProcSubset = "pid";
+            ProtectClock = true;
+            ProtectControlGroups = true;
+            ProtectHome = true;
+            ProtectHostname = true;
+            ProtectKernelLogs = true;
+            ProtectKernelModules = true;
+            ProtectKernelTunables = true;
+            ProtectProc = "invisible";
+            RestrictNamespaces = true;
+            RestrictRealtime = true;
+            SystemCallArchitectures = "native";
+            RestrictAddressFamilies = "none";
+            CapabilityBoundingSet = [ "" ];
+            SystemCallFilter = [
+              "@system-service"
+              "~@privileged"
+              "~@resources"
+            ];
+            UMask = "0077";
+            ExecStart = pkgs.writeShellScript "${serviceName}_script.sh" ''
+              set -euo pipefail
 
-            if ${cscli} bouncers list --output json \
-              | ${jq} -e -- ${lib.escapeShellArg "any(.[]; .name == \"${bouncerName}\")"} >/dev/null; then
-              # Bouncer already registered. Verify the API key is still present
-              if [[ ! -f ${apiKeyFile} ]]; then
-                echo "Bouncer registered but API key is not present"
-                exit 1
-              fi
-            else
-              # Bouncer not registered
-              # Remove any previously saved API key
-              rm -f "${apiKeyFile}"
-              # Register the bouncer and save the new API key
-              if ! ${cscli} bouncers add --output raw \
-                -- ${lib.escapeShellArg bouncerName} >${apiKeyFile}; then
-                # Failed to register the bouncer
+              if ${cscli} bouncers list --output json \
+                | ${jq} -e -- ${lib.escapeShellArg "any(.[]; .name == \"${bouncerName}\")"} >/dev/null; then
+                # Bouncer already registered. Verify the API key is still present
+                if [[ ! -f ${apiKeyFile} ]]; then
+                  echo "Bouncer registered but API key is not present"
+                  exit 1
+                fi
+              else
+                # Bouncer not registered
+                # Remove any previously saved API key
                 rm -f "${apiKeyFile}"
-                exit 1
+                # Register the bouncer and save the new API key
+                if ! ${cscli} bouncers add --output raw \
+                  -- ${lib.escapeShellArg bouncerName} >${apiKeyFile}; then
+                  # Failed to register the bouncer
+                  rm -f "${apiKeyFile}"
+                  exit 1
+                fi
               fi
-            fi
-          '';
+            '';
+          };
       };
     };
 in
@@ -288,25 +287,25 @@ in
             wantedBy = [ "multi-user.target" ];
             after = [ "crowdsec.service" ];
             wants = after;
-            serviceConfig = {
-              Type = "oneshot";
-              User = cfg_crowdsec.user;
-              Group = cfg_crowdsec.group;
-              ReadWritePaths = [
-                rootDir
-                confDir
-              ];
-              UMask = "0077";
-            };
-            script =
+            serviceConfig =
               let
                 cscli = "/run/current-system/sw/bin/cscli";
               in
-              ''
-                ${cscli} console enroll "$(cat ${
-                  config.sops.secrets."crowdsec/enroll_key".path
-                })" --name ${cfg_crowdsec.name}
-              '';
+              {
+                Type = "oneshot";
+                User = cfg_crowdsec.user;
+                Group = cfg_crowdsec.group;
+                ReadWritePaths = [
+                  rootDir
+                  confDir
+                ];
+                UMask = "0077";
+                ExecStart = pkgs.writeShellScript "enroll-crowdsec-console_script.sh" ''
+                  ${cscli} console enroll "$(cat ${
+                    config.sops.secrets."crowdsec/enroll_key".path
+                  })" --name ${cfg_crowdsec.name}
+                '';
+              };
           };
 
           crowdsec-firewall-bouncer = rec {

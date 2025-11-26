@@ -177,17 +177,26 @@ in
               wantedBy = [ "multi-user.target" ];
               after = [ "${serviceName}.service" ];
               wants = after;
-              serviceConfig.Type = "oneshot";
-              script = ''
-                set -euo pipefail
-
-                mkdir -p "$(dirname "${envFile}")"
-                cat ${config.sops.templates."caddy-env".path} >"${envFile}"
-                echo "CROWDSEC_API_KEY=$(cat ${apiKeyFile})" >>"${envFile}"
-
-                chown ${user}:${group} "${envFile}"
-                chmod 0600 "${envFile}"
-              '';
+              serviceConfig =
+                let
+                  cat = lib.getExe' pkgs.coreutils "cat";
+                  chmod = lib.getExe' pkgs.coreutils "chmod";
+                  chown = lib.getExe' pkgs.coreutils "chown";
+                  echo = lib.getExe' pkgs.coreutils "echo";
+                  mkdir = lib.getExe' pkgs.coreutils "mkdir";
+                in
+                {
+                  Type = "oneshot";
+                  ExecStartPre = "${mkdir} -p \"${builtins.dirOf envFile}\"";
+                  ExecStart = pkgs.writeShellScript "caddy/add_crowdsec_api.sh" ''
+                    ${cat} ${config.sops.templates."caddy-env".path} >"${envFile}"
+                    ${echo} "CROWDSEC_API_KEY=$(${cat} ${apiKeyFile})" >>"${envFile}"
+                  '';
+                  ExecStartPost = [
+                    "${chown} ${user}:${group} \"${envFile}\""
+                    "${chmod} 0600 \"${envFile}\""
+                  ];
+                };
             };
 
             caddy = rec {
