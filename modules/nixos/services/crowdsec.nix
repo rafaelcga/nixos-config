@@ -268,7 +268,7 @@ in
             };
             script =
               let
-                cscli = "/run/current-system/sw/bin/cscli";
+                cscli = lib.getExe pkgs.crowdsec;
               in
               ''
                 ${cscli} console enroll "$(cat ${
