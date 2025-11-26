@@ -160,6 +160,10 @@ in
             inherit user group;
             mode = "0755";
           };
+          "${lapiFile}".f = {
+            inherit user group;
+            mode = "0755";
+          };
           "${capiFile}".f = {
             inherit user group;
             mode = "0750";
