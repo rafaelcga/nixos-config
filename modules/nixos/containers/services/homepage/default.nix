@@ -98,6 +98,8 @@ lib.mkMerge [
 
           settings = {
             title = "${config.networking.hostName}/Homepage";
+            color = "teal";
+            iconStyle = "theme";
             layout = {
               "Media Management" = {
                 style = "column";
@@ -184,6 +186,18 @@ lib.mkMerge [
                 ];
               }
             ];
+
+          widgets = [
+            {
+              resources = {
+                cpu = true;
+                memory = true;
+                cputemp = true;
+                uptime = true;
+                units = "metric";
+              };
+            }
+          ];
         };
 
         systemd.tmpfiles.settings = {
