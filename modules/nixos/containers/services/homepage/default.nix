@@ -191,6 +191,11 @@ lib.mkMerge [
 
           widgets = [
             {
+              logo = {
+                icon = "${inputs.self}/resources/splash/nix-snowflake-rainbow-pastel.svg";
+              };
+            }
+            {
               resources = {
                 cpu = true;
                 memory = true;
