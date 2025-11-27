@@ -54,7 +54,6 @@ in
     listenPort = lib.mkOption {
       type = lib.types.port;
       default = 51820;
-      apply = builtins.toString;
       description = "Listening port of the server in the WireGuard VPN";
     };
 
@@ -153,7 +152,7 @@ in
               Address = ${networkIps.${hostName}}/${if cfg.isVpnServer then cfg.network.mask else "32"}
               ${
                 if cfg.isVpnServer then
-                  "ListenPort = ${cfg.listenPort}"
+                  "ListenPort = ${builtins.toString cfg.listenPort}"
                 else
                   "DNS = ${networkIps.${cfg.serverHostName}}"
               }
@@ -178,7 +177,7 @@ in
                 ''
                   [Peer]
                   PublicKey = ${config.sops.placeholder."wireguard/home_vpn/${cfg.serverHostName}/public_key"}
-                  Endpoint = vpn.${config.sops.placeholder."web_domain"}:${cfg.listenPort}
+                  Endpoint = vpn.${config.sops.placeholder."web_domain"}:${builtins.toString cfg.listenPort}
                   AllowedIPs = 0.0.0.0/0, ::/0
                   PersistentKeepalive = 25
                 ''
