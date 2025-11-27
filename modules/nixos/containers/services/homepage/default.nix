@@ -116,6 +116,10 @@ lib.mkMerge [
             color = "gray";
             iconStyle = "theme";
             headerStyle = "boxed";
+            useEqualHeights = true;
+            hideVersion = true;
+            disableUpdateCheck = true;
+            statusStyle = "dot";
 
             layout = {
               "Media Management" = {
@@ -154,6 +158,7 @@ lib.mkMerge [
                   "${data.displayName}" = lib.mkIf containerConfig.enable {
                     icon = "${service}.png";
                     href = hrefLocal;
+                    ping = hrefContainer;
                     inherit (data) description;
                     widget =
                       let
