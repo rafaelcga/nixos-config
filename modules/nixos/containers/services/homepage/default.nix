@@ -37,7 +37,7 @@ let
     in
     "HOMEPAGE_VAR_${lib.toUpper service}_${suffix.${apiAuth}}";
 
-  mountLogoPath = "/mnt/resources/logo.png";
+  logoPath = "/icons/logo.png";
 in
 lib.mkMerge [
   {
@@ -89,7 +89,7 @@ lib.mkMerge [
         "${config.sops.templates."homepage-env".path}" = {
           isReadOnly = true;
         };
-        "${mountLogoPath}" = {
+        "${logoPath}" = {
           hostPath = "${inputs.self}/resources/splash/nix-snowflake-rainbow-pastel.png";
           isReadOnly = true;
         };
@@ -198,7 +198,7 @@ lib.mkMerge [
           widgets = [
             {
               logo = {
-                icon = mountLogoPath;
+                icon = logoPath;
               };
             }
             {
