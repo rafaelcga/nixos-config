@@ -317,7 +317,7 @@ in
                 DynamicUser = lib.mkForce false;
                 User = lib.mkForce "root";
                 Group = lib.mkForce "root";
-                ExecStartPost = "${systemctl} reload crowdsec.service";
+                ExecStartPost = lib.mkForce "${systemctl} reload crowdsec.service";
               };
           };
 
