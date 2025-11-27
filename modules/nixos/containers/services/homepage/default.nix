@@ -152,13 +152,13 @@ lib.mkMerge [
                   containerPort = builtins.toString containerConfig.containerPorts.${service};
 
                   hrefLocal = "http://${hostLocalIp}:${localPort}";
-                  hrefContainer = "http://${containerIp}:${containerPort}";
+                  serviceHost = "${containerIp}:${containerPort}";
                 in
                 {
                   "${data.displayName}" = lib.mkIf containerConfig.enable {
                     icon = "${service}.png";
                     href = hrefLocal;
-                    ping = hrefContainer;
+                    ping = serviceHost;
                     inherit (data) description;
                     widget =
                       let
@@ -168,7 +168,7 @@ lib.mkMerge [
                         lib.mkMerge [
                           {
                             type = service;
-                            url = hrefContainer;
+                            url = "http://${serviceHost}";
                             fields = data.widgetFields;
                           }
                           (lib.mkIf (data.apiAuth == "key") {
