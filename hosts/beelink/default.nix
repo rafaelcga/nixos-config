@@ -34,6 +34,10 @@
       homepage = {
         enable = true;
         hostPort = 8000;
+        userMounts."/media" = {
+          hostPath = "/mnt/media";
+          isReadOnly = true;
+        };
       };
       ddns-updater = {
         enable = true;

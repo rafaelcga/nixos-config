@@ -201,7 +201,7 @@ lib.mkMerge [
             }
             {
               resources = {
-                disk = "/";
+                disk = [ "/" ] ++ lib.unique (lib.attrNames cfg.userMounts);
               };
             }
           ];
