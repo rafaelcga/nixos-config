@@ -1,6 +1,7 @@
 {
   lidarr = {
     displayName = "Lidarr";
+    description = "Music collection manager";
     container = "servarr";
     apiAuth = "key";
     widgetFields = [
@@ -13,6 +14,7 @@
 
   radarr = {
     displayName = "Radarr";
+    description = "Movie collection manager";
     container = "servarr";
     apiAuth = "key";
     widgetFields = [
@@ -25,6 +27,7 @@
 
   sonarr = {
     displayName = "Sonarr";
+    description = "TV series collection manager";
     container = "servarr";
     apiAuth = "key";
     widgetFields = [
@@ -37,6 +40,7 @@
 
   prowlarr = {
     displayName = "Prowlarr";
+    description = "Indexer manager and proxy";
     container = "servarr";
     apiAuth = "key";
     widgetFields = [
@@ -50,6 +54,7 @@
 
   qbittorrent = {
     displayName = "qBittorrent";
+    description = "BitTorrent client";
     container = "qbittorrent";
     apiAuth = "password";
     widgetFields = [
@@ -66,6 +71,7 @@
 
   jellyfin = {
     displayName = "Jellyfin";
+    description = "Media streaming server";
     container = "jellyfin";
     apiAuth = null;
     widgetFields = [ ];

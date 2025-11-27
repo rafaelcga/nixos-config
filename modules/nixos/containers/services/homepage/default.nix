@@ -127,6 +127,7 @@ lib.mkMerge [
                   "${data.displayName}" = lib.mkIf containerConfig.enable {
                     icon = "${service}.png";
                     href = hrefLocal;
+                    inherit (data) description;
                     widget =
                       let
                         envVarSub = "{{" + (getEnvVarName service) + "}}";
