@@ -13,63 +13,7 @@ let
 
   hostLocalIp = config.modules.nixos.networking.staticIp;
 
-  serviceData = {
-    lidarr = {
-      container = "servarr";
-      apiAuth = "key";
-      widgetFields = [
-        "wanted"
-        "queued"
-        "artists"
-      ];
-      extraConfig = { };
-    };
-    radarr = {
-      container = "servarr";
-      apiAuth = "key";
-      widgetFields = [
-        "wanted"
-        "queued"
-        "movies"
-      ];
-      extraConfig = { };
-    };
-    sonarr = {
-      container = "servarr";
-      apiAuth = "key";
-      widgetFields = [
-        "wanted"
-        "queued"
-        "series"
-      ];
-      extraConfig = { };
-    };
-    prowlarr = {
-      container = "servarr";
-      apiAuth = "key";
-      widgetFields = [
-        "numberOfGrabs"
-        "numberOfQueries"
-        "numberOfFailGrabs"
-        "numberOfFailQueries"
-      ];
-      extraConfig = { };
-    };
-    qbittorrent = {
-      container = "qbittorrent";
-      apiAuth = "password";
-      widgetFields = [
-        "leech"
-        "download"
-        "seed"
-        "upload"
-      ];
-      extraConfig = {
-        enableLeechProgress = true;
-        enableLeechSize = true;
-      };
-    };
-  };
+  serviceData = import ./service-data.nix;
 
   getSecretName =
     service:
@@ -156,7 +100,7 @@ lib.mkMerge [
                   hrefContainer = "http://${containerIp}:${containerPort}";
                 in
                 {
-                  "${utils.capitalizeFirst service}" = lib.mkIf containerConfig.enable {
+                  "${data.displayName}" = lib.mkIf containerConfig.enable {
                     icon = "${service}.png";
                     href = hrefLocal;
                     widget =

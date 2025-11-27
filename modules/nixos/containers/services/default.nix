@@ -1,7 +1,7 @@
 {
   imports = [
+    ./homepage
     ./ddns-updater.nix
-    ./homepage.nix
     ./jellyfin.nix
     ./proton-vpn.nix
     ./qbittorrent.nix
