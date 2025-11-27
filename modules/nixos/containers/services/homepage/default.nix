@@ -98,7 +98,7 @@ lib.mkMerge [
 
           settings = {
             title = "${config.networking.hostName}/Homepage";
-            color = "teal";
+            color = "gray";
             iconStyle = "theme";
             layout = {
               "Media Management" = {
