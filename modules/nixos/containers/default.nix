@@ -134,20 +134,20 @@ in
 
           # Make user-defined dirs 775 and files 664 so that containers can
           # modify them (container's user and main user share user group)
-          chmodBindMounts =
+          chmodUserMounts =
             let
               hostPaths =
                 let
-                  withBindMounts = lib.filterAttrs (
-                    _: containerConfig: containerConfig.bindMounts != { }
+                  withUserMounts = lib.filterAttrs (
+                    _: containerConfig: containerConfig.userMounts != { }
                   ) enabledContainers;
 
                   getHostPaths =
-                    bindMounts:
-                    lib.mapAttrsToList (mountPoint: mountConfig: mountConfig.hostPath or mountPoint) bindMounts;
+                    userMounts:
+                    lib.mapAttrsToList (mountPoint: mountConfig: mountConfig.hostPath or mountPoint) userMounts;
 
-                  allHostPaths = lib.concatMap (containerConfig: getHostPaths containerConfig.bindMounts) (
-                    lib.attrValues withBindMounts
+                  allHostPaths = lib.concatMap (containerConfig: getHostPaths containerConfig.userMounts) (
+                    lib.attrValues withUserMounts
                   );
                 in
                 lib.unique allHostPaths;
@@ -170,7 +170,7 @@ in
         in
         lib.mkMerge [
           mkContainerDirs
-          chmodBindMounts
+          chmodUserMounts
         ];
     };
 
@@ -209,7 +209,7 @@ in
                     isReadOnly = false;
                   };
                 })
-                containerConfig.bindMounts
+                containerConfig.userMounts
               ];
 
               config = {

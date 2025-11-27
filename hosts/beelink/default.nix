@@ -43,7 +43,7 @@
         enable = true;
         hostPort = 8003;
         gpuPassthrough = true;
-        bindMounts."/media" = {
+        userMounts."/media" = {
           hostPath = "/mnt/media";
           isReadOnly = true;
         };
@@ -56,7 +56,7 @@
           sonarr = 8006;
           prowlarr = 8007;
         };
-        bindMounts."/media" = {
+        userMounts."/media" = {
           hostPath = "/mnt/media";
           isReadOnly = false;
         };

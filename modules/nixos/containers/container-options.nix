@@ -117,10 +117,14 @@ in
       description = "Exposed container services mapped to their ports";
     };
 
-    bindMounts = lib.mkOption {
+    userMounts = lib.mkOption {
       type = lib.types.attrsOf (lib.types.submodule mountOpts);
       default = { };
-      description = "Attribute set of directories to bind to the container";
+      description = ''
+        Attribute set of user owned directories to be mounted to the containers.
+        WARNING: Their owner and group will be mapped to be that of the user;
+        do not mount system directories
+      '';
     };
 
     extraForwardPorts = lib.mkOption {

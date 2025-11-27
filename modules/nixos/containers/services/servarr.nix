@@ -18,7 +18,7 @@ lib.mkMerge [
       containerDataDir = "/var/lib/servarr";
       behindVpn = true;
 
-      bindMounts = lib.mkIf cfg_containers.qbittorrent.enable {
+      userMounts = lib.mkIf cfg_containers.qbittorrent.enable {
         "${cfg_containers.qbittorrent.containerDataDir}/downloads" = {
           hostPath = "${config.modules.nixos.containers.dataDir}/qbittorrent/downloads";
           isReadOnly = false;
