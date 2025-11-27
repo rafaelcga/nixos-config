@@ -34,27 +34,6 @@ let
     };
   };
 
-  portOpts = {
-    options = {
-      protocol = lib.mkOption {
-        type = lib.types.str;
-        default = "tcp";
-        description = "The protocol specifier for port forwarding between host and container";
-      };
-
-      hostPort = lib.mkOption {
-        type = lib.types.port;
-        description = "Source port of the external interface on host";
-      };
-
-      containerPort = lib.mkOption {
-        type = lib.types.nullOr lib.types.port;
-        default = null;
-        description = "Target port of container";
-      };
-    };
-  };
-
   mountOpts = {
     options = {
       hostPath = lib.mkOption {
