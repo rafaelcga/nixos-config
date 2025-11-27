@@ -197,11 +197,13 @@ lib.mkMerge [
                 cputemp = true;
                 uptime = true;
                 units = "metric";
+                expanded = true;
               };
             }
             {
               resources = {
                 disk = [ "/" ] ++ lib.unique (lib.attrNames cfg.userMounts);
+                expanded = true;
               };
             }
           ];
