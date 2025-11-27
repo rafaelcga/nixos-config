@@ -266,7 +266,6 @@ lib.mkMerge [
               resources = {
                 label = "Storage";
                 disk = [ "/" ] ++ lib.unique (lib.attrNames cfg.userMounts);
-                expanded = true;
               };
             }
           ];
