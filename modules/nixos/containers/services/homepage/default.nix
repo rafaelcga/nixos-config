@@ -38,7 +38,7 @@ let
     "HOMEPAGE_VAR_${lib.toUpper service}_${suffix.${apiAuth}}";
 
   configDir = "/etc/homepage-dashboard";
-  relativeLogoPath = "/icons/logo.svg";
+  iconsPath = "${configDir}/icons";
 in
 lib.mkMerge [
   {
@@ -90,7 +90,7 @@ lib.mkMerge [
         "${config.sops.templates."homepage-env".path}" = {
           isReadOnly = true;
         };
-        "${configDir}${relativeLogoPath}" = {
+        "${iconsPath}/nix_logo.svg" = {
           hostPath = "${inputs.self}/resources/splash/nix-snowflake-rainbow-pastel.svg";
           isReadOnly = true;
         };
@@ -199,7 +199,7 @@ lib.mkMerge [
           widgets = [
             {
               logo = {
-                icon = relativeLogoPath;
+                icon = "nix_logo.svg";
               };
             }
             {
