@@ -199,6 +199,11 @@ lib.mkMerge [
                 units = "metric";
               };
             }
+            {
+              resources = {
+                disk = "/";
+              };
+            }
           ];
         };
 
