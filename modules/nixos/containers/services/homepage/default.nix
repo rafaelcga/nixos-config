@@ -2,7 +2,6 @@
   inputs,
   config,
   lib,
-  pkgs,
   userName,
   ...
 }:
@@ -15,17 +14,6 @@ let
   hostLocalIp = config.modules.nixos.networking.staticIp;
 
   serviceData = import ./service-data.nix;
-
-  homepagePackage =
-    let
-      logoPath = "${inputs.self}/resources/splash/nix-snowflake-rainbow-pastel.svg";
-    in
-    pkgs.homepage-dashboard.overrideAttrs (oldAttrs: {
-      postInstall = (oldAttrs.postInstall or "") + ''
-        mkdir -p $out/share/homepage/public/icons
-        cp ${logoPath} $out/share/homepage/public/icons/logo.svg
-      '';
-    });
 
   getSecretName =
     service:
@@ -104,8 +92,6 @@ lib.mkMerge [
       config = {
         services.homepage-dashboard = {
           enable = true;
-          package = homepagePackage;
-
           listenPort = cfg.containerPort;
           openFirewall = true;
           environmentFile = config.sops.templates."homepage-env".path;
@@ -206,7 +192,7 @@ lib.mkMerge [
           widgets = [
             {
               logo = {
-                icon = "/icons/nix.svg";
+                icon = "/icons/nix-pastel.svg";
               };
             }
             {
