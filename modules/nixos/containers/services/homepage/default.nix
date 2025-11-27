@@ -218,7 +218,6 @@ lib.mkMerge [
                 cputemp = true;
                 tempmax = 100;
                 units = "metric";
-                expanded = true;
               };
             }
             {
