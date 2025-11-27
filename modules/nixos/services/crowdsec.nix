@@ -315,14 +315,13 @@ in
                 systemctl = lib.getExe' pkgs.systemd "systemctl";
               in
               lib.mkForce {
-                SystemCallFilter = [ ];
-                CapabilityBoundingSet = [ ];
-                ProtectSystem = "false";
-                PrivateUsers = false;
-                DynamicUser = false;
-                RestrictNamespaces = false;
-                RestrictRealtime = false;
-                RestrictSUIDSGID = false;
+                Type = "oneshot";
+                User = cfg_crowdsec.user;
+                Group = cfg_crowdsec.group;
+                ReadWritePaths = [
+                  rootDir
+                  confDir
+                ];
                 ExecStart = "${cscli} --error hub update";
                 ExecStartPost = "${systemctl} reload crowdsec.service";
               };
