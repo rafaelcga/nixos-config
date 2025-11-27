@@ -37,7 +37,8 @@ let
     in
     "HOMEPAGE_VAR_${lib.toUpper service}_${suffix.${apiAuth}}";
 
-  logoPath = "/icons/logo.png";
+  resourcesPath = "/mnt/resources";
+  mountLogoPath = "${resourcesPath}/icons/logo.png";
 in
 lib.mkMerge [
   {
@@ -89,7 +90,7 @@ lib.mkMerge [
         "${config.sops.templates."homepage-env".path}" = {
           isReadOnly = true;
         };
-        "${logoPath}" = {
+        "${mountLogoPath}" = {
           hostPath = "${inputs.self}/resources/splash/nix-snowflake-rainbow-pastel.png";
           isReadOnly = true;
         };
@@ -198,7 +199,7 @@ lib.mkMerge [
           widgets = [
             {
               logo = {
-                icon = logoPath;
+                icon = mountLogoPath;
               };
             }
             {
@@ -218,6 +219,12 @@ lib.mkMerge [
               };
             }
           ];
+        };
+
+        systemd.services.homepage-dashboard = {
+          serviceConfig = {
+            ReadWritePaths = [ resourcesPath ];
+          };
         };
 
         systemd.tmpfiles.settings = {
