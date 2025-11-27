@@ -32,7 +32,7 @@
     # Containers
     containers.services = {
       homepage = {
-        enable = true;
+        enable = false;
         hostPort = 8000;
         userMounts."/media" = {
           hostPath = "/mnt/media";
