@@ -209,7 +209,7 @@ lib.mkMerge [
               {
                 "Release Calendar" = [
                   {
-                    _hidden = {
+                    "" = {
                       widget = {
                         type = "calendar";
                         firstDayInWeek = "monday";
