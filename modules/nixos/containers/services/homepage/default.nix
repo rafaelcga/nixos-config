@@ -131,21 +131,23 @@ lib.mkMerge [
                       let
                         envVarSub = "{{" + (getEnvVarName service) + "}}";
                       in
-                      lib.mkMerge [
-                        {
-                          type = service;
-                          url = hrefContainer;
-                          fields = data.widgetFields;
-                        }
-                        (lib.mkIf (data.apiAuth == "key") {
-                          key = envVarSub;
-                        })
-                        (lib.mkIf (data.apiAuth == "password") {
-                          username = userName;
-                          password = envVarSub;
-                        })
-                        data.extraConfig
-                      ];
+                      lib.mkIf (data.apiAuth != null) (
+                        lib.mkMerge [
+                          {
+                            type = service;
+                            url = hrefContainer;
+                            fields = data.widgetFields;
+                          }
+                          (lib.mkIf (data.apiAuth == "key") {
+                            key = envVarSub;
+                          })
+                          (lib.mkIf (data.apiAuth == "password") {
+                            username = userName;
+                            password = envVarSub;
+                          })
+                          data.extraConfig
+                        ]
+                      );
                   };
                 };
 
