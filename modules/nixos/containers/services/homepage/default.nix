@@ -158,7 +158,6 @@ lib.mkMerge [
                   "${data.displayName}" = lib.mkIf containerConfig.enable {
                     icon = "${service}.png";
                     href = hrefLocal;
-                    ping = containerIp;
                     inherit (data) description;
                     widget =
                       let
