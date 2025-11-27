@@ -100,6 +100,8 @@ lib.mkMerge [
             title = "${config.networking.hostName}/Homepage";
             color = "gray";
             iconStyle = "theme";
+            headerStyle = "boxedWidgets";
+
             layout = {
               "Media Management" = {
                 style = "column";
