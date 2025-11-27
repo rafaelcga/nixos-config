@@ -130,6 +130,10 @@ lib.mkMerge [
                 style = "column";
                 icon = "mdi-router-network-wireless";
               };
+              "Release Calendar" = {
+                style = "column";
+                icon = "mdi-calendar";
+              };
             };
           };
 
@@ -200,6 +204,37 @@ lib.mkMerge [
               {
                 "Home Network" = mkGroup [
                   "ddns-updater"
+                ];
+              }
+              {
+                "Release Calendar" = [
+                  {
+                    _hidden = {
+                      widget = {
+                        type = "calendar";
+                        firstDayInWeek = "monday";
+                        view = "monthly";
+                        maxEvents = 10;
+                        showTime = true;
+                        integrations =
+                          let
+                            template = service: {
+                              type = service;
+                              service_group = "Media Management";
+                              service_name = utils.capitalizeFirst service;
+                              params = {
+                                unmonitored = false;
+                              };
+                            };
+                          in
+                          lib.map template [
+                            "lidarr"
+                            "radarr"
+                            "sonarr"
+                          ];
+                      };
+                    };
+                  }
                 ];
               }
             ];
