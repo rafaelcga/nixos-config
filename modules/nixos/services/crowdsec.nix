@@ -309,11 +309,16 @@ in
           };
 
           crowdsec-update-hub = {
-            serviceConfig = {
-              DynamicUser = lib.mkForce false;
-              User = lib.mkForce "root";
-              Group = lib.mkForce "root";
-            };
+            serviceConfig =
+              let
+                systemctl = lib.getExe' pkgs.systemd "systemctl";
+              in
+              {
+                DynamicUser = lib.mkForce false;
+                User = lib.mkForce "root";
+                Group = lib.mkForce "root";
+                ExecStartPost = "${systemctl} reload crowdsec.service";
+              };
           };
 
           crowdsec-firewall-bouncer = rec {
