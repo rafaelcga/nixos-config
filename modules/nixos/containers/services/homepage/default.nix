@@ -38,6 +38,7 @@ let
     in
     "HOMEPAGE_VAR_${lib.toUpper service}_${suffix.${apiAuth}}";
 
+  homepageLogoPath = "/icons/nix-pastel.svg";
   homepageOverride =
     let
       nixLogoPath = "${inputs.self}/resources/splash/nix-snowflake-rainbow-pastel.svg";
@@ -45,7 +46,7 @@ let
     pkgs.homepage-dashboard.overrideAttrs (oldAttrs: {
       postInstall = (oldAttrs.postInstall or "") + ''
         mkdir -p $out/share/homepage/public/icons
-        cp ${nixLogoPath} $out/share/homepage/public/icons/nix-pastel.svg
+        cp ${nixLogoPath} $out/share/homepage/public${homepageLogoPath}
       '';
     });
 in
@@ -206,7 +207,7 @@ lib.mkMerge [
           widgets = [
             {
               logo = {
-                icon = "/icons/nix-pastel.svg";
+                icon = homepageLogoPath;
               };
             }
             {
