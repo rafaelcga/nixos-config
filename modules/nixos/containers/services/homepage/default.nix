@@ -117,6 +117,7 @@ lib.mkMerge [
             iconStyle = "theme";
             headerStyle = "boxed";
             useEqualHeights = true;
+            disableCollapse = true;
             hideVersion = true;
             disableUpdateCheck = true;
             statusStyle = "dot";
