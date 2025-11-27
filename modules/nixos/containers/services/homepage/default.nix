@@ -37,8 +37,7 @@ let
     in
     "HOMEPAGE_VAR_${lib.toUpper service}_${suffix.${apiAuth}}";
 
-  configDir = "/etc/homepage-dashboard";
-  iconsPath = "${configDir}/icons";
+  cacheDir = "/var/cache/homepage-dashboard";
 in
 lib.mkMerge [
   {
@@ -90,7 +89,7 @@ lib.mkMerge [
         "${config.sops.templates."homepage-env".path}" = {
           isReadOnly = true;
         };
-        "${iconsPath}/nix_logo.svg" = {
+        "${cacheDir}/icons/nix.svg" = {
           hostPath = "${inputs.self}/resources/splash/nix-snowflake-rainbow-pastel.svg";
           isReadOnly = true;
         };
@@ -199,7 +198,7 @@ lib.mkMerge [
           widgets = [
             {
               logo = {
-                icon = "/icons/nix_logo.svg";
+                icon = "/icons/nix.svg";
               };
             }
             {
@@ -223,10 +222,8 @@ lib.mkMerge [
 
         systemd.tmpfiles.settings = {
           "10-homepage-cache-symlink" = {
-            "${cfg.containerDataDir}/cache" = {
-              L = {
-                argument = "/var/cache/homepage-dashboard";
-              };
+            "${cfg.containerDataDir}/cache".L = {
+              argument = cacheDir;
             };
           };
         };
