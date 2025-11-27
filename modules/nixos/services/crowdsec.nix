@@ -308,6 +308,8 @@ in
               };
           };
 
+          # Patched the upstream implementation; cscli needs to be run as
+          # crowdsec user, but systemctl needs root
           crowdsec-update-hub = {
             serviceConfig =
               let
