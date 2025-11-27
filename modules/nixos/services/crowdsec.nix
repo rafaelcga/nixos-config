@@ -315,8 +315,6 @@ in
                 systemctl = lib.getExe' pkgs.systemd "systemctl";
               in
               lib.mkForce {
-                User = "root";
-                Group = "root";
                 SystemCallFilter = [ ];
                 CapabilityBoundingSet = [ ];
                 ProtectSystem = "false";
