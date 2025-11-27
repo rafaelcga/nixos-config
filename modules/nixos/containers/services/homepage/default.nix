@@ -212,16 +212,18 @@ lib.mkMerge [
             }
             {
               resources = {
+                label = "System";
                 cpu = true;
                 memory = true;
                 cputemp = true;
-                uptime = true;
+                tempmax = 100;
                 units = "metric";
                 expanded = true;
               };
             }
             {
               resources = {
+                label = "Storage";
                 disk = [ "/" ] ++ lib.unique (lib.attrNames cfg.userMounts);
                 expanded = true;
               };
