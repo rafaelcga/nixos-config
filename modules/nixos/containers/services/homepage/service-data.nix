@@ -63,4 +63,12 @@
       enableLeechSize = true;
     };
   };
+
+  jellyfin = {
+    displayName = "Jellyfin";
+    container = "jellyfin";
+    apiAuth = null;
+    widgetFields = [ ];
+    extraConfig = { };
+  };
 }

@@ -45,32 +45,42 @@ lib.mkMerge [
     };
   }
   (lib.mkIf cfg.enable {
-    sops = {
-      secrets =
-        let
-          mkSecret =
-            service: data:
-            lib.optionalAttrs cfg_containers.${data.container}.enable {
-              "${getSecretName service}" = { };
-            };
-        in
-        lib.concatMapAttrs mkSecret serviceData;
+    sops =
+      let
+        needsSecret =
+          data:
+          let
+            isEnabled = cfg_containers.${data.container}.enable;
+            hasSecret = data.apiAuth != null;
+          in
+          isEnabled && hasSecret;
+      in
+      {
+        secrets =
+          let
+            mkSecret =
+              service: data:
+              lib.optionalAttrs (needsSecret data) {
+                "${getSecretName service}" = { };
+              };
+          in
+          lib.concatMapAttrs mkSecret serviceData;
 
-      templates."homepage-env".content =
-        let
-          mkEnvVar =
-            service: data:
-            lib.optionalString cfg_containers.${data.container}.enable ''
-              ${getEnvVarName service}=${config.sops.placeholder.${getSecretName service}}
-            '';
-        in
-        lib.concatStringsSep "\n" (
-          lib.mapAttrsToList mkEnvVar serviceData
-          ++ [
-            "HOMEPAGE_ALLOWED_HOSTS=${hostLocalIp}:${builtins.toString cfg.hostPort}"
-          ]
-        );
-    };
+        templates."homepage-env".content =
+          let
+            mkEnvVar =
+              service: data:
+              lib.optionalString (needsSecret data) ''
+                ${getEnvVarName service}=${config.sops.placeholder.${getSecretName service}}
+              '';
+          in
+          lib.concatStringsSep "\n" (
+            lib.mapAttrsToList mkEnvVar serviceData
+            ++ [
+              "HOMEPAGE_ALLOWED_HOSTS=${hostLocalIp}:${builtins.toString cfg.hostPort}"
+            ]
+          );
+      };
 
     containers.homepage = {
       bindMounts = {
@@ -84,8 +94,22 @@ lib.mkMerge [
           enable = true;
           listenPort = cfg.containerPort;
           openFirewall = true;
-
           environmentFile = config.sops.templates."homepage-env".path;
+
+          settings = {
+            title = "${config.networking.hostName}/Homepage";
+            layout = {
+              "Media Management" = {
+                style = "column";
+                icon = "mdi-multimedia";
+              };
+              "Media Streaming" = {
+                style = "column";
+                icon = "mdi-broadcast";
+              };
+            };
+          };
+
           services =
             let
               mkService =
@@ -140,6 +164,9 @@ lib.mkMerge [
                   "sonarr"
                   "prowlarr"
                   "qbittorrent"
+                ];
+                "Media Streaming" = mkGroup [
+                  "jellyfin"
                 ];
               }
             ];
