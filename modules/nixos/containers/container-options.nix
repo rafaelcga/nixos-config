@@ -127,13 +127,6 @@ in
       '';
     };
 
-    extraForwardPorts = lib.mkOption {
-      type = lib.types.listOf (lib.types.submodule portOpts);
-      default = [ ];
-      internal = true;
-      description = "Extra forward ports for a container";
-    };
-
     containerDataDir = lib.mkOption {
       type = lib.types.nullOr lib.types.str;
       default = null;

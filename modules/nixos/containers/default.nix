@@ -200,7 +200,7 @@ in
 
                   serviceNames = lib.attrNames containerConfig.containerPorts;
                 in
-                (lib.concatMap mkForwardPort serviceNames) ++ containerConfig.extraForwardPorts;
+                lib.concatMap mkForwardPort serviceNames;
 
               bindMounts = lib.mkMerge [
                 (lib.mkIf (containerConfig.containerDataDir != null) {
