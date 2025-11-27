@@ -184,12 +184,6 @@ in
     };
 
     networking = lib.mkMerge [
-      {
-        wg-quick.interfaces."${cfg.interfaceName}" = {
-          autostart = cfg.isVpnServer;
-          configFile = config.sops.templates."wireguard/${cfg.interfaceName}.conf".path;
-        };
-      }
       (lib.mkIf cfg.isVpnServer {
         nat = {
           enable = true;
@@ -198,7 +192,40 @@ in
           internalInterfaces = [ cfg.interfaceName ];
         };
 
+        wg-quick.interfaces."${cfg.interfaceName}" = {
+          autostart = true;
+          configFile = config.sops.templates."wireguard/${cfg.interfaceName}.conf".path;
+        };
+
         firewall.allowedUDPPorts = [ cfg.listenPort ];
+      })
+      (lib.mkIf (!cfg.isVpnServer) {
+        networking.firewall.checkReversePath = "loose";
+
+        systemd.services.nmcli-import-wg-home = rec {
+          description = "Import WireGuard config into NetworkManager";
+          wantedBy = [ "multi-user.target" ];
+          after = [ "NetworkManager.service" ];
+          requires = after;
+          serviceConfig =
+            let
+              echo = lib.getExe' pkgs.coreutils "echo";
+              nmcli = lib.getExe' pkgs.networkmanager "nmcli";
+            in
+            {
+              Type = "oneshot";
+              ExecStart = pkgs.writeShellScript "nmcli_import_wg_home.sh" ''
+                if ! ${nmcli} connection show ${cfg.interfaceName} >/dev/null 2>&1; then
+                  ${echo} "Importing WireGuard connection..."
+                  ${nmcli} connection import \
+                    type wireguard \
+                    file "${config.sops.templates."wireguard/${cfg.interfaceName}.conf".path}"
+                else
+                  ${echo} "Connection ${cfg.interfaceName} already exists. Skipping import."
+                fi
+              '';
+            };
+        };
       })
     ];
   };
