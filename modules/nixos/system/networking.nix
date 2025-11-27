@@ -49,8 +49,8 @@ in
           };
         };
 
-        nftables.enable = true;
         firewall.enable = true;
+        nftables.enable = true;
       };
 
       services = {

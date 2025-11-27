@@ -31,7 +31,6 @@ in
         discover
       ];
       systemPackages = with pkgs; [
-        papers
         ghostty
         celluloid
         cosmic-edit
