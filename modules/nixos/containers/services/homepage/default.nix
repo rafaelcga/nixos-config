@@ -37,7 +37,7 @@ let
     in
     "HOMEPAGE_VAR_${lib.toUpper service}_${suffix.${apiAuth}}";
 
-  configDir = config.systemd.services.homepage-dashboard.environment.HOMEPAGE_CONFIG_DIR;
+  configDir = "/etc/homepage-dashboard";
   relativeLogoPath = "/icons/logo.svg";
 in
 lib.mkMerge [
