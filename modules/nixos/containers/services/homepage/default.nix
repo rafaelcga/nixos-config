@@ -199,7 +199,7 @@ lib.mkMerge [
           widgets = [
             {
               logo = {
-                icon = "nix_logo.svg";
+                icon = "/icons/nix_logo.svg";
               };
             }
             {
