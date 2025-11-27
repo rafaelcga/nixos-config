@@ -12,34 +12,22 @@ let
 
   utils = import "${inputs.self}/lib/utils.nix" { inherit lib; };
 
-  mkForwardRules =
-    action:
-    let
-      ruleTemplate =
-        binName:
-        let
-          iptablesBin = lib.getExe' pkgs.iptables binName;
-        in
-        ''
-          ${iptablesBin} ${action} FORWARD -i ${cfg.interfaceName} -j ACCEPT
-          ${iptablesBin} ${action} FORWARD -o ${cfg.interfaceName} -j ACCEPT
-          ${iptablesBin} -t nat ${action} POSTROUTING \
-            -o ${defaultInterface} \
-            -j MASQUERADE
-        '';
-    in
-    lib.concatMapStringsSep "\n" ruleTemplate [
-      "iptables"
-      "ip6tables"
-    ];
+  networkOpts = {
+    options = {
+      address = lib.mkOption {
+        type = lib.types.str;
+        default = "10.200.200.0";
+        description = "WireGuard home network IP";
+      };
 
-  postUpFile = pkgs.writeShellScript "wg_server_postup.sh" ''
-    ${mkForwardRules "-A"}
-  '';
-
-  preDownFile = pkgs.writeShellScript "wg_server_predown.sh" ''
-    ${mkForwardRules "-D"}
-  '';
+      mask = lib.mkOption {
+        type = lib.types.int;
+        default = 24;
+        apply = builtins.toString;
+        description = "Subnet mask for the WireGuard home network";
+      };
+    };
+  };
 in
 {
   options.modules.nixos.home-vpn = {
@@ -47,7 +35,7 @@ in
 
     interfaceName = lib.mkOption {
       type = lib.types.str;
-      default = "wg0";
+      default = "wg-home";
       description = "Name of the WireGuard interface";
     };
 
@@ -57,15 +45,16 @@ in
       description = "Name of the peer that will act as server";
     };
 
-    internalIp = lib.mkOption {
-      type = lib.types.str;
-      default = "10.200.200.1";
-      description = "Address of the server in the WireGuard VPN";
+    network = lib.mkOption {
+      type = lib.types.submodule networkOpts;
+      default = { };
+      description = "Configuration of the WireGuard network";
     };
 
     listenPort = lib.mkOption {
       type = lib.types.port;
       default = 51820;
+      apply = builtins.toString;
       description = "Listening port of the server in the WireGuard VPN";
     };
 
@@ -113,68 +102,85 @@ in
         let
           inherit (config.networking) hostName;
 
-          clientIps =
+          sortedPeers = lib.sort lib.lessThan (lib.attrNames flakeMeta.hosts);
+          clientPeers = lib.remove cfg.serverHostName sortedPeers;
+          peers = [ cfg.serverHostName ] ++ clientPeers;
+
+          networkIps =
             let
-              sortedPeers = lib.sort lib.lessThan (lib.attrNames flakeMeta.hosts);
-              clientPeers = lib.remove cfg.serverHostName sortedPeers;
               # Using imap1, index starts from 1
               mkValuePairs = index: name: {
                 inherit name;
-                value = utils.addToLastOctet cfg.internalIp index;
+                value = utils.addToLastOctet cfg.network.address index;
               };
             in
-            lib.listToAttrs (lib.imap1 mkValuePairs clientPeers);
+            lib.listToAttrs (lib.imap1 mkValuePairs peers);
 
-          interfaceConfig = lib.concatStringsSep "\n" [
-            ''
-              [Interface]
-              PrivateKey = ${config.sops.placeholder."wireguard/home_vpn/${hostName}/private_key"}
-            ''
-            (
-              if cfg.isVpnServer then
-                ''
-                  Address = ${cfg.internalIp}/24
-                  ListenPort = ${builtins.toString cfg.listenPort}
-                ''
-              else
+          mkForwardRules =
+            action:
+            let
+              ruleTemplate =
+                binName:
                 let
-                  clientIp = clientIps.${hostName};
+                  iptablesBin = lib.getExe' pkgs.iptables binName;
                 in
                 ''
-                  Address = ${clientIp}/32
-                  DNS = ${cfg.internalIp}
-                ''
-            )
-            (lib.optionalString cfg.isVpnServer ''
-              PostUp = ${postUpFile}
-              PreDown = ${preDownFile}
-            '')
-          ];
-
-          peersConfig =
-            if cfg.isVpnServer then
-              let
-                mkClientPeer = name: peerIp: ''
-                  [Peer]
-                  PublicKey = ${config.sops.placeholder."wireguard/home_vpn/${name}/public_key"}
-                  AllowedIPs = ${peerIp}/32
+                  ${iptablesBin} ${action} FORWARD -i ${cfg.interfaceName} -j ACCEPT
+                  ${iptablesBin} ${action} FORWARD -o ${cfg.interfaceName} -j ACCEPT
+                  ${iptablesBin} -t nat ${action} POSTROUTING \
+                    -o ${defaultInterface} \
+                    -j MASQUERADE
                 '';
-                clientConfigs = lib.mapAttrsToList mkClientPeer clientIps;
-              in
-              lib.concatStringsSep "\n\n" clientConfigs
-            else
-              ''
-                [Peer]
-                PublicKey = ${config.sops.placeholder."wireguard/home_vpn/${cfg.serverHostName}/public_key"}
-                Endpoint = vpn.${config.sops.placeholder."web_domain"}:${builtins.toString cfg.listenPort}
-                AllowedIPs = 0.0.0.0/0, ::/0
-                PersistentKeepalive = 25
-              '';
+            in
+            lib.concatMapStringsSep "\n" ruleTemplate [
+              "iptables"
+              "ip6tables"
+            ];
+
+          postUpFile = pkgs.writeShellScript "wg_server_postup.sh" ''
+            ${mkForwardRules "-A"}
+          '';
+
+          preDownFile = pkgs.writeShellScript "wg_server_predown.sh" ''
+            ${mkForwardRules "-D"}
+          '';
         in
-        lib.concatStringsSep "\n\n" [
-          interfaceConfig
-          peersConfig
-        ];
+        ''
+          [Interface]
+          PrivateKey = ${config.sops.placeholder."wireguard/home_vpn/${hostName}/private_key"}
+          Address = ${networkIps.${hostName}}/${if cfg.isVpnServer then cfg.network.mask else "32"}
+          ${
+            if cfg.isVpnServer then
+              "ListenPort = ${cfg.listenPort}"
+            else
+              "DNS = ${networkIps.${cfg.serverHostName}}"
+          }
+          ${lib.optionalString cfg.isVpnServer ''
+            PostUp = ${postUpFile}
+            PreDown = ${preDownFile}
+          ''}
+        ''
+        + (
+          if cfg.isVpnServer then
+            let
+              clientIps = lib.filterAttrs (hostName: _: lib.elem hostName clientPeers) networkIps;
+              mkClientPeer = hostName: peerIp: ''
+                [Peer]
+                PublicKey = ${config.sops.placeholder."wireguard/home_vpn/${hostName}/public_key"}
+                AllowedIPs = ${peerIp}/32
+              '';
+              clientConfigs = lib.mapAttrsToList mkClientPeer clientIps;
+            in
+            lib.concatStringsSep "\n" clientConfigs
+          else
+            ''
+              [Peer]
+              PublicKey = ${config.sops.placeholder."wireguard/home_vpn/${cfg.serverHostName}/public_key"}
+              Endpoint = vpn.${config.sops.placeholder."web_domain"}:${cfg.listenPort}
+              AllowedIPs = 0.0.0.0/0, ::/0
+              PersistentKeepalive = 25
+            ''
+        );
     };
 
     networking = lib.mkMerge [
