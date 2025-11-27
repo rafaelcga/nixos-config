@@ -87,6 +87,10 @@ lib.mkMerge [
         "${config.sops.templates."homepage-env".path}" = {
           isReadOnly = true;
         };
+        "/mnt/resources/logo.svg" = {
+          hostPath = "${inputs.self}/resources/splash/nix-snowflake-rainbow-pastel.svg";
+          isReadOnly = true;
+        };
       };
 
       config = {
@@ -192,7 +196,7 @@ lib.mkMerge [
           widgets = [
             {
               logo = {
-                icon = "${inputs.self}/resources/splash/nix-snowflake-rainbow-pastel.svg";
+                icon = "/mnt/resources/logo.svg";
               };
             }
             {
