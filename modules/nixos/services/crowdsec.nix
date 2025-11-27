@@ -314,10 +314,22 @@ in
                 systemctl = lib.getExe' pkgs.systemd "systemctl";
               in
               {
-                PrivateUsers = lib.mkForce false;
-                DynamicUser = lib.mkForce false;
                 User = lib.mkForce "root";
                 Group = lib.mkForce "root";
+                PrivateUsers = lib.mkForce false;
+                DynamicUser = lib.mkForce false;
+                SystemCallFilter = lib.mkForce [
+                  " "
+                  "~@reboot"
+                  "~@swap"
+                  "~@obsolete"
+                  "~@mount"
+                  "~@module"
+                  "~@debug"
+                  "~@cpu-emulation"
+                  "~@clock"
+                  "~@raw-io"
+                ];
                 ExecStartPost = lib.mkForce "${systemctl} reload crowdsec.service";
               };
           };
