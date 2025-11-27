@@ -283,7 +283,7 @@ in
     systemd.services = lib.mkMerge (
       [
         {
-          "enroll-crowdsec-console" = rec {
+          enroll-crowdsec-console = rec {
             wantedBy = [ "multi-user.target" ];
             after = [ "crowdsec.service" ];
             wants = after;
@@ -306,6 +306,14 @@ in
                   })" --name ${cfg_crowdsec.name}
                 '';
               };
+          };
+
+          crowdsec-update-hub = {
+            serviceConfig = {
+              DynamicUser = lib.mkForce false;
+              User = lib.mkForce "root";
+              Group = lib.mkForce "root";
+            };
           };
 
           crowdsec-firewall-bouncer = rec {
