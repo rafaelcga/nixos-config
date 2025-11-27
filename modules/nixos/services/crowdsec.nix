@@ -314,6 +314,7 @@ in
                 systemctl = lib.getExe' pkgs.systemd "systemctl";
               in
               {
+                PrivateUsers = lib.mkForce false;
                 DynamicUser = lib.mkForce false;
                 User = lib.mkForce "root";
                 Group = lib.mkForce "root";
