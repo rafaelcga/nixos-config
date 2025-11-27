@@ -2,6 +2,7 @@
   inputs,
   config,
   lib,
+  pkgs,
   userName,
   ...
 }:
@@ -36,6 +37,17 @@ let
       };
     in
     "HOMEPAGE_VAR_${lib.toUpper service}_${suffix.${apiAuth}}";
+
+  homepageOverride =
+    let
+      nixLogoPath = "${inputs.self}/resources/splash/nix-snowflake-rainbow-pastel.svg";
+    in
+    pkgs.homepage-dashboard.overrideAttrs (oldAttrs: {
+      postInstall = (oldAttrs.postInstall or "") + ''
+        mkdir -p $out/share/homepage/public/icons
+        cp ${nixLogoPath} $out/share/homepage/public/icons/nix-pastel.svg
+      '';
+    });
 in
 lib.mkMerge [
   {
@@ -92,6 +104,8 @@ lib.mkMerge [
       config = {
         services.homepage-dashboard = {
           enable = true;
+          package = homepageOverride;
+
           listenPort = cfg.containerPort;
           openFirewall = true;
           environmentFile = config.sops.templates."homepage-env".path;
