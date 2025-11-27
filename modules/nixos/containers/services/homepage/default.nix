@@ -165,6 +165,8 @@ lib.mkMerge [
                   "prowlarr"
                   "qbittorrent"
                 ];
+              }
+              {
                 "Media Streaming" = mkGroup [
                   "jellyfin"
                 ];
