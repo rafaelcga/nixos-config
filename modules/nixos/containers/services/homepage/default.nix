@@ -107,6 +107,10 @@ lib.mkMerge [
                 style = "column";
                 icon = "mdi-broadcast";
               };
+              "Home Network" = {
+                style = "column";
+                icon = "mdi-router-network-wireless";
+              };
             };
           };
 
@@ -172,6 +176,11 @@ lib.mkMerge [
               {
                 "Media Streaming" = mkGroup [
                   "jellyfin"
+                ];
+              }
+              {
+                "Home Network" = mkGroup [
+                  "ddns-updater"
                 ];
               }
             ];

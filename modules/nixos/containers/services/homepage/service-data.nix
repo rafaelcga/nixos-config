@@ -77,4 +77,13 @@
     widgetFields = [ ];
     extraConfig = { };
   };
+
+  ddns-updater = {
+    displayName = "DNS Updater";
+    description = "Dynamic DNS record updater";
+    container = "ddns-updater";
+    apiAuth = null;
+    widgetFields = [ ];
+    extraConfig = { };
+  };
 }
