@@ -323,7 +323,7 @@ in
                   confDir
                 ];
                 ExecStart = "${cscli} --error hub update";
-                ExecStartPost = "${systemctl} reload crowdsec.service";
+                ExecStartPost = "+${systemctl} reload crowdsec.service";
               };
           };
 
