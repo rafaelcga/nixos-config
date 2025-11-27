@@ -311,26 +311,22 @@ in
           crowdsec-update-hub = {
             serviceConfig =
               let
+                cscli = "/run/current-system/sw/bin/cscli";
                 systemctl = lib.getExe' pkgs.systemd "systemctl";
               in
-              {
-                User = lib.mkForce "root";
-                Group = lib.mkForce "root";
-                PrivateUsers = lib.mkForce false;
-                DynamicUser = lib.mkForce false;
-                SystemCallFilter = lib.mkForce [
-                  " "
-                  "~@reboot"
-                  "~@swap"
-                  "~@obsolete"
-                  "~@mount"
-                  "~@module"
-                  "~@debug"
-                  "~@cpu-emulation"
-                  "~@clock"
-                  "~@raw-io"
-                ];
-                ExecStartPost = lib.mkForce "${systemctl} reload crowdsec.service";
+              lib.mkForce {
+                User = "root";
+                Group = "root";
+                SystemCallFilter = [ ];
+                CapabilityBoundingSet = [ ];
+                ProtectSystem = "false";
+                PrivateUsers = false;
+                DynamicUser = false;
+                RestrictNamespaces = false;
+                RestrictRealtime = false;
+                RestrictSUIDSGID = false;
+                ExecStart = "${cscli} --error hub update";
+                ExecStartPost = "${systemctl} reload crowdsec.service";
               };
           };
 
