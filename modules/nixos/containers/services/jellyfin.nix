@@ -23,6 +23,8 @@ lib.mkMerge [
         {
           imports = [ "${inputs.self}/modules/nixos/hardware/graphics.nix" ];
 
+          _module.args.userName = cfg.user.name;
+
           services.jellyfin = {
             enable = true;
             user = cfg.user.name;

@@ -2,6 +2,7 @@
   config,
   lib,
   pkgs,
+  userName,
   ...
 }:
 let
@@ -61,6 +62,8 @@ in
           };
         };
         nixpkgs.config.allowUnfree = lib.mkForce true; # Required for firmware
+
+        users.users.${userName}.extraGroups = [ "render" ];
       }
       (lib.mkIf (lib.elem "nvidia" cfg.vendors) {
         hardware.nvidia = {
