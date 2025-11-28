@@ -14,7 +14,7 @@ let
 
   hostLocalIp = config.modules.nixos.networking.staticIp;
 
-  serviceData = import ./service-data.nix;
+  serviceData = import ./service-data.nix { inherit inputs lib; };
 
   getSecretName =
     service:
@@ -157,33 +157,28 @@ lib.mkMerge [
                 in
                 {
                   "${data.displayName}" = lib.mkIf containerConfig.enable {
-                    icon = "${service}.png";
-                    inherit (data) description;
+                    inherit (data) description icon;
 
                     href = hrefLocal;
                     siteMonitor = hrefService;
 
-                    widget =
-                      let
-                        envVarSub = "{{" + (getEnvVarName service) + "}}";
-                      in
-                      lib.mkIf (data.apiAuth != null) (
-                        lib.mkMerge [
-                          {
-                            type = service;
-                            url = hrefService;
-                            fields = data.widgetFields;
-                          }
-                          (lib.mkIf (data.apiAuth == "key") {
-                            key = envVarSub;
-                          })
-                          (lib.mkIf (data.apiAuth == "password") {
-                            username = userName;
-                            password = envVarSub;
-                          })
-                          data.extraConfig
-                        ]
-                      );
+                    widget = lib.mkIf (data.apiAuth != null) (
+                      lib.mkMerge [
+                        {
+                          inherit (data) type;
+                          url = hrefService;
+                          fields = data.widgetFields;
+                        }
+                        (lib.mkIf (data.apiAuth == "key") {
+                          key = "{{" + (getEnvVarName service) + "}}";
+                        })
+                        (lib.mkIf (data.apiAuth == "password") {
+                          username = userName;
+                          password = "{{" + (getEnvVarName service) + "}}";
+                        })
+                        data.extraConfig
+                      ]
+                    );
                   };
                 };
 
