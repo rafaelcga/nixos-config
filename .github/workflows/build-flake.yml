@@ -23,7 +23,10 @@ jobs:
       hosts: ${{ steps.get-hosts.outputs.hosts }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+          fetch-depth: 0
 
       - name: Get NixOS hosts from directories
         id: get-hosts
@@ -51,7 +54,7 @@ jobs:
           hatchet-protocol: "cleave"
 
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           token: ${{ secrets.GH_TOKEN }}
           fetch-depth: 0
