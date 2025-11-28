@@ -116,10 +116,15 @@ in
         };
 
         # HTTP/HTTPS ports
-        networking.firewall.allowedTCPPorts = [
-          80
-          443
-        ];
+        networking.firewall =
+          let
+            httpPorts = [ 80 ];
+            httpsPorts = [ 443 ];
+          in
+          {
+            allowedTCPPorts = httpPorts ++ httpsPorts;
+            allowedUDPPorts = httpsPorts;
+          };
 
         sops = {
           secrets = {
