@@ -24,11 +24,6 @@ lib.mkMerge [
       extraConfig = disableStubListener;
     };
 
-    # networking.firewall = rec {
-    #   allowedTCPPorts = [ dnsPort ];
-    #   allowedUDPPorts = allowedTCPPorts;
-    # };
-
     containers.adguard = {
       forwardPorts =
         let
@@ -44,13 +39,8 @@ lib.mkMerge [
         ];
 
       config =
-        { config, pkgs, ... }:
+        { config, ... }:
         {
-          environment.systemPackages = with pkgs; [
-            dig
-            tcpdump
-          ];
-
           services.resolved = lib.mkIf (config.services.resolved.enable) {
             extraConfig = disableStubListener;
           };
@@ -69,6 +59,7 @@ lib.mkMerge [
           services.adguardhome = {
             enable = true;
             port = cfg.containerPort;
+            allowDHCP = false;
             openFirewall = true;
 
             settings = {
