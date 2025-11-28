@@ -55,6 +55,11 @@ lib.mkMerge [
             extraConfig = disableStubListener;
           };
 
+          networking.firewall = rec {
+            allowedTCPPorts = [ dnsPort ];
+            allowedUDPPorts = allowedTCPPorts;
+          };
+
           systemd.services.adguardhome = {
             serviceConfig = {
               DynamicUser = lib.mkForce false;
