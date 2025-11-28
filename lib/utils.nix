@@ -54,20 +54,4 @@ in
       lib.concatStringsSep ":" (restHextets ++ [ (lib.toHexString newLastHextet) ]);
 
   removeMask = block: lib.elemAt (lib.splitString "/" block) 0;
-
-  waitOnline =
-    config:
-    let
-      usesNetworkManager = config.networking.networkmanager.enable;
-      usesSystemdNetwork = config.systemd.network.enable && config.systemd.network.wait-online.enable;
-    in
-    [
-      "network-online.target"
-    ]
-    ++ lib.optionals usesNetworkManager [
-      "NetworkManager-wait-online.service"
-    ]
-    ++ lib.optionals usesSystemdNetwork [
-      "systemd-networkd-wait-online.service"
-    ];
 }

@@ -1,5 +1,4 @@
 {
-  inputs,
   config,
   lib,
   pkgs,
@@ -9,8 +8,6 @@
 let
   cfg = config.modules.nixos.flatpak;
   user = config.users.users.${userName};
-
-  utils = import "${inputs.self}/lib/utils.nix" { inherit lib; };
 in
 {
   options.modules.nixos.flatpak = {
@@ -29,11 +26,13 @@ in
       {
         add-flathub-repo = rec {
           description = "Adds Flathub repository";
-          after = utils.waitOnline config;
+          after = [ "network-online.target" ];
           wants = after;
           wantedBy = [ "multi-user.target" ];
           serviceConfig = {
             Type = "oneshot";
+            Restart = "on-failure";
+            RestartSec = "10s";
             ExecStart = ''
               ${flatpak} remote-add --if-not-exists \
                 flathub https://dl.flathub.org/repo/flathub.flatpakrepo
