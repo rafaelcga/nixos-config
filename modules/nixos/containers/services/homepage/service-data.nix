@@ -86,4 +86,18 @@
     widgetFields = [ ];
     extraConfig = { };
   };
+
+  adguard = {
+    displayName = "AdGuard Home";
+    description = "Network-wide ad-blocking DNS server";
+    container = "adguard";
+    apiAuth = "password";
+    widgetFields = [
+      "queries"
+      "blocked"
+      "filtered"
+      "latency"
+    ];
+    extraConfig = { };
+  };
 }

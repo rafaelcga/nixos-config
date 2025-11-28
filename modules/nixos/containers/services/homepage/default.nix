@@ -211,6 +211,7 @@ lib.mkMerge [
               }
               {
                 "Home Network" = mkGroup [
+                  "adguard"
                   "ddns-updater"
                 ];
               }
