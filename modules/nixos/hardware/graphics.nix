@@ -63,17 +63,25 @@ in
         };
         nixpkgs.config.allowUnfree = lib.mkForce true; # Required for firmware
 
-        users.users.${userName}.extraGroups = [ "render" ];
+        users.users.${userName}.extraGroups = [
+          "video"
+          "render"
+        ];
       }
+      (lib.mkIf (lib.elem "intel" cfg.vendors) {
+        boot.kernelParams = [ "i915.enable_guc=3" ];
+        services.xserver.videoDrivers = [ "modesetting" ];
+        environment.sessionVariables.LIBVA_DRIVER_NAME = "iHD";
+      })
+      (lib.mkIf (lib.elem "amd" cfg.vendors) {
+        services.xserver.videoDrivers = [ "amdgpu" ];
+      })
       (lib.mkIf (lib.elem "nvidia" cfg.vendors) {
         hardware.nvidia = {
           open = true; # Open-source kernel module
           package = config.boot.kernelPackages.nvidiaPackages.latest;
         };
         services.xserver.videoDrivers = [ "nvidia" ];
-      })
-      (lib.mkIf (lib.elem "intel" cfg.vendors) {
-        environment.sessionVariables.LIBVA_DRIVER_NAME = "iHD";
       })
     ]
   );
