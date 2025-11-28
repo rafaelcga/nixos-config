@@ -11,6 +11,8 @@ let
   disableStubListener = ''
     DNSStubListener=no
   '';
+
+  homeVpnSubnet = config.modules.nixos.home-vpn.network.subnet;
 in
 lib.mkMerge [
   {
@@ -80,6 +82,7 @@ lib.mkMerge [
               };
               dns = {
                 allowed_clients = [
+                  homeVpnSubnet
                   "172.16.0.0/12"
                   "192.168.0.0/16"
                 ];

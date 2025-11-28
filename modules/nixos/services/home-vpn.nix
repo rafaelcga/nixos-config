@@ -13,20 +13,30 @@ let
   utils = import "${inputs.self}/lib/utils.nix" { inherit lib; };
 
   networkOpts = {
-    options = {
-      address = lib.mkOption {
-        type = lib.types.str;
-        default = "10.200.200.0";
-        description = "WireGuard home network IP";
-      };
+    options =
+      { config, ... }:
+      {
+        address = lib.mkOption {
+          type = lib.types.str;
+          default = "10.200.200.0";
+          description = "WireGuard home network IP";
+        };
 
-      mask = lib.mkOption {
-        type = lib.types.int;
-        default = 24;
-        apply = builtins.toString;
-        description = "Subnet mask for the WireGuard home network";
+        mask = lib.mkOption {
+          type = lib.types.int;
+          default = 24;
+          apply = builtins.toString;
+          description = "Subnet mask for the WireGuard home network";
+        };
+
+        subnet = lib.mkOption {
+          type = lib.types.str;
+          readOnly = true;
+          internal = true;
+          default = "${config.address}/${config.mask}";
+          description = "WireGuard home network subnet";
+        };
       };
-    };
   };
 in
 {
