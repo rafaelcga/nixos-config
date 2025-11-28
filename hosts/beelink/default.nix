@@ -39,6 +39,10 @@
           isReadOnly = true;
         };
       };
+      adguard = {
+        enable = true;
+        hostPort = 8001;
+      };
       ddns-updater = {
         enable = true;
         hostPort = 8002;
