@@ -43,6 +43,7 @@ lib.mkMerge [
         let
           # Not added 10.0.0.0/8, as it contains the VPN IPs themselves
           localIpv4 = [
+            config.modules.nixos.home-vpn.network.subnet
             "172.16.0.0/12"
             "192.168.0.0/16"
           ];
