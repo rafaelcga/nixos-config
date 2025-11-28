@@ -108,7 +108,7 @@ in
             {
               "metrics.{$DOMAIN}" = {
                 extraConfig = ''
-                  @denied not remote_ip private_ranges
+                  @denied not client_ip private_ranges
                   abort @denied
 
                   metrics
