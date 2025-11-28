@@ -178,55 +178,84 @@ in
       let
         baseConfigs =
           let
-            mkBaseConfig = name: containerConfig: {
-              autoStart = true;
-              privateNetwork = true;
-              privateUsers = "identity";
+            mkBaseConfig =
+              name: containerConfig:
+              let
+                gpuDevices = [
+                  "/dev/dri/card0"
+                  "/dev/dri/renderD128"
+                ];
+              in
+              {
+                autoStart = true;
+                privateNetwork = true;
+                privateUsers = "identity";
 
-              forwardPorts =
-                let
-                  mkForwardPort =
-                    serviceName:
+                forwardPorts =
+                  let
+                    mkForwardPort =
+                      serviceName:
+                      let
+                        hostPort = containerConfig.hostPorts.${serviceName};
+                        containerPort = containerConfig.containerPorts.${serviceName};
+                      in
+                      lib.optionals (hostPort != null && containerPort != null) [
+                        {
+                          inherit hostPort containerPort;
+                          protocol = "tcp";
+                        }
+                      ];
+
+                    serviceNames = lib.attrNames containerConfig.containerPorts;
+                  in
+                  lib.concatMap mkForwardPort serviceNames;
+
+                allowedDevices =
+                  let
+                    mkAllowedDevice = node: {
+                      inherit node;
+                      modifier = "rw";
+                    };
+                  in
+                  lib.mkIf containerConfig.gpuPassthrough (lib.map mkAllowedDevice gpuDevices);
+
+                bindMounts = lib.mkMerge [
+                  (lib.mkIf (containerConfig.containerDataDir != null) {
+                    "${containerConfig.containerDataDir}" = {
+                      hostPath = "${cfg.dataDir}/${name}";
+                      isReadOnly = false;
+                    };
+                  })
+                  (
                     let
-                      hostPort = containerConfig.hostPorts.${serviceName};
-                      containerPort = containerConfig.containerPorts.${serviceName};
+                      mkValuePairs = name: {
+                        inherit name;
+                        value = {
+                          isReadOnly = false;
+                        };
+                      };
+                      gpuBindMounts = lib.listToAttrs (lib.map mkValuePairs gpuDevices);
                     in
-                    lib.optionals (hostPort != null && containerPort != null) [
-                      {
-                        inherit hostPort containerPort;
-                        protocol = "tcp";
-                      }
-                    ];
+                    lib.mkIf containerConfig.gpuPassthrough gpuBindMounts
+                  )
+                  containerConfig.userMounts
+                ];
 
-                  serviceNames = lib.attrNames containerConfig.containerPorts;
-                in
-                lib.concatMap mkForwardPort serviceNames;
+                config = {
+                  # Use systemd-resolved inside the container
+                  # Workaround for bug https://github.com/NixOS/nixpkgs/issues/162686
+                  networking.useHostResolvConf = lib.mkForce false;
+                  services.resolved.enable = true;
 
-              bindMounts = lib.mkMerge [
-                (lib.mkIf (containerConfig.containerDataDir != null) {
-                  "${containerConfig.containerDataDir}" = {
-                    hostPath = "${cfg.dataDir}/${name}";
-                    isReadOnly = false;
+                  users.users."${name}" = {
+                    uid = cfg.containerUid;
+                    group = cfg.containerGroup;
+                    isSystemUser = true;
                   };
-                })
-                containerConfig.userMounts
-              ];
 
-              config = {
-                # Use systemd-resolved inside the container
-                # Workaround for bug https://github.com/NixOS/nixpkgs/issues/162686
-                networking.useHostResolvConf = lib.mkForce false;
-                services.resolved.enable = true;
-
-                users.users."${name}" = {
-                  uid = cfg.containerUid;
-                  group = cfg.containerGroup;
-                  isSystemUser = true;
+                  system.stateVersion = config.system.stateVersion;
                 };
-
-                system.stateVersion = config.system.stateVersion;
               };
-            };
           in
           lib.mapAttrs mkBaseConfig enabledContainers;
 
