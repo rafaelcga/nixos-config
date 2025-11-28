@@ -226,6 +226,7 @@ in
                 ${nmcli} connection import \
                   type wireguard \
                   file "${config.sops.templates."wireguard/${cfg.interfaceName}.conf".path}"
+                ${nmcli} connection down ${cfg.interfaceName}
                 ${nmcli} connection modify \
                   ${cfg.interfaceName} connection.autoconnect no
               '';
