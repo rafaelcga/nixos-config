@@ -115,7 +115,6 @@ in
           '';
         };
 
-        # HTTP/HTTPS ports
         networking.firewall =
           let
             httpPorts = [ 80 ];
