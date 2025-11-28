@@ -7,6 +7,7 @@
 let
   cfg = config.modules.nixos.containers.services.adguard;
 
+  dnsPort = 53;
   disableStubListener = ''
     DNSStubListener=no
   '';
@@ -23,11 +24,16 @@ lib.mkMerge [
       extraConfig = disableStubListener;
     };
 
+    networking.firewall = rec {
+      allowedTCPPorts = [ dnsPort ];
+      allowedUDPPorts = allowedTCPPorts;
+    };
+
     containers.adguard = {
       forwardPorts =
         let
           mkDnsPort = protocol: rec {
-            containerPort = 53;
+            containerPort = dnsPort;
             hostPort = containerPort;
             inherit protocol;
           };
