@@ -12,10 +12,10 @@ let
 
   utils = import "${inputs.self}/lib/utils.nix" { inherit lib; };
 
-  networkOpts = {
-    options =
-      { config, ... }:
-      {
+  networkOpts =
+    { config, ... }:
+    {
+      options = {
         address = lib.mkOption {
           type = lib.types.str;
           default = "10.200.200.0";
@@ -37,7 +37,7 @@ let
           description = "WireGuard home network subnet";
         };
       };
-  };
+    };
 in
 {
   options.modules.nixos.home-vpn = {

@@ -7,12 +7,12 @@
 let
   cfg = config.modules.nixos.containers.services.adguard;
 
+  homeVpnSubnet = config.modules.nixos.home-vpn.network.subnet;
+
   dnsPort = 53;
   disableStubListener = ''
     DNSStubListener=no
   '';
-
-  homeVpnSubnet = config.modules.nixos.home-vpn.network.subnet;
 in
 lib.mkMerge [
   {
