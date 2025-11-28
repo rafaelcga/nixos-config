@@ -25,6 +25,12 @@ lib.mkMerge [
         ];
 
       config = {
+        systemd.services.adguardhome = {
+          serviceConfig = {
+            DynamicUser = lib.mkForce false;
+          };
+        };
+
         services.adguardhome = {
           enable = true;
           port = cfg.containerPort;
