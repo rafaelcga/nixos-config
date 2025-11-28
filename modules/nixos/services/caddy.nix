@@ -101,7 +101,20 @@ in
           enable = true;
           environmentFile = config.sops.templates."caddy-env".path;
           package = pkgs.local.caddy-with-plugins;
-          virtualHosts = lib.mapAttrs' mkVirtualHost cfg.virtualHosts;
+          virtualHosts = lib.mkMerge [
+            (lib.mapAttrs' mkVirtualHost cfg.virtualHosts)
+            {
+              "metrics.{$DOMAIN}" = {
+                extraConfig = ''
+                  @denied not remote_ip private_ranges
+                  abort @denied
+
+                  metrics
+                '';
+                logFormat = null;
+              };
+            }
+          ];
           logFormat = ''
             output file ${config.services.caddy.logDir}/access.log {
                 mode 644
