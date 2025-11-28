@@ -24,10 +24,10 @@ lib.mkMerge [
       extraConfig = disableStubListener;
     };
 
-    networking.firewall = rec {
-      allowedTCPPorts = [ dnsPort ];
-      allowedUDPPorts = allowedTCPPorts;
-    };
+    # networking.firewall = rec {
+    #   allowedTCPPorts = [ dnsPort ];
+    #   allowedUDPPorts = allowedTCPPorts;
+    # };
 
     containers.adguard = {
       forwardPorts =
@@ -78,6 +78,10 @@ lib.mkMerge [
                 interval = "24h";
               };
               dns = {
+                allowed_clients = [
+                  "172.16.0.0/12"
+                  "192.168.0.0/16"
+                ];
                 upstream_dns = [
                   "https://dns.quad9.net/dns-query"
                   "tls://dns.quad9.net"
