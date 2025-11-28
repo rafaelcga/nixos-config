@@ -44,8 +44,13 @@ lib.mkMerge [
         ];
 
       config =
-        { config, ... }:
+        { config, pkgs, ... }:
         {
+          environment.systemPackages = with pkgs; [
+            dig
+            tcpdump
+          ];
+
           services.resolved = lib.mkIf (config.services.resolved.enable) {
             extraConfig = disableStubListener;
           };
