@@ -1,4 +1,9 @@
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  userName,
+  ...
+}:
 let
   cfg = config.modules.nixos.containers.services.adguard;
 
@@ -52,6 +57,12 @@ lib.mkMerge [
 
             settings = {
               log.enabled = true;
+              users = [
+                {
+                  name = userName;
+                  password = "$2b$12$kZpm0P3wFyidgKBwribsO.Y/ouoHppUvbJ3ifqaQRX8J8mWB1aDMC";
+                }
+              ];
               querylog = {
                 enabled = true;
                 interval = "24h";
