@@ -217,14 +217,17 @@ in
             {
               Type = "oneshot";
               ExecStart = pkgs.writeShellScript "nmcli_import_wg_home.sh" ''
-                if ! ${nmcli} connection show ${cfg.interfaceName} >/dev/null 2>&1; then
-                  ${echo} "Importing WireGuard connection..."
-                  ${nmcli} connection import \
-                    type wireguard \
-                    file "${config.sops.templates."wireguard/${cfg.interfaceName}.conf".path}"
-                else
-                  ${echo} "Connection ${cfg.interfaceName} already exists. Skipping import."
+                if ${nmcli} connection show ${cfg.interfaceName} >/dev/null 2>&1; then
+                  ${echo} "Interface found already, deleting..."
+                  ${nmcli} connection delete ${cfg.interfaceName}
                 fi
+
+                ${echo} "Importing WireGuard configuration..."
+                ${nmcli} connection import \
+                  type wireguard \
+                  file "${config.sops.templates."wireguard/${cfg.interfaceName}.conf".path}"
+                ${nmcli} connection modify \
+                  ${cfg.interfaceName} connection.autoconnect no
               '';
             };
         };
