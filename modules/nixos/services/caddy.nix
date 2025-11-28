@@ -221,8 +221,10 @@ in
             caddy = rec {
               after = [ "${genServiceName}.service" ];
               wants = after;
-              requires = [ "crowdsec.service" ];
-              serviceConfig.EnvironmentFile = lib.mkForce envFile;
+              serviceConfig = {
+                TimeoutStopSec = lib.mkForce "20s";
+                EnvironmentFile = lib.mkForce envFile;
+              };
             };
           };
       })
