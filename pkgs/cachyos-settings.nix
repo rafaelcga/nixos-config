@@ -14,7 +14,7 @@ stdenv.mkDerivation rec {
   src = fetchFromGitHub {
     owner = "CachyOS";
     repo = "CachyOS-Settings";
-    rev = "v${version}";
+    tag = version;
     sha256 = "sha256-WknipQ447/r3FqnHqdCINYvYsoP6u4bbTnQeiXr42sk=";
   };
 
