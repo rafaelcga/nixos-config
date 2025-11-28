@@ -1,7 +1,6 @@
 { config, lib, ... }:
 let
   cfg = config.modules.nixos.containers.services.adguard;
-  osConfig = config;
 
   disableStubListener = ''
     DNSStubListener=no
@@ -15,7 +14,7 @@ lib.mkMerge [
     };
   }
   (lib.mkIf cfg.enable {
-    services.resolved = lib.mkIf (osConfig.services.resolved.enable) {
+    services.resolved = lib.mkIf (config.services.resolved.enable) {
       extraConfig = disableStubListener;
     };
 
