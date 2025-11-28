@@ -109,7 +109,7 @@ in
                   @denied not remote_ip private_ranges
                   abort @denied
 
-                  reverse_proxy localhost:2019
+                  metrics
                 '';
                 logFormat = null;
               };
