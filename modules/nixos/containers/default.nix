@@ -185,8 +185,8 @@ in
                 name: _:
                 lib.nameValuePair "${cfg.dataDir}/${name}" {
                   d = {
-                    user = user.name;
-                    inherit (user) group;
+                    user = cfg.user.name;
+                    inherit (cfg.user) group;
                     mode = "2755";
                   };
                 };
