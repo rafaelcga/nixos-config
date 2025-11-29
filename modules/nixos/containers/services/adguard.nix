@@ -31,7 +31,12 @@ lib.mkMerge [
   (lib.mkIf cfg.enable {
     networking.nameservers = [ (utils.removeMask config.containers.adguard.localAddress) ];
 
-    services.resolved.fallbackDns = lib.mkForce bootstrapDns;
+    services.resolved = {
+      fallbackDns = lib.mkForce bootstrapDns;
+      extraConfig = ''
+        DNSStubListener=no
+      '';
+    };
 
     containers.adguard = {
       forwardPorts =
