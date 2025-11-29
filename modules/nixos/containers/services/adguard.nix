@@ -92,12 +92,17 @@ lib.mkMerge [
                   "https://dns.quad9.net/dns-query"
                   "tls://dns.quad9.net"
                 ];
+                fallback_dns = [
+                  "https://cloudflare-dns.com/dns-query"
+                  "tls://one.one.one.one"
+                ];
                 bootstrap_dns = [
                   "9.9.9.9"
                   "149.112.112.112"
                   "2620:fe::fe"
                   "2620:fe::fe:9"
                 ];
+                upstream_mode = "parallel";
                 ratelimit = 0;
                 edns_client_subnet.enabled = false;
                 enable_dnssec = true;
