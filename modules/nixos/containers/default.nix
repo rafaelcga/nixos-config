@@ -311,10 +311,7 @@ in
                   networking.useHostResolvConf = lib.mkForce false;
                   services.resolved.enable = true;
 
-                  users.users."${cfg.user.name}" = {
-                    inherit (cfg.user) uid group;
-                    isSystemUser = true;
-                  };
+                  users.users."${cfg.user.name}" = config.users.users.${cfg.user.name};
 
                   system.stateVersion = config.system.stateVersion;
                 };
