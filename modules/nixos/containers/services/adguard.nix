@@ -1,4 +1,5 @@
 {
+  inputs,
   config,
   lib,
   userName,
@@ -7,6 +8,8 @@
 let
   cfg = config.modules.nixos.containers.services.adguard;
   inherit (config.modules.nixos.containers) user;
+
+  utils = import "${inputs.self}/lib/utils.nix" { inherit lib; };
 
   homeVpnSubnet = config.modules.nixos.home-vpn.network.subnet;
 
@@ -26,7 +29,7 @@ lib.mkMerge [
     };
   }
   (lib.mkIf cfg.enable {
-    networking.nameservers = [ config.containers.adguard.localAddress ];
+    networking.nameservers = [ (utils.removeMask config.containers.adguard.localAddress) ];
 
     services.resolved.fallbackDns = lib.mkForce fallbackDns;
 
