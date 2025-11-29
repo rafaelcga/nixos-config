@@ -65,7 +65,6 @@ in
             "2620:fe::fe"
             "2620:fe::9"
           ];
-          dnsovertls = "true";
         };
 
         openssh = {
