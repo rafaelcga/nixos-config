@@ -99,11 +99,12 @@ in
     lib.mkMerge [
       {
         services.caddy = {
-          inherit globalConfig;
           enable = true;
+          enableReload = false;
           environmentFile = config.sops.templates."caddy-env".path;
           package = pkgs.local.caddy-with-plugins;
-          virtualHosts = lib.mapAttrs' mkVirtualHost cfg.virtualHosts;
+
+          inherit globalConfig;
           logFormat = ''
             output file ${config.services.caddy.logDir}/access.log {
                 mode 644
@@ -115,6 +116,7 @@ in
                 time_format rfc3339
             }
           '';
+          virtualHosts = lib.mapAttrs' mkVirtualHost cfg.virtualHosts;
         };
 
         networking.firewall =
