@@ -6,15 +6,10 @@
 }:
 let
   inherit (config.modules.nixos) crowdsec;
-  inherit (config.modules.nixos.containers.services) homepage;
   cfg = config.modules.nixos.caddy;
 
   globalConfig = lib.concatStringsSep "\n" [
     ''
-      admin localhost:2019 {
-          origins localhost:2019 localhost 127.0.0.1 ::1 ${lib.optionalString homepage.enable "homepage.containers"}
-      }
-
       acme_dns porkbun {
           api_key {$PORKBUN_API_KEY}
           api_secret_key {$PORKBUN_API_SECRET_KEY}
