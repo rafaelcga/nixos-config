@@ -14,7 +14,7 @@ let
   homeVpnSubnet = config.modules.nixos.home-vpn.network.subnet;
 
   dnsPort = 53;
-  fallbackDns = [
+  bootstrapDns = [
     "9.9.9.9"
     "149.112.112.112"
     "2620:fe::fe"
@@ -31,7 +31,7 @@ lib.mkMerge [
   (lib.mkIf cfg.enable {
     networking.nameservers = [ (utils.removeMask config.containers.adguard.localAddress) ];
 
-    services.resolved.fallbackDns = lib.mkForce fallbackDns;
+    services.resolved.fallbackDns = lib.mkForce bootstrapDns;
 
     containers.adguard = {
       forwardPorts =
@@ -96,11 +96,7 @@ lib.mkMerge [
                 "https://dns.quad9.net/dns-query"
                 "tls://dns.quad9.net"
               ];
-              fallback_dns = [
-                "https://cloudflare-dns.com/dns-query"
-                "tls://one.one.one.one"
-              ];
-              bootstrap_dns = fallbackDns;
+              bootstrap_dns = bootstrapDns;
               upstream_mode = "parallel";
               ratelimit = 0;
               edns_client_subnet.enabled = false;
