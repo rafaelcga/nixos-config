@@ -12,8 +12,8 @@ let
 
   utils = import "${inputs.self}/lib/utils.nix" { inherit lib; };
 
-  caddyAdminPort = 2019;
   hostLocalIp = config.modules.nixos.networking.staticIp;
+  hostSubnetIp = config.modules.nixos.containers.hostAddress;
   serviceData = import ./service-data.nix { inherit inputs lib; };
 
   getSecretName =
@@ -200,7 +200,7 @@ lib.mkMerge [
                   {
                     "Caddy" =
                       let
-                        caddyAdminUrl = "http://localhost:${builtins.toString caddyAdminPort}";
+                        caddyAdminUrl = "http://${hostSubnetIp}:2019";
                       in
                       {
                         icon = "caddy.svg";
