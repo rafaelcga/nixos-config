@@ -56,7 +56,8 @@ in
       services = {
         resolved = {
           enable = true;
-          dnssec = "allow-downgrade";
+          dnssec = "true";
+          domains = [ "~." ];
           # Quad9 as fallback
           fallbackDns = [
             "9.9.9.9"
@@ -64,6 +65,7 @@ in
             "2620:fe::fe"
             "2620:fe::9"
           ];
+          dnsovertls = "true";
         };
 
         openssh = {
