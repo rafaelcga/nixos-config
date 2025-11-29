@@ -108,7 +108,7 @@ lib.mkMerge [
                 enable_dnssec = true;
                 blocking_mode = "default";
               };
-              filtering.filters_update_interval = 1;
+              filtering.filters_update_interval = 12;
               filters = [
                 {
                   enabled = true;
