@@ -6,12 +6,13 @@
 }:
 let
   inherit (config.modules.nixos) crowdsec;
+  inherit (config.modules.nixos.containers.services) homepage;
   cfg = config.modules.nixos.caddy;
 
   globalConfig = lib.concatStringsSep "\n" [
     ''
       admin localhost:2019 {
-          origins private_ranges
+          origins localhost ${lib.optionalString homepage.enable "homepage.containers"}
           enforce_origin
       }
 
