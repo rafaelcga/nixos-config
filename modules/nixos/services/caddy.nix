@@ -12,7 +12,7 @@ let
   globalConfig = lib.concatStringsSep "\n" [
     ''
       admin localhost:2019 {
-          origins localhost ${lib.optionalString homepage.enable "homepage.containers"}
+          origins localhost 127.0.0.1 ::1 ${lib.optionalString homepage.enable "homepage.containers"}
           enforce_origin
       }
 
