@@ -10,8 +10,6 @@ let
 
   globalConfig = lib.concatStringsSep "\n" [
     ''
-      metrics
-
       acme_dns porkbun {
           api_key {$PORKBUN_API_KEY}
           api_secret_key {$PORKBUN_API_SECRET_KEY}
@@ -103,20 +101,7 @@ in
           enable = true;
           environmentFile = config.sops.templates."caddy-env".path;
           package = pkgs.local.caddy-with-plugins;
-          virtualHosts = lib.mkMerge [
-            (lib.mapAttrs' mkVirtualHost cfg.virtualHosts)
-            {
-              "metrics.{$DOMAIN}" = {
-                extraConfig = ''
-                  @denied not client_ip private_ranges
-                  abort @denied
-
-                  metrics
-                '';
-                logFormat = null;
-              };
-            }
-          ];
+          virtualHosts = lib.mapAttrs' mkVirtualHost cfg.virtualHosts;
           logFormat = ''
             output file ${config.services.caddy.logDir}/access.log {
                 mode 644
