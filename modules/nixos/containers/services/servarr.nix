@@ -4,7 +4,12 @@ let
   cfg = cfg_containers.servarr;
   inherit (config.modules.nixos.containers) user dataDir;
 
-  services = lib.attrNames cfg.containerPorts;
+  servarrServices = [
+    "lidarr"
+    "radarr"
+    "sonarr"
+    "prowlarr"
+  ];
 in
 lib.mkMerge [
   {
@@ -14,6 +19,7 @@ lib.mkMerge [
         radarr = 7878;
         sonarr = 8989;
         prowlarr = 9696;
+        flaresolverr = 8191;
       };
       dataDir = "/var/lib/servarr";
       behindVpn = true;
@@ -32,7 +38,7 @@ lib.mkMerge [
         let
           mkSecret = service: lib.nameValuePair "servarr/${service}" { };
         in
-        lib.genAttrs' services mkSecret;
+        lib.genAttrs' servarrServices mkSecret;
 
       templates."servarr-env".content =
         let
@@ -43,7 +49,7 @@ lib.mkMerge [
             in
             "${lib.toUpper service}__AUTH__APIKEY=${apiKey}";
         in
-        lib.concatMapStringsSep "\n" mkApiKey services;
+        lib.concatMapStringsSep "\n" mkApiKey servarrServices;
     };
 
     containers.servarr = {
@@ -54,23 +60,32 @@ lib.mkMerge [
       };
 
       config = {
-        services =
-          let
-            mkService =
-              name:
-              {
-                enable = true;
-                dataDir = "${cfg.dataDir}/${name}";
-                settings.server.port = cfg.containerPorts.${name};
-                environmentFiles = [ config.sops.templates."servarr-env".path ];
-                openFirewall = true;
-              }
-              // lib.optionalAttrs (name != "prowlarr") {
-                user = user.name;
-                inherit (user) group;
-              };
-          in
-          lib.genAttrs services mkService;
+        services = lib.mkMerge [
+          (
+            let
+              mkService =
+                name:
+                {
+                  enable = true;
+                  dataDir = "${cfg.dataDir}/${name}";
+                  settings.server.port = cfg.containerPorts.${name};
+                  environmentFiles = [ config.sops.templates."servarr-env".path ];
+                  openFirewall = true;
+                }
+                // lib.optionalAttrs (name != "prowlarr") {
+                  user = user.name;
+                  inherit (user) group;
+                };
+            in
+            lib.genAttrs servarrServices mkService
+          )
+          {
+            flaresolverr = {
+              enable = true;
+              port = cfg.containerPorts.flaresolverr;
+            };
+          }
+        ];
       };
     };
   })
