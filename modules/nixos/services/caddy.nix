@@ -10,6 +10,11 @@ let
 
   globalConfig = lib.concatStringsSep "\n" [
     ''
+      admin localhost:2019 {
+          origins private_ranges
+          enforce_origin
+      }
+
       acme_dns porkbun {
           api_key {$PORKBUN_API_KEY}
           api_secret_key {$PORKBUN_API_SECRET_KEY}
