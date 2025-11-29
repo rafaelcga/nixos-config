@@ -126,35 +126,6 @@ in
                   };
                 in
                 lib.listToAttrs (lib.imap1 mkValuePairs peers);
-
-              mkForwardRules =
-                action:
-                let
-                  ruleTemplate =
-                    binName:
-                    let
-                      iptablesBin = lib.getExe' pkgs.iptables binName;
-                    in
-                    ''
-                      ${iptablesBin} ${action} FORWARD -i ${cfg.interfaceName} -j ACCEPT
-                      ${iptablesBin} ${action} FORWARD -o ${cfg.interfaceName} -j ACCEPT
-                      ${iptablesBin} -t nat ${action} POSTROUTING \
-                        -o ${defaultInterface} \
-                        -j MASQUERADE
-                    '';
-                in
-                lib.concatMapStringsSep "\n" ruleTemplate [
-                  "iptables"
-                  "ip6tables"
-                ];
-
-              postUpFile = pkgs.writeShellScript "wg_server_postup.sh" ''
-                ${mkForwardRules "-A"}
-              '';
-
-              preDownFile = pkgs.writeShellScript "wg_server_predown.sh" ''
-                ${mkForwardRules "-D"}
-              '';
             in
             ''
               [Interface]
@@ -166,10 +137,6 @@ in
                 else
                   "DNS = ${networkIps.${cfg.serverHostName}}"
               }
-              ${lib.optionalString cfg.isVpnServer ''
-                PostUp = ${postUpFile}
-                PreDown = ${preDownFile}
-              ''}
             ''
             + (
               if cfg.isVpnServer then
