@@ -202,7 +202,7 @@ lib.mkMerge [
                   (lib.optionalAttrs caddy.enable {
                     "Caddy" =
                       let
-                        caddyAdminUrl = "http://localhost:${caddy.adminPort}";
+                        caddyAdminUrl = "http://localhost:${builtins.toString caddy.adminPort}";
                       in
                       {
                         icon = "caddy.svg";

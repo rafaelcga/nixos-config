@@ -106,7 +106,7 @@ in
       {
         services.caddy = {
           enable = true;
-          enableReload = false;
+          enableReload = false; # Needs to be false for admin API to work
           environmentFile = config.sops.templates."caddy-env".path;
           package = pkgs.local.caddy-with-plugins;
 
