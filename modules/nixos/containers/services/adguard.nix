@@ -28,25 +28,25 @@ lib.mkMerge [
   (lib.mkIf cfg.enable {
     networking.nameservers = [ config.containers.adguard.localAddress ];
 
-    services.resolved = {
-      fallbackDns = lib.mkForce fallbackDns;
-      extraConfig = ''
-        DNSStubListener=no
-      '';
+    networking.firewall = rec {
+      allowedTCPPorts = [ dnsPort ];
+      allowedUDPPorts = allowedTCPPorts;
     };
 
+    services.resolved.fallbackDns = lib.mkForce fallbackDns;
+
     containers.adguard = {
-      forwardPorts =
-        let
-          mkDnsPort = protocol: {
-            hostPort = dnsPort;
-            inherit protocol;
-          };
-        in
-        lib.map mkDnsPort [
-          "tcp"
-          "udp"
-        ];
+      # forwardPorts =
+      #   let
+      #     mkDnsPort = protocol: {
+      #       hostPort = dnsPort;
+      #       inherit protocol;
+      #     };
+      #   in
+      #   lib.map mkDnsPort [
+      #     "tcp"
+      #     "udp"
+      #   ];
 
       config = {
         networking.nameservers = [ "127.0.0.1" ];
