@@ -12,8 +12,8 @@ let
 
   utils = import "${inputs.self}/lib/utils.nix" { inherit lib; };
 
+  caddyAdminPort = 2019;
   hostLocalIp = config.modules.nixos.networking.staticIp;
-
   serviceData = import ./service-data.nix { inherit inputs lib; };
 
   getSecretName =
@@ -87,11 +87,9 @@ lib.mkMerge [
       };
 
     containers.homepage = {
-      forwardPorts =
-        let
-          caddyAdminPort = 2019;
-        in
-        lib.optionals config.services.caddy.enable [ { hostPort = caddyAdminPort; } ];
+      forwardPorts = lib.optionals config.services.caddy.enable [
+        { hostPort = caddyAdminPort; }
+      ];
 
       bindMounts = {
         "${config.sops.templates."homepage-env".path}" = {
@@ -206,7 +204,7 @@ lib.mkMerge [
                   {
                     "Caddy" =
                       let
-                        caddyAdminUrl = "http://localhost:2019";
+                        caddyAdminUrl = "http://localhost:${builtins.toString caddyAdminPort}";
                       in
                       {
                         icon = "caddy.svg";
