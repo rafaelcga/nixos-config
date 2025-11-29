@@ -25,6 +25,8 @@ lib.mkMerge [
 
           _module.args.userName = user.name;
 
+          modules.nixos.graphics = lib.mkIf cfg.gpuPassthrough configModules.graphics;
+
           services.jellyfin = {
             enable = true;
             user = user.name;
@@ -80,8 +82,6 @@ lib.mkMerge [
                 };
               };
             };
-
-          modules.nixos.graphics = lib.mkIf cfg.gpuPassthrough configModules.graphics;
         };
     };
 
