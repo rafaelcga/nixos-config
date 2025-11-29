@@ -142,40 +142,34 @@ lib.mkMerge [
                 service: data:
                 let
                   containerConfig = cfg_containers.${data.container};
-                  localPort = builtins.toString containerConfig.hostPorts.${service};
+                  hostPort = builtins.toString containerConfig.hostPorts.${service};
                   containerPort = builtins.toString containerConfig.containerPorts.${service};
                 in
                 {
                   "${data.displayName}" = lib.mkIf containerConfig.enable rec {
                     inherit (data) icon description;
 
-                    href = "http://${hostLocalIp}:${localPort}";
+                    href = "http://${hostLocalIp}:${hostPort}";
                     siteMonitor = "http://${containerConfig.address}:${containerPort}";
 
-                    widget = lib.mkIf (data.apiAuth != null) (
-                      lib.mkMerge [
-                        {
-                          inherit (data) type;
-                          url = siteMonitor;
-                          fields = data.widgetFields;
-                        }
-                        (
-                          let
-                            authField = {
-                              "${data.apiAuth}" = "{{" + (getEnvVarName service) + "}}";
-                            };
-                            authExtra = {
-                              key = { };
-                              password = {
-                                username = userName;
-                              };
-                            };
-                          in
-                          lib.mkIf (needsSecret data) (authField // authExtra.${data.apiAuth})
-                        )
-                        data.extraConfig
-                      ]
-                    );
+                    widget =
+                      let
+                        authExtraFields = lib.optionalAttrs (data.apiAuth == "password") {
+                          username = userName;
+                        };
+                      in
+                      lib.mkIf (data.apiAuth != null) (
+                        lib.mkMerge [
+                          {
+                            inherit (data) type;
+                            url = siteMonitor;
+                            fields = data.widgetFields;
+                            "${data.apiAuth}" = "{{" + (getEnvVarName service) + "}}";
+                          }
+                          authExtraFields
+                          data.extraConfig
+                        ]
+                      );
                   };
                 };
 
