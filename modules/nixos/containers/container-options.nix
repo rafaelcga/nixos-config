@@ -6,34 +6,6 @@
   ...
 }:
 let
-  userOpts = {
-    options = {
-      name = lib.mkOption {
-        type = lib.types.str;
-        default = name;
-        readOnly = true;
-        internal = true;
-        description = "Container's main user account name";
-      };
-
-      uid = lib.mkOption {
-        type = lib.types.int;
-        default = cfg.containerUid;
-        readOnly = true;
-        internal = true;
-        description = "Container's main user account UID";
-      };
-
-      group = lib.mkOption {
-        type = lib.types.str;
-        default = cfg.containerGroup;
-        readOnly = true;
-        internal = true;
-        description = "Container's main user account group";
-      };
-    };
-  };
-
   mountOpts = {
     options = {
       hostPath = lib.mkOption {
@@ -60,14 +32,6 @@ in
       readOnly = true;
       internal = true;
       description = "Container name";
-    };
-
-    user = lib.mkOption {
-      type = lib.types.submodule userOpts;
-      default = { };
-      readOnly = true;
-      internal = true;
-      description = "Container user configuration";
     };
 
     hostPort = lib.mkOption {
@@ -106,7 +70,7 @@ in
       '';
     };
 
-    containerDataDir = lib.mkOption {
+    dataDir = lib.mkOption {
       type = lib.types.nullOr lib.types.str;
       default = null;
       internal = true;

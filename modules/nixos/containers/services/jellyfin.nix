@@ -6,6 +6,7 @@
 }:
 let
   cfg = config.modules.nixos.containers.services.jellyfin;
+  inherit (config.modules.nixos.containers) user;
 
   utils = import "${inputs.self}/lib/utils.nix" { inherit lib; };
 in
@@ -13,7 +14,7 @@ lib.mkMerge [
   {
     modules.nixos.containers.services.jellyfin = {
       containerPort = 8096;
-      containerDataDir = "/var/lib/jellyfin";
+      dataDir = "/var/lib/jellyfin";
     };
   }
   (lib.mkIf cfg.enable {
@@ -23,18 +24,18 @@ lib.mkMerge [
         {
           imports = [ "${inputs.self}/modules/nixos/hardware/graphics.nix" ];
 
-          _module.args.userName = cfg.user.name;
+          _module.args.userName = user.name;
 
           services.jellyfin = {
             enable = true;
-            user = cfg.user.name;
-            inherit (cfg.user) group;
+            user = user.name;
+            inherit (user) group;
             openFirewall = true;
 
-            dataDir = cfg.containerDataDir;
-            configDir = "${cfg.containerDataDir}/config";
-            cacheDir = "${cfg.containerDataDir}/cache";
-            logDir = "${cfg.containerDataDir}/log";
+            inherit (cfg) dataDir;
+            configDir = "${cfg.dataDir}/config";
+            cacheDir = "${cfg.dataDir}/cache";
+            logDir = "${cfg.dataDir}/log";
           };
 
           environment.systemPackages = with pkgs; [

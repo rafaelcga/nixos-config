@@ -2,7 +2,7 @@
 let
   cfg_containers = config.modules.nixos.containers.services;
   cfg = cfg_containers.servarr;
-  cfgSops = config.sops;
+  inherit (config.modules.nixos.containers) user dataDir;
 
   services = lib.attrNames cfg.containerPorts;
 in
@@ -15,12 +15,12 @@ lib.mkMerge [
         sonarr = 8989;
         prowlarr = 9696;
       };
-      containerDataDir = "/var/lib/servarr";
+      dataDir = "/var/lib/servarr";
       behindVpn = true;
 
       userMounts = lib.mkIf cfg_containers.qbittorrent.enable {
-        "${cfg_containers.qbittorrent.containerDataDir}/downloads" = {
-          hostPath = "${config.modules.nixos.containers.dataDir}/qbittorrent/downloads";
+        "${cfg_containers.qbittorrent.dataDir}/downloads" = {
+          hostPath = "${dataDir}/qbittorrent/downloads";
           isReadOnly = false;
         };
       };
@@ -39,7 +39,7 @@ lib.mkMerge [
           mkApiKey =
             service:
             let
-              apiKey = cfgSops.placeholder."servarr/${service}";
+              apiKey = config.sops.placeholder."servarr/${service}";
             in
             "${lib.toUpper service}__AUTH__APIKEY=${apiKey}";
         in
@@ -48,7 +48,7 @@ lib.mkMerge [
 
     containers.servarr = {
       bindMounts = {
-        "${cfgSops.templates."servarr-env".path}" = {
+        "${config.sops.templates."servarr-env".path}" = {
           isReadOnly = true;
         };
       };
@@ -60,14 +60,14 @@ lib.mkMerge [
               name:
               {
                 enable = true;
-                dataDir = "${cfg.containerDataDir}/${name}";
+                dataDir = "${cfg.dataDir}/${name}";
                 settings.server.port = cfg.containerPorts.${name};
-                environmentFiles = [ cfgSops.templates."servarr-env".path ];
+                environmentFiles = [ config.sops.templates."servarr-env".path ];
                 openFirewall = true;
               }
               // lib.optionalAttrs (name != "prowlarr") {
-                user = cfg.user.name;
-                inherit (cfg.user) group;
+                user = user.name;
+                inherit (user) group;
               };
           in
           lib.genAttrs services mkService;

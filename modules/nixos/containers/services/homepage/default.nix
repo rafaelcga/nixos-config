@@ -10,11 +10,20 @@ let
   cfg_containers = config.modules.nixos.containers.services;
   cfg = cfg_containers.homepage;
   inherit (config.modules.nixos) caddy;
+  inherit (config.modules.nixos.containers) bridge;
 
   utils = import "${inputs.self}/lib/utils.nix" { inherit lib; };
 
   hostLocalIp = config.modules.nixos.networking.staticIp;
   serviceData = import ./service-data.nix { inherit inputs lib; };
+
+  needsSecret =
+    data:
+    let
+      isEnabled = cfg_containers.${data.container}.enable;
+      hasSecret = data.apiAuth != null;
+    in
+    isEnabled && hasSecret;
 
   getSecretName =
     service:
@@ -45,50 +54,42 @@ lib.mkMerge [
   {
     modules.nixos.containers.services.homepage = {
       containerPort = 8082;
-      containerDataDir = "/etc/homepage-dashboard";
+      dataDir = "/etc/homepage-dashboard";
     };
   }
   (lib.mkIf cfg.enable {
-    sops =
-      let
-        needsSecret =
-          data:
-          let
-            isEnabled = cfg_containers.${data.container}.enable;
-            hasSecret = data.apiAuth != null;
-          in
-          isEnabled && hasSecret;
-      in
-      {
-        secrets =
-          let
-            mkSecret =
-              service: data:
-              lib.optionalAttrs (needsSecret data) {
-                "${getSecretName service}" = { };
-              };
-          in
-          lib.concatMapAttrs mkSecret serviceData;
+    sops = {
+      secrets =
+        let
+          mkSecret =
+            service: data:
+            lib.optionalAttrs (needsSecret data) {
+              "${getSecretName service}" = { };
+            };
+        in
+        lib.concatMapAttrs mkSecret serviceData;
 
-        templates."homepage-env".content =
-          let
-            mkEnvVar =
-              service: data:
-              lib.optionalString (needsSecret data) ''
-                ${getEnvVarName service}=${config.sops.placeholder.${getSecretName service}}
-              '';
-          in
-          lib.concatStringsSep "\n" (
-            lib.mapAttrsToList mkEnvVar serviceData
-            ++ [
-              "HOMEPAGE_ALLOWED_HOSTS=${hostLocalIp}:${builtins.toString cfg.hostPort}"
-            ]
-          );
-      };
+      templates."homepage-env".content =
+        let
+          mkEnvVar =
+            service: data:
+            lib.optionalString (needsSecret data) ''
+              ${getEnvVarName service}=${config.sops.placeholder.${getSecretName service}}
+            '';
+        in
+        lib.concatStringsSep "\n" (
+          lib.mapAttrsToList mkEnvVar serviceData
+          ++ [
+            "HOMEPAGE_ALLOWED_HOSTS=${hostLocalIp}:${builtins.toString cfg.hostPort}"
+          ]
+        );
+    };
+
+    networking.firewall.interfaces."${bridge.name}" = {
+      allowedTCPPorts = lib.optionals caddy.enable [ caddy.adminPort ];
+    };
 
     containers.homepage = {
-      forwardPorts = lib.optionals caddy.enable [ { hostPort = caddy.adminPort; } ];
-
       bindMounts = {
         "${config.sops.templates."homepage-env".path}" = {
           isReadOnly = true;
@@ -144,31 +145,35 @@ lib.mkMerge [
                   containerIp = utils.removeMask config.containers.${data.container}.localAddress;
                   localPort = builtins.toString containerConfig.hostPorts.${service};
                   containerPort = builtins.toString containerConfig.containerPorts.${service};
-
-                  hrefLocal = "http://${hostLocalIp}:${localPort}";
-                  hrefService = "http://${containerIp}:${containerPort}";
                 in
                 {
-                  "${data.displayName}" = lib.mkIf containerConfig.enable {
-                    inherit (data) description icon;
+                  "${data.displayName}" = lib.mkIf containerConfig.enable rec {
+                    inherit (data) icon description;
 
-                    href = hrefLocal;
-                    siteMonitor = hrefService;
+                    href = "http://${hostLocalIp}:${localPort}";
+                    siteMonitor = "http://${containerIp}:${containerPort}";
 
                     widget = lib.mkIf (data.apiAuth != null) (
                       lib.mkMerge [
                         {
                           inherit (data) type;
-                          url = hrefService;
+                          url = siteMonitor;
                           fields = data.widgetFields;
                         }
-                        (lib.mkIf (data.apiAuth == "key") {
-                          key = "{{" + (getEnvVarName service) + "}}";
-                        })
-                        (lib.mkIf (data.apiAuth == "password") {
-                          username = userName;
-                          password = "{{" + (getEnvVarName service) + "}}";
-                        })
+                        (
+                          let
+                            authField = {
+                              "${data.apiAuth}" = "{{" + (getEnvVarName service) + "}}";
+                            };
+                            authExtra = {
+                              key = { };
+                              password = {
+                                username = userName;
+                              };
+                            };
+                          in
+                          lib.mkIf (needsSecret data) (authField // authExtra)
+                        )
                         data.extraConfig
                       ]
                     );
@@ -200,19 +205,15 @@ lib.mkMerge [
               {
                 "Home Network" = [
                   (lib.optionalAttrs caddy.enable {
-                    "Caddy" =
-                      let
-                        caddyAdminUrl = "http://localhost:${builtins.toString caddy.adminPort}";
-                      in
-                      {
-                        icon = "caddy.svg";
-                        description = "Web server with automatic HTTPS";
-                        siteMonitor = caddyAdminUrl;
-                        widget = {
-                          type = "caddy";
-                          url = caddyAdminUrl;
-                        };
+                    "Caddy" = rec {
+                      icon = "caddy.svg";
+                      description = "Web server with automatic HTTPS";
+                      siteMonitor = "http://${bridge.ipv4.host}:${builtins.toString caddy.adminPort}";
+                      widget = {
+                        type = "caddy";
+                        url = siteMonitor;
                       };
+                    };
                   })
                 ]
                 ++ (mkGroup [
@@ -280,7 +281,7 @@ lib.mkMerge [
 
         systemd.tmpfiles.settings = {
           "10-homepage-cache-symlink" = {
-            "${cfg.containerDataDir}/cache".L = {
+            "${cfg.dataDir}/cache".L = {
               argument = "/var/cache/homepage-dashboard";
             };
           };

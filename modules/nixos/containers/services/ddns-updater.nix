@@ -1,6 +1,7 @@
 { config, lib, ... }:
 let
   cfg = config.modules.nixos.containers.services.ddns-updater;
+  inherit (config.modules.nixos.containers) user;
 in
 lib.mkMerge [
   {
@@ -63,8 +64,8 @@ lib.mkMerge [
         systemd.services.ddns-updater = {
           serviceConfig = {
             DynamicUser = lib.mkForce false;
-            User = cfg.user.name;
-            Group = cfg.user.group;
+            User = user.name;
+            Group = user.group;
           };
         };
 

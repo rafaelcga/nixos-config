@@ -3,7 +3,7 @@ let
   upperFirst = str: lib.toUpper (lib.substring 0 1 str);
   lowerOther = str: lib.toLower (lib.substring 1 (lib.stringLength str - 1) str);
 in
-{
+rec {
   capitalizeFirst = str: if str == "" then "" else upperFirst str + lowerOther str;
 
   listSubdirs =
@@ -52,6 +52,14 @@ in
       throw "addToLastHextet: Octet overflow"
     else
       lib.concatStringsSep ":" (restHextets ++ [ (lib.toHexString newLastHextet) ]);
+
+  addToAddress =
+    address: num:
+    let
+      isIpv6 = lib.hasInfix ":" address;
+      addFun = if isIpv6 then addToLastHextet else addToLastOctet;
+    in
+    addFun address num;
 
   removeMask = block: lib.elemAt (lib.splitString "/" block) 0;
 }

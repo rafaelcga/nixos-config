@@ -6,12 +6,13 @@
 }:
 let
   cfg = config.modules.nixos.containers.services.qbittorrent;
+  inherit (config.modules.nixos.containers) user;
 in
 lib.mkMerge [
   {
     modules.nixos.containers.services.qbittorrent = {
       containerPort = 8080;
-      containerDataDir = "/var/lib/qBittorrent";
+      dataDir = "/var/lib/qBittorrent";
       behindVpn = true;
     };
   }
@@ -20,17 +21,17 @@ lib.mkMerge [
       config =
         { pkgs, ... }:
         let
-          savePath = "${cfg.containerDataDir}/downloads";
+          savePath = "${cfg.dataDir}/downloads";
           tempPath = "${savePath}/incomplete";
         in
         {
           services.qbittorrent = {
             enable = true;
-            user = cfg.user.name;
-            inherit (cfg.user) group;
+            user = user.name;
+            inherit (user) group;
 
             webuiPort = cfg.containerPort;
-            profileDir = cfg.containerDataDir;
+            profileDir = cfg.dataDir;
             openFirewall = true;
 
             serverConfig = {

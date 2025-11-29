@@ -7,8 +7,8 @@ let
     let
       defaultData = {
         displayName = utils.capitalizeFirst name;
-        description = "";
         icon = "${name}.svg";
+        description = "";
         type = name;
         container = name;
         apiAuth = null; # key or password
@@ -66,8 +66,8 @@ lib.mapAttrs mkServiceData {
 
   qbittorrent = {
     displayName = "VueTorrent";
-    description = "BitTorrent client";
     icon = "vuetorrent";
+    description = "BitTorrent client";
     apiAuth = "password";
     widgetFields = [
       "leech"
@@ -92,8 +92,8 @@ lib.mapAttrs mkServiceData {
 
   adguard = {
     displayName = "AdGuard Home";
-    description = "Network-wide ad-blocking DNS server";
     icon = "adguard-home";
+    description = "Network-wide ad-blocking DNS server";
     apiAuth = "password";
     widgetFields = [
       "queries"

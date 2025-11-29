@@ -18,7 +18,7 @@ lib.mkMerge [
   {
     modules.nixos.containers.services.adguard = {
       containerPort = 3000;
-      containerDataDir = "/var/lib/AdGuardHome";
+      dataDir = "/var/lib/AdGuardHome";
     };
   }
   (lib.mkIf cfg.enable {
