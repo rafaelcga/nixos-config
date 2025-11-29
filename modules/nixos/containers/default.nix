@@ -181,7 +181,15 @@ in
         let
           mkContainerDirs =
             let
-              settingTemplate = name: _: lib.nameValuePair "${cfg.dataDir}/${name}" { d = { }; };
+              settingTemplate =
+                name: _:
+                lib.nameValuePair "${cfg.dataDir}/${name}" {
+                  d = {
+                    user = user.name;
+                    inherit (user) group;
+                    mode = "2755";
+                  };
+                };
             in
             {
               "10-make-container-dirs" = lib.mapAttrs' settingTemplate enabledContainers;

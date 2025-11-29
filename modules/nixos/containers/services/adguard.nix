@@ -6,6 +6,7 @@
 }:
 let
   cfg = config.modules.nixos.containers.services.adguard;
+  inherit (config.modules.nixos.containers) user;
 
   homeVpnSubnet = config.modules.nixos.home-vpn.network.subnet;
 
@@ -54,6 +55,8 @@ lib.mkMerge [
           systemd.services.adguardhome = {
             serviceConfig = {
               DynamicUser = lib.mkForce false;
+              User = user.name;
+              Group = user.group;
             };
           };
 
