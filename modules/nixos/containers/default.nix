@@ -200,10 +200,7 @@ in
                         containerPort = containerConfig.containerPorts.${serviceName};
                       in
                       lib.optionals (hostPort != null && containerPort != null) [
-                        {
-                          inherit hostPort containerPort;
-                          protocol = "tcp";
-                        }
+                        { inherit hostPort containerPort; }
                       ];
 
                     serviceNames = lib.attrNames containerConfig.containerPorts;

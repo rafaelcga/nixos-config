@@ -87,6 +87,12 @@ lib.mkMerge [
       };
 
     containers.homepage = {
+      forwardPorts =
+        let
+          caddyAdminPort = 2019;
+        in
+        lib.optionals config.services.caddy.enable [ { hostPort = caddyAdminPort; } ];
+
       bindMounts = {
         "${config.sops.templates."homepage-env".path}" = {
           isReadOnly = true;
@@ -196,10 +202,27 @@ lib.mkMerge [
                 ];
               }
               {
-                "Home Network" = mkGroup [
+                "Home Network" = [
+                  {
+                    "Caddy" =
+                      let
+                        caddyAdminUrl = "http://localhost:2019";
+                      in
+                      {
+                        icon = "caddy.svg";
+                        description = "Web server with automatic HTTPS";
+                        siteMonitor = caddyAdminUrl;
+                        widget = {
+                          type = "caddy";
+                          url = caddyAdminUrl;
+                        };
+                      };
+                  }
+                ]
+                ++ (mkGroup [
                   "adguard"
                   "ddns-updater"
-                ];
+                ]);
               }
               {
                 "Release Calendar" = [

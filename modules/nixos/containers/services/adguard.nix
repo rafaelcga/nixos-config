@@ -29,9 +29,8 @@ lib.mkMerge [
     containers.adguard = {
       forwardPorts =
         let
-          mkDnsPort = protocol: rec {
-            containerPort = dnsPort;
-            hostPort = containerPort;
+          mkDnsPort = protocol: {
+            hostPort = dnsPort;
             inherit protocol;
           };
         in
