@@ -29,7 +29,7 @@ lib.mkMerge [
     networking.nameservers = [ config.containers.adguard.localAddress ];
 
     services.resolved = {
-      fallbackDns = lib.mkForce [ ];
+      fallbackDns = lib.mkForce fallbackDns;
       extraConfig = ''
         DNSStubListener=no
       '';
@@ -51,7 +51,7 @@ lib.mkMerge [
       config = {
         networking.nameservers = [ "127.0.0.1" ];
 
-        services.resolved = (config.services.resolved // { inherit fallbackDns; });
+        services.resolved = config.services.resolved;
 
         networking.firewall = rec {
           allowedTCPPorts = [ dnsPort ];
