@@ -42,6 +42,44 @@ lib.mkMerge [
             jellyfin-ffmpeg
           ];
 
+          systemd.tmpfiles.settings =
+            let
+              inherit (config.services.jellyfin) configDir;
+            in
+            {
+              "10-generate-jellyfin-config" = {
+                "${configDir}".d = {
+                  user = user.name;
+                  inherit (user) group;
+                  mode = "750";
+                };
+                "${configDir}/branding.xml"."f+" = {
+                  user = user.name;
+                  inherit (user) group;
+                  mode = "640";
+                  argument =
+                    let
+                      inherit (config.modules.nixos.catppuccin) flavor accent;
+                      customCss = ''
+                        @import url('https://jellyfin.catppuccin.com/theme.css');
+                        @import url('https://jellyfin.catppuccin.com/catppuccin-${flavor}.css');
+                        :root {
+                            --main-color: var(--${accent});
+                        }
+                      '';
+                    in
+                    ''
+                      <?xml version="1.0" encoding="utf-8"?>
+                      <BrandingOptions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+                        <LoginDisclaimer />
+                        <CustomCss>${customCss}</CustomCss>
+                        <SplashscreenEnabled>false</SplashscreenEnabled>
+                      </BrandingOptions>
+                    '';
+                };
+              };
+            };
+
           modules.nixos.graphics = lib.mkIf cfg.gpuPassthrough config.modules.nixos.graphics;
         };
     };

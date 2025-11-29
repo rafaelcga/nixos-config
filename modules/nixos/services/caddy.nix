@@ -188,6 +188,7 @@ in
           in
           {
             "${genServiceName}" = rec {
+              description = "Append CrowdSec's API key to Caddy's environment variables";
               wantedBy = [ "multi-user.target" ];
               after = [ "${serviceName}.service" ];
               wants = after;
