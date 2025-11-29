@@ -172,7 +172,7 @@ lib.mkMerge [
                               };
                             };
                           in
-                          lib.mkIf (needsSecret data) (authField // authExtra)
+                          lib.mkIf (needsSecret data) (authField // authExtra.${data.apiAuth})
                         )
                         data.extraConfig
                       ]
