@@ -9,11 +9,11 @@
 let
   cfg_containers = config.modules.nixos.containers.services;
   cfg = cfg_containers.homepage;
+  inherit (config.modules.nixos) caddy;
 
   utils = import "${inputs.self}/lib/utils.nix" { inherit lib; };
 
   hostLocalIp = config.modules.nixos.networking.staticIp;
-  hostSubnetIp = config.modules.nixos.containers.hostAddress;
   serviceData = import ./service-data.nix { inherit inputs lib; };
 
   getSecretName =
@@ -87,6 +87,8 @@ lib.mkMerge [
       };
 
     containers.homepage = {
+      forwardPorts = lib.optionals caddy.enable [ { hostPort = caddy.adminPort; } ];
+
       bindMounts = {
         "${config.sops.templates."homepage-env".path}" = {
           isReadOnly = true;
@@ -197,10 +199,10 @@ lib.mkMerge [
               }
               {
                 "Home Network" = [
-                  {
+                  (lib.optionalAttrs caddy.enable {
                     "Caddy" =
                       let
-                        caddyAdminUrl = "http://${hostSubnetIp}:2019";
+                        caddyAdminUrl = "http://localhost:${caddy.adminPort}";
                       in
                       {
                         icon = "caddy.svg";
@@ -211,7 +213,7 @@ lib.mkMerge [
                           url = caddyAdminUrl;
                         };
                       };
-                  }
+                  })
                 ]
                 ++ (mkGroup [
                   "adguard"

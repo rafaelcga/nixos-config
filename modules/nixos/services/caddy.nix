@@ -10,7 +10,7 @@ let
 
   globalConfig = lib.concatStringsSep "\n" [
     ''
-      admin :2019
+      admin :${builtins.toString cfg.adminPort}
 
       acme_dns porkbun {
           api_key {$PORKBUN_API_KEY}
@@ -87,6 +87,12 @@ in
 {
   options.modules.nixos.caddy = {
     enable = lib.mkEnableOption "Enable Caddy web server";
+
+    adminPort = lib.mkOption {
+      type = lib.types.port;
+      default = 2019;
+      description = "Listening port of the admin API";
+    };
 
     virtualHosts = lib.mkOption {
       type = lib.types.attrsOf (lib.types.submodule virtualHostOpts);
