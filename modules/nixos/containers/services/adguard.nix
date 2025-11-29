@@ -28,11 +28,6 @@ lib.mkMerge [
   (lib.mkIf cfg.enable {
     networking.nameservers = [ config.containers.adguard.localAddress ];
 
-    # networking.firewall = rec {
-    #   allowedTCPPorts = [ dnsPort ];
-    #   allowedUDPPorts = allowedTCPPorts;
-    # };
-
     services.resolved.fallbackDns = lib.mkForce fallbackDns;
 
     containers.adguard = {
