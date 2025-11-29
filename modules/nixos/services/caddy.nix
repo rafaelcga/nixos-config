@@ -13,7 +13,6 @@ let
     ''
       admin localhost:2019 {
           origins localhost 127.0.0.1 ::1 ${lib.optionalString homepage.enable "homepage.containers"}
-          enforce_origin
       }
 
       acme_dns porkbun {
