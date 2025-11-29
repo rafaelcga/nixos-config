@@ -29,12 +29,7 @@ lib.mkMerge [
     };
   }
   (lib.mkIf cfg.enable {
-    networking.nameservers = [ "127.0.0.1" ];
-
-    services.resolved = {
-      extraConfig = disableStubListener;
-      inherit fallbackDns;
-    };
+    services.resolved.extraConfig = disableStubListener;
 
     containers.adguard = {
       forwardPorts =
@@ -50,7 +45,12 @@ lib.mkMerge [
         ];
 
       config = {
-        services.resolved.extraConfig = disableStubListener;
+        networking.nameservers = [ "127.0.0.1" ];
+
+        services.resolved = {
+          extraConfig = disableStubListener;
+          inherit fallbackDns;
+        };
 
         networking.firewall = rec {
           allowedTCPPorts = [ dnsPort ];
