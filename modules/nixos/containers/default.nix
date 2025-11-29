@@ -266,7 +266,10 @@ in
                         { inherit hostPort containerPort; }
                       ];
 
-                    serviceNames = lib.attrNames containerConfig.containerPorts;
+                    # Get name of services from hostPorts present in containerPorts
+                    serviceNames = lib.attrNames (
+                      lib.intersectAttrs containerConfig.containerPorts containerConfig.hostPorts
+                    );
                   in
                   lib.concatMap mkForwardPort serviceNames;
 
