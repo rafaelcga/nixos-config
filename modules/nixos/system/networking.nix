@@ -56,7 +56,7 @@ in
       services = {
         resolved = {
           enable = true;
-          dnssec = "true";
+          dnssec = "allow-downgrade";
           domains = [ "~." ];
           # Quad9 as fallback
           fallbackDns = [
