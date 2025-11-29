@@ -1,4 +1,15 @@
-{ cfg }:
+{
+  inputs,
+  config,
+  lib,
+  ...
+}:
+let
+  cfg = config.modules.nixos.containers;
+  inherit (config) containers;
+
+  utils = import "${inputs.self}/lib/utils.nix" { inherit lib; };
+in
 {
   config,
   lib,
@@ -32,6 +43,14 @@ in
       readOnly = true;
       internal = true;
       description = "Container name";
+    };
+
+    address = lib.mkOption {
+      type = lib.types.str;
+      default = utils.removeMask containers.${name}.localAddress;
+      readOnly = true;
+      internal = true;
+      description = "IPv4 of the container within the bridge";
     };
 
     hostPort = lib.mkOption {

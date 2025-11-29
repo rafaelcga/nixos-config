@@ -1,4 +1,4 @@
-{
+args@{
   inputs,
   config,
   lib,
@@ -116,7 +116,7 @@ in
     };
 
     services = lib.mkOption {
-      type = lib.types.attrsOf (lib.types.submodule (import ./container-options.nix { inherit cfg; }));
+      type = lib.types.attrsOf (lib.types.submodule (import ./container-options.nix args));
       default = { };
       description = "Enabled containers";
     };

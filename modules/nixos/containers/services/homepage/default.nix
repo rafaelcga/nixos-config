@@ -142,7 +142,6 @@ lib.mkMerge [
                 service: data:
                 let
                   containerConfig = cfg_containers.${data.container};
-                  containerIp = utils.removeMask config.containers.${data.container}.localAddress;
                   localPort = builtins.toString containerConfig.hostPorts.${service};
                   containerPort = builtins.toString containerConfig.containerPorts.${service};
                 in
@@ -151,7 +150,7 @@ lib.mkMerge [
                     inherit (data) icon description;
 
                     href = "http://${hostLocalIp}:${localPort}";
-                    siteMonitor = "http://${containerIp}:${containerPort}";
+                    siteMonitor = "http://${containerConfig.address}:${containerPort}";
 
                     widget = lib.mkIf (data.apiAuth != null) (
                       lib.mkMerge [

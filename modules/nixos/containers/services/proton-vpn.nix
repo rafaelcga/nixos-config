@@ -1,5 +1,4 @@
 {
-  inputs,
   config,
   lib,
   pkgs,
@@ -8,8 +7,6 @@
 let
   cfg_containers = config.modules.nixos.containers.services;
   cfg = cfg_containers.proton-vpn;
-
-  utils = import "${inputs.self}/lib/utils.nix" { inherit lib; };
 
   wireguardInterface = "wg-proton";
 
@@ -182,10 +179,9 @@ lib.mkMerge [
 
         modifiedConfigs =
           let
-            vpnLocalIp = utils.removeMask config.containers.proton-vpn.localAddress;
             mkModifiedConfig = name: containerConfig: {
               config = {
-                networking.defaultGateway = lib.mkForce vpnLocalIp;
+                networking.defaultGateway = lib.mkForce cfg.address;
               };
             };
           in
