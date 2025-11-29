@@ -51,7 +51,7 @@ lib.mkMerge [
       config = {
         networking.nameservers = [ "127.0.0.1" ];
 
-        services.resolved = config.services.resolved;
+        # services.resolved = config.services.resolved;
 
         networking.firewall = rec {
           allowedTCPPorts = [ dnsPort ];
