@@ -7,6 +7,7 @@
 let
   cfg = config.modules.nixos.containers.services.jellyfin;
   inherit (config.modules.nixos.containers) user;
+  configModules = config.modules.nixos;
 in
 lib.mkMerge [
   {
@@ -18,7 +19,7 @@ lib.mkMerge [
   (lib.mkIf cfg.enable {
     containers.jellyfin = {
       config =
-        { pkgs, ... }:
+        { config, pkgs, ... }:
         {
           imports = [ "${inputs.self}/modules/nixos/hardware/graphics.nix" ];
 
@@ -59,7 +60,7 @@ lib.mkMerge [
                   mode = "640";
                   argument =
                     let
-                      inherit (config.modules.nixos.catppuccin) flavor accent;
+                      inherit (configModules.catppuccin) flavor accent;
                       customCss = ''
                         @import url('https://jellyfin.catppuccin.com/theme.css');
                         @import url('https://jellyfin.catppuccin.com/catppuccin-${flavor}.css');
@@ -80,11 +81,11 @@ lib.mkMerge [
               };
             };
 
-          modules.nixos.graphics = lib.mkIf cfg.gpuPassthrough config.modules.nixos.graphics;
+          modules.nixos.graphics = lib.mkIf cfg.gpuPassthrough configModules.graphics;
         };
     };
 
-    modules.nixos.caddy = lib.mkIf config.modules.nixos.caddy.enable {
+    modules.nixos.caddy = lib.mkIf configModules.caddy.enable {
       virtualHosts.jellyfin = {
         originHost = cfg.address;
         originPort = cfg.containerPort;
