@@ -1,9 +1,9 @@
-{ inputs, config, ... }:
+{ config, ... }:
 let
   inherit (config.modules.nixos.catppuccin) flavor accent themeName;
 
-  nixLogoPath = "${inputs.self}/resources/splash/nix-snowflake-rainbow-pastel.png";
-  splashPreview = "${inputs.self}/resources/splash/preview.png";
+  nixLogoPath = ../resources/splash/nix-snowflake-rainbow-pastel.png;
+  splashPreview = ../resources/splash/preview.png;
 in
 final: prev: {
   catppuccin-kde =
