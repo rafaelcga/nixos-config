@@ -87,10 +87,6 @@ lib.mkMerge [
       };
 
     containers.homepage = {
-      forwardPorts = lib.optionals config.services.caddy.enable [
-        { hostPort = caddyAdminPort; }
-      ];
-
       bindMounts = {
         "${config.sops.templates."homepage-env".path}" = {
           isReadOnly = true;
