@@ -233,7 +233,6 @@ in
             lib.map acquisTemplate [
               "journal"
               "syslog"
-              "stdout"
               "kernel"
             ]
           )
