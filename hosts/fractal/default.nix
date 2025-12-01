@@ -33,9 +33,7 @@
   };
 
   # Native NixOS modules and stand-alone configurations
-  programs = {
-    xppen.enable = true;
-  };
+  hardware.opentabletdriver.enable = true;
 
   environment.sessionVariables.GDK_SCALE = "1.25"; # sets XWayland render scale
 
