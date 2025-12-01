@@ -38,6 +38,13 @@ lib.mkMerge [
               LegalNotice.Accepted = true;
 
               BitTorrent.Session = {
+                AlternativeGlobalDLSpeedLimit = 0;
+                AlternativeGlobalUPSpeedLimit = 0;
+                QueueingSystemEnabled = true;
+                IgnoreSlowTorrentsForQueueing = true;
+                SlowTorrentsDownloadRate = 100;
+                SlowTorrentsUploadRate = 100;
+                AnonymousModeEnabled = true;
                 DefaultSavePath = savePath;
                 Preallocation = true;
                 TempPath = tempPath;
