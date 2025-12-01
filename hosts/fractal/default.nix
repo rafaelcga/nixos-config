@@ -1,4 +1,3 @@
-{ pkgs, ... }:
 {
   modules.nixos = {
     # System
@@ -31,6 +30,7 @@
     flatpak.enable = true;
     # Apps
     steam.enable = true;
+    winboat.enable = true;
   };
 
   # Native NixOS modules and stand-alone configurations
@@ -38,10 +38,7 @@
     xppen.enable = true;
   };
 
-  environment = {
-    systemPackages = with pkgs; [ winboat ];
-    sessionVariables.GDK_SCALE = "1.25"; # sets XWayland render scale
-  };
+  environment.sessionVariables.GDK_SCALE = "1.25"; # sets XWayland render scale
 
   boot.loader.systemd-boot.windows."11" = {
     title = "Windows 11";
