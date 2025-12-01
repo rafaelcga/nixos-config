@@ -21,6 +21,7 @@
 
   home.packages = with pkgs; [
     # General apps
+    krita
     telegram-desktop
     # Gaming
     umu-launcher
