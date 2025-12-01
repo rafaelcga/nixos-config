@@ -30,7 +30,6 @@
     flatpak.enable = true;
     # Apps
     steam.enable = true;
-    winboat.enable = true;
   };
 
   # Native NixOS modules and stand-alone configurations
