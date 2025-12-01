@@ -19,14 +19,7 @@ in
       winboat
     ];
 
-    virtualisation.docker = {
-      enable = true;
-      rootless = {
-        enable = true;
-        setSocketVariable = true;
-      };
-    };
-
+    virtualisation.docker.enable = true;
     users.users."${userName}".extraGroups = [ "docker" ];
 
     hardware.nvidia-container-toolkit.enable = lib.elem "nvidia" config.modules.nixos.graphics.vendors;
