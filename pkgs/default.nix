@@ -6,6 +6,7 @@ in
   inherit (pkgs-python.python3.pkgs)
     pyqtdarktheme-fork
     rich
+    tidalapi
     typer
     ;
   caddy-with-plugins = pkgs.callPackage ./caddy-with-plugins/package.nix { };
