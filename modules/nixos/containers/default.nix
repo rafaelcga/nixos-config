@@ -157,7 +157,7 @@ in
       };
     };
 
-    users.users.${cfg.user.name} = {
+    users.users."${cfg.user.name}" = {
       inherit (cfg.user) uid group;
       isSystemUser = true;
     };
