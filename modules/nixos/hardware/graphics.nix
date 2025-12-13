@@ -77,10 +77,7 @@ in
         services.xserver.videoDrivers = [ "amdgpu" ];
       })
       (lib.mkIf (lib.elem "nvidia" cfg.vendors) {
-        hardware.nvidia = {
-          open = true; # Open-source kernel module
-          package = config.boot.kernelPackages.nvidiaPackages.latest;
-        };
+        hardware.nvidia.open = true; # Open-source kernel module
         services.xserver.videoDrivers = [ "nvidia" ];
       })
     ]
