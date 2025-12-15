@@ -17,7 +17,10 @@ in
   config = lib.mkIf cfg.enable {
     services.flatpak.enable = true;
 
-    environment.sessionVariables.GSK_RENDERER = "gl"; # fixes graphical flatpak bug under Wayland
+    environment.sessionVariables = {
+      GSK_RENDERER = "gl"; # fixes graphical flatpak bug under Wayland
+      QT_QPA_PLATFORM = "xcb"; # Telegram crashes with NVIDIA+Wayland
+    };
 
     systemd.services =
       let
