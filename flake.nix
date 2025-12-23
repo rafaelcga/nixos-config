@@ -20,6 +20,10 @@
             user = "rafael";
             system = "x86_64-linux";
           };
+          thinker = {
+            user = "rafael";
+            system = "x86_64-linux";
+          };
         };
 
         stateVersion = "26.05";
