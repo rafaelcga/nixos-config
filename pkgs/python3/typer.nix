@@ -6,12 +6,12 @@
 
 python3.pkgs.buildPythonApplication rec {
   pname = "typer";
-  version = "0.20.0";
+  version = "0.20.1";
   pyproject = true;
 
   src = fetchPypi {
     inherit pname version;
-    hash = "sha256-Gq9klAMXk+SHb7C6z6apErVRz0PB5jyADfixqGZyDDc=";
+    hash = "sha256-aFhesbASA2icQZm8RA1r5hbwhR6fDrQeSneIRcWg/Vs=";
   };
 
   build-system = [
