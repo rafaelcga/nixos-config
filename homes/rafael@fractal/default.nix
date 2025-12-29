@@ -6,7 +6,6 @@
     papirus.enable = true;
     # Apps
     ghostty.enable = true;
-    tidal-dl-ng.enable = true;
     yt-dlp.enable = true;
     zed-editor.enable = true;
   };
