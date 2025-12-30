@@ -12,7 +12,13 @@
       enable = true;
       vendors = [ "amd" ];
     };
-    printing.enable = true;
+    printing = {
+      enable = true;
+      vendors = [
+        "brother"
+        "hp"
+      ];
+    };
     # External modules
     disko.disks = {
       main = {

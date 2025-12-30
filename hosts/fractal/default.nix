@@ -13,7 +13,10 @@
         "nvidia"
       ];
     };
-    printing.enable = true;
+    printing = {
+      enable = true;
+      vendors = [ "brother" ];
+    };
     # External modules
     disko.disks = {
       main = {

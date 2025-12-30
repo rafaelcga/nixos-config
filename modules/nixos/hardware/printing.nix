@@ -20,19 +20,22 @@ let
       hplipWithPlugin
     ];
   };
+  extraDrivers = lib.concatMap (vendor: vendorDrivers.${vendor}) cfg.vendors;
 in
 {
   options.modules.nixos.printing = {
     enable = lib.mkEnableOption "Enable printing and scanning support";
 
-    vendor = lib.mkOption {
-      type = lib.types.enum [
-        "brother"
-        "canon"
-        "hp"
-      ];
-      default = "brother";
-      description = "Printer vendor";
+    vendors = lib.mkOption {
+      default = [ ];
+      type = lib.types.listOf (
+        lib.types.enum [
+          "brother"
+          "canon"
+          "hp"
+        ]
+      );
+      description = "List of one or more printer vendors";
     };
   };
 
@@ -46,7 +49,7 @@ in
 
       printing = {
         enable = true;
-        drivers = vendorDrivers.${cfg.vendor};
+        drivers = extraDrivers;
       };
 
       udev.packages = with pkgs; [ sane-airscan ];
