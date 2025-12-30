@@ -98,7 +98,7 @@ in
             config = lib.mkMerge [
               themeConfig
               (lib.mkIf papirus.enable {
-                catppuccin.gtk.icon.enable = true;
+                modules.home-manager.papirus.package = pkgs.catppuccin-papirus-folders;
               })
             ];
           };
