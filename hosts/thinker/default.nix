@@ -4,7 +4,10 @@
     fonts.enable = true;
     zram.enable = true;
     # Hardware
-    audio.enable = true;
+    audio = {
+      enable = true;
+      bufferSize = 512; # Less CPU intensive
+    };
     graphics = {
       enable = true;
       vendors = [ "amd" ];
