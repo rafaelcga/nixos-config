@@ -34,7 +34,7 @@ in
     gtk = {
       enable = true;
       iconTheme = {
-        name = lib.mkDefault "Papirus-Dark";
+        name = lib.mkDefault "Papirus";
         package = lib.mkForce cfg.package;
       };
     };
