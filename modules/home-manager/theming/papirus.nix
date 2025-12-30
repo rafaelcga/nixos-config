@@ -35,7 +35,7 @@ in
       enable = true;
       iconTheme = {
         name = lib.mkDefault "Papirus-Dark";
-        inherit (cfg) package;
+        package = lib.mkForce cfg.package;
       };
     };
   };

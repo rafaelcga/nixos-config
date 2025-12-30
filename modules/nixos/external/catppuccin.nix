@@ -98,7 +98,9 @@ in
             config = lib.mkMerge [
               themeConfig
               (lib.mkIf papirus.enable {
-                modules.home-manager.papirus.package = pkgs.catppuccin-papirus-folders;
+                modules.home-manager.papirus.package = pkgs.catppuccin-papirus-folders.override {
+                  inherit (cfg) accent flavor;
+                };
               })
             ];
           };
