@@ -55,7 +55,7 @@ lib.mkMerge [
             PUBLICIP_DNS_PROVIDERS = "all";
             PUBLICIP_DNS_TIMEOUT = "3s";
             HTTP_TIMEOUT = "10s";
-            LISTENING_ADDRESS = ":${builtins.toString cfg.containerPort}";
+            LISTENING_ADDRESS = ":${toString cfg.containerPort}";
             RESOLVER_ADDRESS = "9.9.9.9:53";
             TZ = "Europe/Madrid";
           };

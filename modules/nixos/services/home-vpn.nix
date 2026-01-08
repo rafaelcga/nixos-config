@@ -25,7 +25,7 @@ let
         mask = lib.mkOption {
           type = lib.types.int;
           default = 24;
-          apply = builtins.toString;
+          apply = toString;
           description = "Subnet mask for the WireGuard home network";
         };
 
@@ -133,7 +133,7 @@ in
               Address = ${networkIps.${hostName}}/${if cfg.isVpnServer then cfg.network.mask else "32"}
               ${
                 if cfg.isVpnServer then
-                  "ListenPort = ${builtins.toString cfg.listenPort}"
+                  "ListenPort = ${toString cfg.listenPort}"
                 else
                   "DNS = ${networkIps.${cfg.serverHostName}}"
               }
@@ -154,7 +154,7 @@ in
                 ''
                   [Peer]
                   PublicKey = ${config.sops.placeholder."wireguard/home_vpn/${cfg.serverHostName}/public_key"}
-                  Endpoint = vpn.${config.sops.placeholder."web_domain"}:${builtins.toString cfg.listenPort}
+                  Endpoint = vpn.${config.sops.placeholder."web_domain"}:${toString cfg.listenPort}
                   AllowedIPs = 0.0.0.0/0, ::/0
                   PersistentKeepalive = 25
                 ''

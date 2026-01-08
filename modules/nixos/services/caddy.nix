@@ -10,7 +10,7 @@ let
 
   globalConfig = lib.concatStringsSep "\n" [
     ''
-      admin :${builtins.toString cfg.adminPort}
+      admin :${toString cfg.adminPort}
 
       acme_dns porkbun {
           api_key {$PORKBUN_API_KEY}
@@ -78,7 +78,7 @@ let
 
       originPort = lib.mkOption {
         type = lib.types.port;
-        apply = builtins.toString;
+        apply = toString;
         description = "Port at the origin host to which traffic is routed";
       };
     };
@@ -202,7 +202,7 @@ in
                 in
                 {
                   Type = "oneshot";
-                  ExecStartPre = "${mkdir} -p \"${builtins.dirOf envFile}\"";
+                  ExecStartPre = "${mkdir} -p \"${dirOf envFile}\"";
                   ExecStart = pkgs.writeShellScript "caddy/add_crowdsec_api.sh" ''
                     ${cat} ${config.sops.templates."caddy-env".path} >"${envFile}"
                     ${echo} "CROWDSEC_API_KEY=$(${cat} ${apiKeyFile})" >>"${envFile}"
