@@ -80,7 +80,7 @@ lib.mkMerge [
         lib.concatStringsSep "\n" (
           lib.mapAttrsToList mkEnvVar serviceData
           ++ [
-            "HOMEPAGE_ALLOWED_HOSTS=${hostLocalIp}:${builtins.toString cfg.hostPort}"
+            "HOMEPAGE_ALLOWED_HOSTS=${hostLocalIp}:${toString cfg.hostPort}"
           ]
         );
     };
@@ -142,8 +142,8 @@ lib.mkMerge [
                 service: data:
                 let
                   containerConfig = cfg_containers.${data.container};
-                  hostPort = builtins.toString containerConfig.hostPorts.${service};
-                  containerPort = builtins.toString containerConfig.containerPorts.${service};
+                  hostPort = toString containerConfig.hostPorts.${service};
+                  containerPort = toString containerConfig.containerPorts.${service};
                 in
                 {
                   "${data.displayName}" = lib.mkIf containerConfig.enable rec {
@@ -199,7 +199,7 @@ lib.mkMerge [
                 "Home Network" = [
                   (
                     let
-                      adminUrl = "http://${bridge.ipv4.host}:${builtins.toString caddy.adminPort}";
+                      adminUrl = "http://${bridge.ipv4.host}:${toString caddy.adminPort}";
                     in
                     lib.optionalAttrs caddy.enable {
                       "Caddy" = {

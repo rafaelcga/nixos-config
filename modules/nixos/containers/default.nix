@@ -215,8 +215,8 @@ in
                 in
                 lib.unique allHostPaths;
 
-              settingsTemplate = path: {
-                name = path;
+              settingsTemplate = hostPath: {
+                name = hostPath;
                 value = {
                   d = {
                     user = user.name;
@@ -336,8 +336,8 @@ in
                 inherit name;
                 value = {
                   hostBridge = cfg.bridge.name;
-                  localAddress = "${localIpv4}/${builtins.toString cfg.bridge.ipv4.mask}";
-                  localAddress6 = "${localIpv6}/${builtins.toString cfg.bridge.ipv6.mask}";
+                  localAddress = "${localIpv4}/${toString cfg.bridge.ipv4.mask}";
+                  localAddress6 = "${localIpv6}/${toString cfg.bridge.ipv6.mask}";
 
                   config = {
                     networking.defaultGateway = cfg.bridge.ipv4.host;

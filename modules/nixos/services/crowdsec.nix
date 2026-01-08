@@ -132,14 +132,14 @@ in
     lapiPort = lib.mkOption {
       default = 8080;
       type = lib.types.port;
-      apply = builtins.toString;
+      apply = toString;
       description = "Port in localhost (127.0.0.1) for CrowdSec's LAPI";
     };
 
     appsecPort = lib.mkOption {
       default = 7422;
       type = lib.types.port;
-      apply = builtins.toString;
+      apply = toString;
       description = "Port in localhost (127.0.0.1) for AppSec";
     };
 

@@ -7,9 +7,9 @@ rec {
   capitalizeFirst = str: if str == "" then "" else upperFirst str + lowerOther str;
 
   listSubdirs =
-    path:
+    dirPath:
     let
-      dirContents = lib.readDir path;
+      dirContents = lib.readDir dirPath;
     in
     lib.attrNames (lib.filterAttrs (_: type: type == "directory") dirContents);
 
@@ -30,7 +30,7 @@ rec {
     else if !isValidResult then
       throw "addToLastOctet: Octet overflow"
     else
-      lib.concatStringsSep "." (restOctets ++ [ (builtins.toString newLastOctet) ]);
+      lib.concatStringsSep "." (restOctets ++ [ (toString newLastOctet) ]);
 
   addToLastHextet =
     address: num:

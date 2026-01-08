@@ -56,7 +56,7 @@ in
           Type = "oneshot";
           User = user.name;
           Group = user.group;
-          ExecStartPre = "${mkdir} -p \"${builtins.dirOf cfg.ageKeyFile}\"";
+          ExecStartPre = "${mkdir} -p \"${dirOf cfg.ageKeyFile}\"";
           ExecStart = "${ssh-to-age} -private-key -i \"${cfg.sshKeyFile}\" -o \"${cfg.ageKeyFile}\"";
         };
     };
