@@ -333,6 +333,8 @@ in
 
           crowdsec-firewall-bouncer =
             let
+              format = pkgs.formats.yaml { };
+              bouncerCfg = config.services.crowdsec-firewall-bouncer;
               runtimeDirName = "crowdsec-firewall-bouncer";
               configFile = "/run/${runtimeDirName}/config.yaml";
 
@@ -342,7 +344,7 @@ in
                 mkdir -p "${dirOf configFile}"
 
                 # Copy the template to the final location
-                cp ${format.generate "crowdsec-firewall-bouncer-config-template.yml" cfg.settings} ${configFile}
+                cp ${format.generate "crowdsec-firewall-bouncer-config-template.yml" bouncerCfg.settings} ${configFile}
                 chmod 0600 ${configFile}
 
                 # Replace the api_key placeholder with the secret
