@@ -29,6 +29,7 @@ lib.mkMerge [
     networking.nameservers = dnsServers;
 
     services.resolved = {
+      dnssec = lib.mkForce "false";
       fallbackDns = lib.mkForce dnsServers;
       extraConfig = ''
         DNSStubListener=no
