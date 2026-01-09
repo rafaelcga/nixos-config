@@ -113,12 +113,6 @@ lib.mkMerge [
               }
               {
                 enabled = true;
-                url = "https://adguardteam.github.io/HostlistsRegistry/assets/filter_55.txt";
-                name = "HaGeZi's Badware Hoster Blocklist";
-                id = 1741636457;
-              }
-              {
-                enabled = true;
                 url = "https://adguardteam.github.io/HostlistsRegistry/assets/filter_47.txt";
                 name = "HaGeZi's Gambling Blocklist";
                 id = 1741636458;
