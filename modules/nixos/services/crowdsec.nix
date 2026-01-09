@@ -333,7 +333,6 @@ in
 
           crowdsec-firewall-bouncer =
             let
-              format = pkgs.formats.yaml { };
               bouncerCfg = config.services.crowdsec-firewall-bouncer;
               runtimeDirName = "crowdsec-firewall-bouncer";
               configFile = "/run/${runtimeDirName}/config.yaml";
