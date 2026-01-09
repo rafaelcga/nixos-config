@@ -24,7 +24,7 @@ lib.mkMerge [
     };
   }
   (lib.mkIf cfg.enable {
-    networking.nameservers = [ cfg.address ];
+    networking.nameservers = [ cfg.address ] ++ bootstrapDns;
 
     services.resolved = {
       fallbackDns = lib.mkForce bootstrapDns;
