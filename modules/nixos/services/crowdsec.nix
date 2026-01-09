@@ -224,9 +224,9 @@ in
           # crowdsecurity/linux-lpe
           (
             let
-              acquisTemplate = filter: {
+              acquisTemplate = filterName: {
                 source = "journalctl";
-                journalctl_filter = [ "_TRANSPORT=${filter}" ];
+                journalctl_filter = [ "_TRANSPORT=${filterName}" ];
                 labels.type = "syslog";
               };
             in
@@ -331,15 +331,36 @@ in
               };
           };
 
-          crowdsec-firewall-bouncer = rec {
-            after = [ "crowdsec-firewall-bouncer-register.service" ];
-            wants = after;
-            serviceConfig = {
-              DynamicUser = lib.mkForce false;
-              User = cfg_crowdsec.user;
-              Group = cfg_crowdsec.group;
+          crowdsec-firewall-bouncer =
+            let
+              runtimeDirName = "crowdsec-firewall-bouncer";
+              configFile = "/run/${runtimeDirName}/config.yaml";
+
+              generateConfig = pkgs.writeShellScript "crowdsec-firewall-bouncer-config" ''
+                set -euo pipefail
+                umask 077
+                mkdir -p "${dirOf configFile}"
+
+                # Copy the template to the final location
+                cp ${format.generate "crowdsec-firewall-bouncer-config-template.yml" cfg.settings} ${configFile}
+                chmod 0600 ${configFile}
+
+                # Replace the api_key placeholder with the secret
+                ${lib.getExe pkgs.replace-secret} '@API_KEY_FILE@' "$CREDENTIALS_DIRECTORY/API_KEY_FILE" ${configFile}
+              '';
+            in
+            rec {
+              after = [ "crowdsec-firewall-bouncer-register.service" ];
+              wants = after;
+              serviceConfig = {
+                DynamicUser = lib.mkForce false;
+                RuntimeDirectory = lib.mkForce runtimeDirName;
+                User = cfg_crowdsec.user;
+                Group = cfg_crowdsec.group;
+
+                ExecStartPre = lib.mkForce [ generateConfig ];
+              };
             };
-          };
         }
       ]
       ++ lib.mapAttrsToList registerBouncer cfg.bouncers
