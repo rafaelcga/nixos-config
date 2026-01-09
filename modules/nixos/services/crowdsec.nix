@@ -6,7 +6,7 @@
 }:
 let
   cfg = config.modules.nixos.crowdsec;
-  cfg_crowdsec = config.services.crowdsec;
+  cfgCrowdsec = config.services.crowdsec;
 
   format = pkgs.formats.yaml { };
 
@@ -70,8 +70,8 @@ let
           in
           {
             Type = "oneshot";
-            User = cfg_crowdsec.user;
-            Group = cfg_crowdsec.group;
+            User = cfgCrowdsec.user;
+            Group = cfgCrowdsec.group;
             StateDirectory = serviceName;
             # Needs write permissions to add the bouncer
             ReadWritePaths = [ rootDir ];
@@ -154,7 +154,7 @@ in
     # See https://github.com/nixos/nixpkgs/issues/446764
     systemd.tmpfiles.settings =
       let
-        inherit (cfg_crowdsec) user group;
+        inherit (cfgCrowdsec) user group;
       in
       {
         "10-crowdsec" = {
@@ -175,8 +175,8 @@ in
 
     # Generate the config.yaml for cscli to read in certain operations
     environment.etc."crowdsec/config.yaml" = {
-      source = format.generate "crowdsec/config.yaml" cfg_crowdsec.settings.general;
-      inherit (cfg_crowdsec) user group;
+      source = format.generate "crowdsec/config.yaml" cfgCrowdsec.settings.general;
+      inherit (cfgCrowdsec) user group;
       mode = "0660";
     };
 
@@ -274,8 +274,8 @@ in
 
     sops.secrets = {
       "crowdsec/enroll_key" = {
-        owner = cfg_crowdsec.user;
-        group = cfg_crowdsec.group;
+        owner = cfgCrowdsec.user;
+        group = cfgCrowdsec.group;
       };
     };
 
@@ -292,8 +292,8 @@ in
               in
               {
                 Type = "oneshot";
-                User = cfg_crowdsec.user;
-                Group = cfg_crowdsec.group;
+                User = cfgCrowdsec.user;
+                Group = cfgCrowdsec.group;
                 ReadWritePaths = [
                   rootDir
                   confDir
@@ -302,7 +302,7 @@ in
                 ExecStart = pkgs.writeShellScript "enroll-crowdsec-console_script.sh" ''
                   ${cscli} console enroll "$(cat ${
                     config.sops.secrets."crowdsec/enroll_key".path
-                  })" --name ${cfg_crowdsec.name}
+                  })" --name ${cfgCrowdsec.name}
                 '';
               };
           };
@@ -317,8 +317,8 @@ in
               in
               lib.mkForce {
                 Type = "oneshot";
-                User = cfg_crowdsec.user;
-                Group = cfg_crowdsec.group;
+                User = cfgCrowdsec.user;
+                Group = cfgCrowdsec.group;
                 ReadWritePaths = [
                   rootDir
                   confDir
@@ -333,7 +333,7 @@ in
 
           crowdsec-firewall-bouncer =
             let
-              bouncerCfg = config.services.crowdsec-firewall-bouncer;
+              cfgBouncer = config.services.crowdsec-firewall-bouncer;
               runtimeDirName = "crowdsec-firewall-bouncer";
               configFile = "/run/${runtimeDirName}/config.yaml";
 
@@ -345,13 +345,13 @@ in
                 mkdir -p "${dirOf configFile}"
 
                 # Copy the template to the final location
-                cp ${format.generate "crowdsec-firewall-bouncer-config-template.yml" bouncerCfg.settings} ${configFile}
+                cp ${format.generate "crowdsec-firewall-bouncer-config-template.yml" cfgBouncer.settings} ${configFile}
 
                 # Replace the api_key placeholder with the secret
                 ${lib.getExe pkgs.replace-secret} '@API_KEY_FILE@' "$CREDENTIALS_DIRECTORY/API_KEY_FILE" ${configFile}
 
                 # Return ownership to service user
-                chown ${cfg_crowdsec.user}:${cfg_crowdsec.group} ${configFile}
+                chown ${cfgCrowdsec.user}:${cfgCrowdsec.group} ${configFile}
                 chmod 0600 ${configFile}
               '';
             in
@@ -361,12 +361,12 @@ in
               serviceConfig = {
                 DynamicUser = lib.mkForce false;
                 RuntimeDirectory = lib.mkForce runtimeDirName;
-                User = cfg_crowdsec.user;
-                Group = cfg_crowdsec.group;
+                User = cfgCrowdsec.user;
+                Group = cfgCrowdsec.group;
 
                 ExecStartPre = lib.mkForce [
                   "+${generateConfig}"
-                  "${lib.getExe bouncerCfg.package} -c ${configFile} -t"
+                  "${lib.getExe cfgBouncer.package} -c ${configFile} -t"
                 ];
               };
             };
