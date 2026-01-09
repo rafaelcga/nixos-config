@@ -8,13 +8,15 @@ let
   cfg = config.modules.nixos.containers.services.adguard;
   inherit (config.modules.nixos.containers) user;
 
-  dnsPort = 53;
   bootstrapDns = [
     "9.9.9.9"
     "149.112.112.112"
     "2620:fe::fe"
     "2620:fe::9"
   ];
+
+  dnsPort = 53;
+  dnsServers = [ cfg.address ] ++ bootstrapDns;
 in
 lib.mkMerge [
   {
@@ -24,10 +26,10 @@ lib.mkMerge [
     };
   }
   (lib.mkIf cfg.enable {
-    networking.nameservers = [ cfg.address ] ++ bootstrapDns;
+    networking.nameservers = dnsServers;
 
     services.resolved = {
-      fallbackDns = lib.mkForce bootstrapDns;
+      fallbackDns = lib.mkForce dnsServers;
       extraConfig = ''
         DNSStubListener=no
       '';
