@@ -340,14 +340,19 @@ in
               generateConfig = pkgs.writeShellScript "crowdsec-firewall-bouncer-config" ''
                 set -euo pipefail
                 umask 077
+
+                # Ensure directory creation
                 mkdir -p "${dirOf configFile}"
 
                 # Copy the template to the final location
                 cp ${format.generate "crowdsec-firewall-bouncer-config-template.yml" bouncerCfg.settings} ${configFile}
-                chmod 0600 ${configFile}
 
                 # Replace the api_key placeholder with the secret
                 ${lib.getExe pkgs.replace-secret} '@API_KEY_FILE@' "$CREDENTIALS_DIRECTORY/API_KEY_FILE" ${configFile}
+
+                # Return ownership to service user
+                chown ${cfg_crowdsec.user}:${cfg_crowdsec.group} ${configFile}
+                chmod 0600 ${configFile}
               '';
             in
             rec {
@@ -359,7 +364,10 @@ in
                 User = cfg_crowdsec.user;
                 Group = cfg_crowdsec.group;
 
-                ExecStartPre = lib.mkForce [ generateConfig ];
+                ExecStartPre = lib.mkForce [
+                  "+${generateConfig}"
+                  "${lib.getExe bouncerCfg.package} -c ${configFile} -t"
+                ];
               };
             };
         }
