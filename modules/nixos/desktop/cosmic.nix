@@ -30,7 +30,7 @@ in
         ghostty
         celluloid
         gnome-calendar
-        kdePackages.spectacle
+        gnome-screenshot
       ];
       sessionVariables.NIXOS_OZONE_WL = "1"; # Hint Electron apps to use Wayland
     };
