@@ -23,12 +23,14 @@ in
       cosmic.excludePackages = with pkgs; [
         cosmic-term
         cosmic-player
+        cosmic-screenshot
       ];
       systemPackages = with pkgs; [
         loupe
         ghostty
         celluloid
         gnome-calendar
+        kdePackages.spectacle
       ];
       sessionVariables.NIXOS_OZONE_WL = "1"; # Hint Electron apps to use Wayland
     };
