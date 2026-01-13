@@ -73,6 +73,10 @@
         enable = true;
         hostPort = 8008;
       };
+      minecraft = {
+        enable = true;
+        hostPort = 8009;
+      };
     };
   };
 }
