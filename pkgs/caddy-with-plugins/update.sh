@@ -43,7 +43,7 @@ echo "Updating derivation hash..."
 # Replace non-valid strings by a fake hash
 fake_hash="sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
 if ! hash="$(grep -qP "hash\s*=\s*\"\K(sha256-[\w\+\/=]+)" "$PKG_FILE")"; then
-  echo " [❗] Warning: Non-valid string found in hash, replacing with fake hash \"$fake_hash\"."
+  echo "[❗] Warning: Non-valid string found in hash, replacing with fake hash \"$fake_hash\"."
   sed -i "s|$hash|$fake_hash|" "$PKG_FILE"
 fi
 

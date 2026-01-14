@@ -21,7 +21,7 @@ lib.mkMerge [
           enable = true;
           eula = true;
 
-          package = pkgs.papermc;
+          package = pkgs.local.papermc;
           inherit (cfg) dataDir;
           openFirewall = true;
 

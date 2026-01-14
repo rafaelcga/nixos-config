@@ -129,6 +129,10 @@ lib.mkMerge [
                 style = "column";
                 icon = "mdi-router-network-wireless";
               };
+              "Game Servers" = {
+                style = "column";
+                icon = "mdi-controller";
+              };
               "Release Calendar" = {
                 style = "column";
                 icon = "mdi-calendar";
@@ -144,29 +148,30 @@ lib.mkMerge [
                   containerConfig = cfg_containers.${data.container};
                   hostPort = toString containerConfig.hostPorts.${service};
                   containerPort = toString containerConfig.containerPorts.${service};
+                  serviceUrl = "${data.protocol}://${containerConfig.address}:${containerPort}";
                 in
                 {
-                  "${data.displayName}" = lib.mkIf containerConfig.enable rec {
+                  "${data.displayName}" = lib.mkIf containerConfig.enable {
                     inherit (data) icon description;
 
                     href = "http://${hostLocalIp}:${hostPort}";
-                    siteMonitor = "http://${containerConfig.address}:${containerPort}";
+                    siteMonitor = lib.mkIf (data.protocol == "http") serviceUrl;
 
                     widget =
                       let
-                        authExtraFields = lib.optionalAttrs (data.apiAuth == "password") {
-                          username = userName;
+                        authConfig = lib.optionalAttrs (data.apiAuth != null) {
+                          "${data.apiAuth}" = "{{" + (getEnvVarName service) + "}}";
+                          username = lib.mkIf (data.apiAuth == "password") userName;
                         };
                       in
-                      lib.mkIf (data.apiAuth != null) (
+                      lib.mkIf (data.widgetFields != [ ]) (
                         lib.mkMerge [
                           {
                             inherit (data) type;
-                            url = siteMonitor;
+                            url = serviceUrl;
                             fields = data.widgetFields;
-                            "${data.apiAuth}" = "{{" + (getEnvVarName service) + "}}";
                           }
-                          authExtraFields
+                          authConfig
                           data.extraConfig
                         ]
                       );
@@ -218,6 +223,11 @@ lib.mkMerge [
                   "adguard"
                   "ddns-updater"
                 ]);
+              }
+              {
+                "Game Servers" = mkGroup [
+                  "minecraft"
+                ];
               }
               {
                 "Release Calendar" = [
