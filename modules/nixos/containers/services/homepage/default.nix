@@ -129,6 +129,10 @@ lib.mkMerge [
                 style = "column";
                 icon = "mdi-router-network-wireless";
               };
+              "Game Servers" = {
+                style = "column";
+                icon = "mdi-controller";
+              };
               "Release Calendar" = {
                 style = "column";
                 icon = "mdi-calendar";
@@ -149,7 +153,7 @@ lib.mkMerge [
                   "${data.displayName}" = lib.mkIf containerConfig.enable rec {
                     inherit (data) icon description protocol;
 
-                    href = "http://${hostLocalIp}:${hostPort}";
+                    href = "${protocol}://${hostLocalIp}:${hostPort}";
                     siteMonitor = "${protocol}://${containerConfig.address}:${containerPort}";
 
                     widget =
