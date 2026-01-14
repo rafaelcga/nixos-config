@@ -88,6 +88,13 @@ let
           };
         };
       };
+      nixd = {
+        settings = {
+          diagnostic = {
+            suppress = [ "sema-primop-overridden" ];
+          };
+        };
+      };
       texlab = {
         settings = {
           texlab = {
