@@ -147,26 +147,26 @@ lib.mkMerge [
                 in
                 {
                   "${data.displayName}" = lib.mkIf containerConfig.enable rec {
-                    inherit (data) icon description;
+                    inherit (data) icon description protocol;
 
                     href = "http://${hostLocalIp}:${hostPort}";
-                    siteMonitor = "http://${containerConfig.address}:${containerPort}";
+                    siteMonitor = "${protocol}://${containerConfig.address}:${containerPort}";
 
                     widget =
                       let
-                        authExtraFields = lib.optionalAttrs (data.apiAuth == "password") {
-                          username = userName;
+                        authConfig = lib.optionalAttrs (data.apiAuth != null) {
+                          "${data.apiAuth}" = "{{" + (getEnvVarName service) + "}}";
+                          username = lib.mkIf (data.apiAuth == "password") userName;
                         };
                       in
-                      lib.mkIf (data.apiAuth != null) (
+                      lib.mkIf (data.widgetFields != [ ]) (
                         lib.mkMerge [
                           {
                             inherit (data) type;
                             url = siteMonitor;
                             fields = data.widgetFields;
-                            "${data.apiAuth}" = "{{" + (getEnvVarName service) + "}}";
                           }
-                          authExtraFields
+                          authConfig
                           data.extraConfig
                         ]
                       );
@@ -218,6 +218,11 @@ lib.mkMerge [
                   "adguard"
                   "ddns-updater"
                 ]);
+              }
+              {
+                "Game Servers" = mkGroup [
+                  "minecraft"
+                ];
               }
               {
                 "Release Calendar" = [

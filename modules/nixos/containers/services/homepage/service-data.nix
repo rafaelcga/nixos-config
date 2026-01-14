@@ -12,6 +12,7 @@ let
         type = name;
         container = name;
         apiAuth = null; # key or password
+        protocol = "http";
         widgetFields = [ ];
         extraConfig = { };
       };
@@ -100,6 +101,16 @@ lib.mapAttrs mkServiceData {
       "blocked"
       "filtered"
       "latency"
+    ];
+  };
+
+  minecraft = {
+    description = "PaperMC server";
+    protocol = "udp";
+    widgetFields = [
+      "players"
+      "version"
+      "status"
     ];
   };
 }
