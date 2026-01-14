@@ -148,13 +148,14 @@ lib.mkMerge [
                   containerConfig = cfg_containers.${data.container};
                   hostPort = toString containerConfig.hostPorts.${service};
                   containerPort = toString containerConfig.containerPorts.${service};
+                  serviceUrl = "${data.protocol}://${containerConfig.address}:${containerPort}";
                 in
                 {
-                  "${data.displayName}" = lib.mkIf containerConfig.enable rec {
-                    inherit (data) icon description protocol;
+                  "${data.displayName}" = lib.mkIf containerConfig.enable {
+                    inherit (data) icon description;
 
-                    href = "${protocol}://${hostLocalIp}:${hostPort}";
-                    siteMonitor = "${protocol}://${containerConfig.address}:${containerPort}";
+                    href = "http://${hostLocalIp}:${hostPort}";
+                    siteMonitor = lib.mkIf (data.protocol == "http") serviceUrl;
 
                     widget =
                       let
@@ -167,7 +168,7 @@ lib.mkMerge [
                         lib.mkMerge [
                           {
                             inherit (data) type;
-                            url = siteMonitor;
+                            url = serviceUrl;
                             fields = data.widgetFields;
                           }
                           authConfig
