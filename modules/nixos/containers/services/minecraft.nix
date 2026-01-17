@@ -36,7 +36,8 @@ lib.mkMerge [
           };
 
           whitelist = {
-            AzaharPetal = "24cae93f-e7c5-4ee1-bfc3-a375096fd436";
+            "AzaharPetal" = "24cae93f-e7c5-4ee1-bfc3-a375096fd436";
+            "Javier_L_S" = "de6c5b03-4368-4317-9f88-f9a01a53be3e";
           };
         };
       };
