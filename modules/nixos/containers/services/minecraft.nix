@@ -6,11 +6,13 @@
 }:
 let
   cfg = config.modules.nixos.containers.services.minecraft;
+  minecraftPort = 25565;
 in
 lib.mkMerge [
   {
     modules.nixos.containers.services.minecraft = {
-      containerPort = 25565;
+      hostPort = minecraftPort;
+      containerPort = minecraftPort;
       dataDir = "/var/lib/minecraft";
     };
   }
