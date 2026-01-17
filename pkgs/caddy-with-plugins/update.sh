@@ -1,5 +1,5 @@
 #!/usr/bin/env nix-shell
-#!nix-shell --quiet -i bash -p coreutils gnused curl jq
+#!nix-shell --quiet -i bash -p coreutils gnused curl jq go
 
 set -euo pipefail
 
@@ -11,18 +11,19 @@ echo "Checking for Caddy plugin updates..."
 
 grep -oP "github.com/\K([a-zA-Z0-9_\-]+/?)+@[^\"]+" "$PKG_FILE" \
   | while read -r plugin; do
-    splits=($(sed "s|[/@]|\n|g" <<<"$plugin"))
     printf " %s " "$plugin"
 
-    repo_owner="${splits[0]}"
-    repo_name="${splits[1]}"
-    old_version="${splits[-1]}"
+    plugin_path="${plugin%@*}"
+    old_version="${plugin#*@}"
+    # Keep only <author>/<repo_name>
+    plugin_repo="$(echo "$plugin_path" | cut -d'/' -f1-2)"
 
-    new_version=$(
-      curl -sfL -A "nixos-config-update-script/1.0" \
-        "https://api.github.com/repos/$repo_owner/$repo_name/releases/latest" \
-        | jq -r ".tag_name"
-    )
+    # Grep the plugin version
+    {
+      go mod init temp && go get $plugin_path
+    } >/dev/null 2>&1
+
+    new_version="$(grep "$plugin_repo" go.mod | awk '{print $2}')"
 
     if [[ -z "$new_version" || "$new_version" == "null" ]]; then
       echo "[❌] error: Could not find latest version."
