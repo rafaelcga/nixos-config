@@ -8,42 +8,40 @@ let
   inherit (config.modules.nixos) crowdsec;
   cfg = config.modules.nixos.caddy;
 
-  globalConfig = lib.concatStringsSep "\n" [
-    ''
-      admin :${toString cfg.adminPort}
+  globalConfig = lib.concatStringsSep "\n" (
+    [
+      ''
+        admin :${toString cfg.adminPort}
 
-      acme_dns porkbun {
-          api_key {$PORKBUN_API_KEY}
-          api_secret_key {$PORKBUN_API_SECRET_KEY}
-      }
-    ''
-    (lib.optionalString crowdsec.enable ''
-      crowdsec {
-          api_url http://127.0.0.1:${crowdsec.lapiPort}
-          api_key {$CROWDSEC_API_KEY}
-          appsec_url http://127.0.0.1:${crowdsec.appsecPort}
-      }
-    '')
-  ];
+        acme_dns porkbun {
+            api_key {$PORKBUN_API_KEY}
+            api_secret_key {$PORKBUN_API_SECRET_KEY}
+        }
+      ''
+      (lib.optionalString crowdsec.enable ''
+        crowdsec {
+            api_url http://127.0.0.1:${crowdsec.lapiPort}
+            api_key {$CROWDSEC_API_KEY}
+            appsec_url http://127.0.0.1:${crowdsec.appsecPort}
+        }
+      '')
+    ]
+    # Append extra global config from virtual hosts
+    ++ lib.mapAttrsToList (_: host: host.extraGlobalConfig) cfg.virtualHosts
+  );
 
   commonBlock = ''
     encode
 
     header {
-        Content-Security-Policy "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; object-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://www.youtube.com blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' wss:; worker-src 'self' blob:; media-src 'self' data: blob: https://www.youtube.com;"
+        Content-Security-Policy "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests;"
         Permissions-Policy "accelerometer=(), ambient-light-sensor=(), battery=(), bluetooth=(), gyroscope=(), hid=(), interest-cohort=(), magnetometer=(), serial=(), usb=(), xr-spatial-tracking=()"
         X-Content-Type-Options nosniff
-        X-Frame-Options DENY
+        X-Frame-Options SAMEORIGIN
         -Server
         Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
         X-Robots-Tag none
-        Referrer-Policy no-referrer
-    }
-
-    @webos header_regexp User-Agent (Web0S|WebAppManager|NetCast|SmartTV)
-    header @webos {
-        -Content-Security-Policy
-        -X-Frame-Options
+        Referrer-Policy strict-origin-when-cross-origin
     }
   '';
 
@@ -60,6 +58,7 @@ let
     lib.nameValuePair "${name}.{$DOMAIN}" {
       extraConfig = ''
         ${commonBlock}
+        ${host.extraConfig}
         route {
             ${preProxyBlock}
             reverse_proxy ${host.originHost}:${host.originPort}
@@ -80,6 +79,24 @@ let
         type = lib.types.port;
         apply = toString;
         description = "Port at the origin host to which traffic is routed";
+      };
+
+      extraGlobalConfig = lib.mkOption {
+        type = lib.types.lines;
+        default = "";
+        description = ''
+          Additional lines of configuration appended to the global configuration
+          in the automatically generated `Caddyfile`
+        '';
+      };
+
+      extraConfig = lib.mkOption {
+        type = lib.types.lines;
+        default = "";
+        description = ''
+          Additional lines of configuration appended to this virtual host in the
+          automatically generated `Caddyfile`
+        '';
       };
     };
   };

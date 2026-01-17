@@ -89,6 +89,12 @@ lib.mkMerge [
       virtualHosts.jellyfin = {
         originHost = cfg.address;
         originPort = cfg.containerPort;
+        extraConfig = ''
+          header {
+              -Content-Security-Policy
+              -X-Frame-Options
+          }
+        '';
       };
     };
   })
