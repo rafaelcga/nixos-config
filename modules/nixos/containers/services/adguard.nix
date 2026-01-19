@@ -31,9 +31,9 @@ lib.mkMerge [
     services.resolved = {
       dnssec = lib.mkForce "false";
       fallbackDns = lib.mkForce dnsServers;
-      extraConfig = ''
-        DNSStubListener=no
-      '';
+      settings.Resolve = {
+        DNSStubListener = "no";
+      };
     };
 
     containers.adguard = {
