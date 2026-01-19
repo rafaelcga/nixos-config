@@ -56,15 +56,17 @@ in
       services = {
         resolved = {
           enable = true;
-          dnssec = "allow-downgrade";
-          domains = [ "~." ];
-          # Quad9 as fallback
-          fallbackDns = [
-            "9.9.9.9"
-            "149.112.112.112"
-            "2620:fe::fe"
-            "2620:fe::9"
-          ];
+          settings.Resolve = {
+            DNSSEC = "allow-downgrade";
+            Domains = [ "~." ];
+            # Quad9 as fallback
+            FallbackDNS = [
+              "9.9.9.9"
+              "149.112.112.112"
+              "2620:fe::fe"
+              "2620:fe::9"
+            ];
+          };
         };
 
         openssh = {

@@ -28,12 +28,10 @@ lib.mkMerge [
   (lib.mkIf cfg.enable {
     networking.nameservers = dnsServers;
 
-    services.resolved = {
-      dnssec = lib.mkForce "false";
-      fallbackDns = lib.mkForce dnsServers;
-      settings.Resolve = {
-        DNSStubListener = "no";
-      };
+    services.resolved.settings.Resolve = {
+      DNSSEC = false;
+      FallbackDNS = dnsServers;
+      DNSStubListener = "no";
     };
 
     containers.adguard = {
