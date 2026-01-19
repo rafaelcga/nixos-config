@@ -29,9 +29,9 @@ lib.mkMerge [
     networking.nameservers = dnsServers;
 
     services.resolved.settings.Resolve = {
-      DNSSEC = false;
-      FallbackDNS = dnsServers;
-      DNSStubListener = "no";
+      DNSSEC = lib.mkForce false;
+      FallbackDNS = lib.mkForce dnsServers;
+      DNSStubListener = lib.mkForce "no";
     };
 
     containers.adguard = {
