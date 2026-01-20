@@ -91,7 +91,7 @@ lib.mkMerge [
         originPort = cfg.containerPort;
         extraConfig = ''
           header {
-              Content-Security-Policy "default-src 'self'; style-src 'self' 'unsafe-inline' https://jellyfin.catppuccin.com; script-src 'self' 'unsafe-inline'; img-src 'self' data: https://jellyfin.catppuccin.com; font-src 'self' data:; connect-src 'self'; upgrade-insecure-requests;"
+              -Content-Security-Policy
               -X-Frame-Options
           }
         '';
