@@ -49,6 +49,8 @@ let
     name: host:
     let
       preProxyBlock = lib.concatStringsSep "\n" [
+        commonBlock
+        host.extraConfig
         (lib.optionalString crowdsec.enable ''
           crowdsec
           appsec
@@ -57,10 +59,8 @@ let
     in
     lib.nameValuePair "${name}.{$DOMAIN}" {
       extraConfig = ''
-        ${commonBlock}
         route {
             ${preProxyBlock}
-            ${host.extraConfig}
             reverse_proxy ${host.originHost}:${host.originPort}
         }
       '';
