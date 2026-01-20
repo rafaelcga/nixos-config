@@ -38,18 +38,18 @@ let
         Permissions-Policy "accelerometer=(), ambient-light-sensor=(), battery=(), bluetooth=(), gyroscope=(), hid=(), interest-cohort=(), magnetometer=(), serial=(), usb=(), xr-spatial-tracking=()"
         X-Content-Type-Options nosniff
         X-Frame-Options SAMEORIGIN
-        -Server
         Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
         X-Robots-Tag none
         Referrer-Policy strict-origin-when-cross-origin
     }
+
+    header -Server
   '';
 
   mkVirtualHost =
     name: host:
     let
       preProxyBlock = lib.concatStringsSep "\n" [
-        commonBlock
         host.extraConfig
         (lib.optionalString crowdsec.enable ''
           crowdsec
@@ -59,6 +59,7 @@ let
     in
     lib.nameValuePair "${name}.{$DOMAIN}" {
       extraConfig = ''
+        ${commonBlock}
         route {
             ${preProxyBlock}
             reverse_proxy ${host.originHost}:${host.originPort}
