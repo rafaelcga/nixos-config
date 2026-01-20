@@ -58,9 +58,9 @@ let
     lib.nameValuePair "${name}.{$DOMAIN}" {
       extraConfig = ''
         ${commonBlock}
-        ${host.extraConfig}
         route {
             ${preProxyBlock}
+            ${host.extraConfig}
             reverse_proxy ${host.originHost}:${host.originPort}
         }
       '';
