@@ -42,7 +42,6 @@ let
         X-Robots-Tag none
         Referrer-Policy strict-origin-when-cross-origin
     }
-
     header -Server
   '';
 
