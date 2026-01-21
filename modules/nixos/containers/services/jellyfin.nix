@@ -91,7 +91,7 @@ lib.mkMerge [
         originPort = cfg.containerPort;
         extraConfig = ''
           header {
-              -Content-Security-Policy
+              Content-Security-Policy "default-src https: data: blob: http://image.tmdb.org; style-src 'self' 'unsafe-inline' https://jellyfin.catppuccin.com; script-src 'self' 'unsafe-inline' https://www.gstatic.com/cv/js/sender/v1/cast_sender.js https://www.youtube.com blob:; worker-src 'self' blob:; connect-src 'self'; object-src 'none'; frame-ancestors 'self'";
               -X-Frame-Options
           }
         '';
