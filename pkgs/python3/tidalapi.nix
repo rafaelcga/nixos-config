@@ -6,12 +6,12 @@
 
 python3.pkgs.buildPythonApplication rec {
   pname = "tidalapi";
-  version = "0.8.10";
+  version = "0.8.11";
   pyproject = true;
 
   src = fetchPypi {
     inherit pname version;
-    hash = "sha256-9bfWqxnP1AkHlBIAqR1JHxbRtosDI6+bBmC7c54Kq4A=";
+    hash = "sha256-yN6ow4K+N74SQTZlyLgaUW7NbpfAmXpWXyrhshou0WU=";
   };
 
   build-system = [
