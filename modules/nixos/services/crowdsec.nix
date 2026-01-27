@@ -22,7 +22,6 @@ let
     {
       options = {
         enable = lib.mkEnableOption "Enable bouncer";
-        package = pkgs.local.crowdsec;
 
         bouncerName = lib.mkOption {
           type = lib.types.str;
@@ -185,6 +184,7 @@ in
       crowdsec = {
         enable = true;
         autoUpdateService = true;
+        package = pkgs.local.crowdsec;
 
         settings = {
           general.api.server = {
