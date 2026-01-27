@@ -22,6 +22,7 @@ let
     {
       options = {
         enable = lib.mkEnableOption "Enable bouncer";
+        package = pkgs.local.crowdsec;
 
         bouncerName = lib.mkOption {
           type = lib.types.str;
