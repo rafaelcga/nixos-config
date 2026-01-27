@@ -18,7 +18,7 @@ in
 
   config = {
     boot = {
-      kernelPackages = pkgs.linuxKernel.kernels.linux_zen;
+      kernelPackages = pkgs.linuxPackages_latest;
       initrd = {
         systemd.enable = true;
         verbose = true;
