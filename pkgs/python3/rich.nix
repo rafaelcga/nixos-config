@@ -6,12 +6,12 @@
 
 python3.pkgs.buildPythonApplication rec {
   pname = "rich";
-  version = "14.2.0";
+  version = "14.3.1";
   pyproject = true;
 
   src = fetchPypi {
     inherit pname version;
-    hash = "sha256-c/9Qx8DBx3yCQweSg/Tts3bw9kQkM67LjOfm0LktH+Q=";
+    hash = "sha256-uMX1aKOnSfkpDsa93t+DXOwzaWv8Hki8/ssnbHOG5Lg=";
   };
 
   build-system = [
