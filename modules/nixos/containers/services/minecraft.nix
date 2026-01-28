@@ -33,6 +33,7 @@ lib.mkMerge [
           serverProperties = {
             server-port = cfg.containerPort;
             pause-when-empty-seconds = 60;
+            white-list = true;
           };
 
           whitelist = {
