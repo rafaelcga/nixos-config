@@ -209,17 +209,22 @@ in
           };
         };
 
-        hub.collections = [
-          "crowdsecurity/linux"
-          "crowdsecurity/linux-lpe"
-          "crowdsecurity/http-cve"
-          "crowdsecurity/base-http-scenarios"
-          "crowdsecurity/sshd"
-          "crowdsecurity/sshd-impossible-travel"
-          "crowdsecurity/appsec-virtual-patching"
-          "crowdsecurity/appsec-generic-rules"
-          "crowdsecurity/appsec-crs"
-        ];
+        hub = {
+          collections = [
+            "crowdsecurity/linux"
+            "crowdsecurity/linux-lpe"
+            "crowdsecurity/http-cve"
+            "crowdsecurity/base-http-scenarios"
+            "crowdsecurity/sshd"
+            "crowdsecurity/sshd-impossible-travel"
+            "crowdsecurity/appsec-virtual-patching"
+            "crowdsecurity/appsec-generic-rules"
+            "crowdsecurity/appsec-crs"
+          ];
+          parsers = [
+            "crowdsecurity/whitelists" # Avoid banning LAN
+          ];
+        };
 
         localConfig.acquisitions =
           # crowdsecurity/linux-lpe
