@@ -82,6 +82,11 @@ in
             enable = true;
             maxtime = "168h";
           };
+          ignoreIP = [
+            config.modules.nixos.home-vpn.network.subnet
+            "172.16.0.0/12"
+            "192.168.0.0/16"
+          ];
         };
       };
 
