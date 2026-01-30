@@ -9,11 +9,11 @@
 
 stdenvNoCC.mkDerivation (finalAttrs: {
   pname = "papermc";
-  version = "1.21.11-99";
-  hash = "sha256-hPQoMlOuflCiWybvOwPVeBgUVTT7DIonklt7rlkiK6Y=";
+  version = "1.21.11-100";
+  hash = "sha256-SlWKAABdM9r6TE1fnkezvUfZIxH87M2cl1Tua5E/hkk=";
 
   src = fetchurl {
-    url = "https://fill-data.papermc.io/v1/objects/84f4283253ae7e50a25b26ef3b03d57818145534fb0c8a27925b7bae59222ba6/paper-1.21.11-99.jar";
+    url = "https://fill-data.papermc.io/v1/objects/4a558a00005d33dafa4c4d5f9e47b3bd47d92311fceccd9c9754ee6b913f8649/paper-1.21.11-100.jar";
     inherit (finalAttrs) hash;
   };
 
