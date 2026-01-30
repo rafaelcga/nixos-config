@@ -6,6 +6,8 @@
 }:
 let
   cfg = config.modules.nixos.containers.services.minecraft;
+  inherit (config.modules.nixos.containers) user;
+
   minecraftPort = 25565;
 in
 lib.mkMerge [
@@ -39,6 +41,17 @@ lib.mkMerge [
           whitelist = {
             "AzaharPetal" = "24cae93f-e7c5-4ee1-bfc3-a375096fd436";
             "Javier_L_S" = "de6c5b03-4368-4317-9f88-f9a01a53be3e";
+          };
+        };
+
+        systemd = {
+          sockets.minecraft-server.socketConfig = {
+            SocketUser = lib.mkForce user.name;
+            SocketGroup = lib.mkForce user.group;
+          };
+
+          services.minecraft-server.serviceConfig = {
+            User = lib.mkForce user.name;
           };
         };
       };
