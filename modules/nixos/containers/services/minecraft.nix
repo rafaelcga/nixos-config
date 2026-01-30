@@ -54,6 +54,8 @@ lib.mkMerge [
             User = lib.mkForce user.name;
           };
         };
+
+        users.users.minecraft = lib.mkForce { }; # Avoids change of dataDir owner
       };
     };
   })
