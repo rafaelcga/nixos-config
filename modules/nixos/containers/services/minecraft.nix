@@ -55,7 +55,12 @@ lib.mkMerge [
           };
         };
 
-        users.users.minecraft = lib.mkForce { }; # Avoids change of dataDir owner
+        # Avoids change of dataDir owner
+        users.users.minecraft = lib.mkForce {
+          description = "Minecraft server service user";
+          isSystemUser = true;
+          group = "minecraft";
+        };
       };
     };
   })
