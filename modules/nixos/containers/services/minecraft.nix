@@ -9,6 +9,10 @@ let
   inherit (config.modules.nixos.containers) user;
 
   minecraftPort = 25565;
+  players = {
+    "AzaharPetal" = "24cae93f-e7c5-4ee1-bfc3-a375096fd436";
+    "Javier_L_S" = "de6c5b03-4368-4317-9f88-f9a01a53be3e";
+  };
 in
 lib.mkMerge [
   {
@@ -39,10 +43,7 @@ lib.mkMerge [
             white-list = true;
           };
 
-          whitelist = {
-            "AzaharPetal" = "24cae93f-e7c5-4ee1-bfc3-a375096fd436";
-            "Javier_L_S" = "de6c5b03-4368-4317-9f88-f9a01a53be3e";
-          };
+          whitelist = players;
         };
 
         systemd = {
@@ -51,8 +52,35 @@ lib.mkMerge [
             SocketGroup = lib.mkForce user.group;
           };
 
-          services.minecraft-server.serviceConfig = {
-            User = lib.mkForce user.name;
+          services = {
+            minecraft-server.serviceConfig = {
+              User = lib.mkForce user.name;
+            };
+
+            generate-ops-json = rec {
+              description = "Generates the operators JSON";
+              before = [ "minecraft-server.service" ];
+              wantedBy = before;
+              serviceConfig = {
+                Type = "oneshot";
+                User = user.name;
+                Group = user.group;
+                WorkingDirectory = cfg.dataDir;
+                ExecStart =
+                  let
+                    opsFile = pkgs.writeText "ops.json" (
+                      builtins.toJSON (
+                        lib.mapAttrsToList (name: uuid: {
+                          inherit name uuid;
+                          level = 4;
+                          bypassesPlayerLimit = true;
+                        }) players
+                      )
+                    );
+                  in
+                  "ln -sf ${opsFile} ops.json";
+              };
+            };
           };
         };
 
