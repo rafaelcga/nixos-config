@@ -68,6 +68,7 @@ lib.mkMerge [
                 WorkingDirectory = cfg.dataDir;
                 ExecStart =
                   let
+                    ln = lib.getExe' pkgs.coreutils "ln";
                     opsFile = pkgs.writeText "ops.json" (
                       builtins.toJSON (
                         lib.mapAttrsToList (name: uuid: {
@@ -78,7 +79,7 @@ lib.mkMerge [
                       )
                     );
                   in
-                  "ln -sf ${opsFile} ops.json";
+                  "${ln} -sf ${opsFile} ops.json";
               };
             };
           };
