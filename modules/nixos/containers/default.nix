@@ -2,6 +2,7 @@ args@{
   inputs,
   config,
   lib,
+  pkgs,
   userName,
   ...
 }:
@@ -162,80 +163,78 @@ in
       isSystemUser = true;
     };
 
-    systemd = {
-      services =
-        let
-          mkWaitForBridge =
-            name: containerConfig:
-            let
-              serviceName = "network-addresses-${cfg.bridge.name}.service";
-            in
-            lib.nameValuePair "container@${name}" rec {
-              after = [ serviceName ];
-              requires = after;
-            };
-        in
-        lib.mapAttrs' mkWaitForBridge enabledContainers;
+    systemd =
+      let
+        withUserMounts = lib.filterAttrs (
+          _: containerConfig: containerConfig.userMounts != { }
+        ) enabledContainers;
 
-      tmpfiles.settings =
-        let
-          mkContainerDirs =
-            let
-              settingTemplate =
-                name: _:
-                lib.nameValuePair "${cfg.dataDir}/${name}" {
-                  d = {
-                    user = cfg.user.name;
-                    inherit (cfg.user) group;
-                    mode = "2755";
+        userMountPaths =
+          let
+            getHostPaths =
+              userMounts:
+              lib.mapAttrsToList (mountPoint: mountConfig: mountConfig.hostPath or mountPoint) userMounts;
+
+            allUserMountPaths = lib.concatMap (containerConfig: getHostPaths containerConfig.userMounts) (
+              lib.attrValues withUserMounts
+            );
+          in
+          lib.unique allUserMountPaths;
+      in
+      {
+        services =
+          let
+            addRequiresBridge =
+              let
+                modifyService =
+                  name: containerConfig:
+                  lib.nameValuePair "container@${name}" rec {
+                    after = [ "network-addresses-${cfg.bridge.name}.service" ];
+                    requires = after;
                   };
-                };
-            in
-            {
-              "10-make-container-dirs" = lib.mapAttrs' settingTemplate enabledContainers;
-            };
+              in
+              lib.mapAttrs' modifyService enabledContainers;
 
-          # Make user-defined dirs 775 and files 664 so that containers can
-          # modify them (container's user and main user share user group)
-          chmodUserMounts =
-            let
-              hostPaths =
-                let
-                  withUserMounts = lib.filterAttrs (
-                    _: containerConfig: containerConfig.userMounts != { }
-                  ) enabledContainers;
-
-                  getHostPaths =
-                    userMounts:
-                    lib.mapAttrsToList (mountPoint: mountConfig: mountConfig.hostPath or mountPoint) userMounts;
-
-                  allHostPaths = lib.concatMap (containerConfig: getHostPaths containerConfig.userMounts) (
-                    lib.attrValues withUserMounts
-                  );
-                in
-                lib.unique allHostPaths;
-
-              settingsTemplate = hostPath: {
-                name = hostPath;
-                value = {
-                  d = {
-                    user = user.name;
-                    inherit (user) group;
-                    mode = "2775";
+            setfaclUserMounts = {
+              "setfacl-user-mounts" = rec {
+                description = "Set the current and default ACL to rwX for user mounts";
+                before = lib.mapAttrsToList (name: _: "container@${name}.service") withUserMounts;
+                wantedBy = before;
+                serviceConfig =
+                  let
+                    setfacl = lib.getExe' pkgs.acl "setfacl";
+                    chmodScriptText = lib.concatMapStringsSep "\n" (mountPath: ''
+                      ${setfacl} -Rm g::rwX,d:g::rwX "${mountPath}"
+                    '') userMountPaths;
+                  in
+                  {
+                    Type = "oneshot";
+                    ExecStart = pkgs.writeShellScript "setfacl_user_mounts.sh" chmodScriptText;
                   };
-                  "A+".argument = "default:group::rwx";
+              };
+            };
+          in
+          lib.mkMerge [
+            addRequiresBridge
+            setfaclUserMounts
+          ];
+
+        tmpfiles.settings =
+          let
+            settingTemplate =
+              name: _:
+              lib.nameValuePair "${cfg.dataDir}/${name}" {
+                d = {
+                  user = cfg.user.name;
+                  inherit (cfg.user) group;
+                  mode = "2755";
                 };
               };
-            in
-            {
-              "10-chmod-container-binds" = lib.listToAttrs (lib.map settingsTemplate hostPaths);
-            };
-        in
-        lib.mkMerge [
-          mkContainerDirs
-          chmodUserMounts
-        ];
-    };
+          in
+          {
+            "10-make-container-dirs" = lib.mapAttrs' settingTemplate enabledContainers;
+          };
+      };
 
     containers =
       let
