@@ -27,15 +27,13 @@ let
     languages = {
       Python = {
         language_servers = [
-          "ruff"
-          "basedpyright"
-          "!pyright"
+          "ty"
+          "!basedpyright"
         ];
         format_on_save = "on";
         formatter = [
           { code_action = "source.fixAll.ruff"; }
           { code_action = "source.organizeImports.ruff"; }
-          { language_server.name = "ruff"; }
         ];
       };
       Nix = {
@@ -78,16 +76,6 @@ let
     };
     # Language-servers
     lsp = {
-      basedpyright = {
-        settings = {
-          "basedpyright.analysis" = {
-            diagnosticSeverityOverrides = {
-              reportAny = false;
-              reportExplicitAny = false;
-            };
-          };
-        };
-      };
       nixd = {
         settings = {
           diagnostic = {
@@ -147,6 +135,7 @@ in
 
       ## EXTENSIONS AND PACKAGES
       extraPackages = with pkgs; [
+        ty
         ruff
         nixd
         caddy
@@ -154,7 +143,6 @@ in
         nixfmt
         gemini-cli
         shellcheck
-        basedpyright
         cfg.font.package
       ];
       extensions = [
