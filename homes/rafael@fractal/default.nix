@@ -23,6 +23,5 @@
     krita
     # Gaming
     umu-launcher
-    heroic
   ];
 }
