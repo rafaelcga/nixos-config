@@ -23,7 +23,7 @@ in
 
     fish = {
       enable = true;
-      shellInit = "set -U fish_greeting";
+      interactiveShellInit = "set -U fish_greeting";
     };
 
     atuin = {
