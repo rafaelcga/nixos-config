@@ -13,10 +13,7 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    environment.systemPackages = with pkgs; [
-      uv
-      gcc
-    ];
+    environment.systemPackages = with pkgs; [ uv ];
 
     programs.nix-ld.enable = true;
   };
