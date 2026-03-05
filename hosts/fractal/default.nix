@@ -33,6 +33,7 @@
     flatpak.enable = true;
     # Apps
     steam.enable = true;
+    uv.enable = true;
   };
 
   # Native NixOS modules and stand-alone configurations
