@@ -1,17 +1,14 @@
-{ pkgs }:
+{ lib, pkgs }:
 let
-  pkgs-python = pkgs.extend (import ./python3);
+  pkgs-python = pkgs.extend (import ./python3 { inherit lib; });
 in
 {
   inherit (pkgs-python.python3.pkgs)
-    pyqtdarktheme-fork
-    rich
-    tidalapi
-    typer
+    asreview
+    asreview-dory
     ;
   caddy-with-plugins = pkgs.callPackage ./caddy-with-plugins/package.nix { };
   papermc = pkgs.callPackage ./papermc/package.nix { };
-  asreview-dory = pkgs.callPackage ./asreview-dory.nix { };
   cachyos-settings = pkgs.callPackage ./cachyos-settings.nix { };
   crowdsec = pkgs.callPackage ./crowdsec.nix { };
 }

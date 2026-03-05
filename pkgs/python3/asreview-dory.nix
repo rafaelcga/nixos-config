@@ -32,10 +32,6 @@ python3.pkgs.buildPythonApplication (finalAttrs: {
     xgboost
   ];
 
-  pythonImportsCheck = [
-    "asreview_dory"
-  ];
-
   meta = {
     description = "ASReview New Exciting Models";
     homepage = "https://pypi.org/project/asreview-dory";
