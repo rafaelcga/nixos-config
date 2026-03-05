@@ -23,7 +23,5 @@
     krita
     # Gaming
     umu-launcher
-    # Development
-    uv
   ];
 }
