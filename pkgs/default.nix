@@ -11,6 +11,7 @@ in
     ;
   caddy-with-plugins = pkgs.callPackage ./caddy-with-plugins/package.nix { };
   papermc = pkgs.callPackage ./papermc/package.nix { };
+  asreview-dory = pkgs.callPackage ./asreview-dory.nix { };
   cachyos-settings = pkgs.callPackage ./cachyos-settings.nix { };
   crowdsec = pkgs.callPackage ./crowdsec.nix { };
 }

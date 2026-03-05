@@ -23,5 +23,7 @@
     krita
     # Gaming
     umu-launcher
+    # PhD
+    local.asreview-dory
   ];
 }
