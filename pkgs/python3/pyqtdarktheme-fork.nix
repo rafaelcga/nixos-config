@@ -19,13 +19,13 @@ in
 
 python3.pkgs.buildPythonApplication rec {
   pname = "pyqtdarktheme-fork";
-  version = "2.3.4";
+  version = "2.3.6";
   pyproject = true;
 
   src = fetchPypi {
     pname = "pyqtdarktheme_fork";
     inherit version;
-    hash = "sha256-Kl+rnSEi5S93KnCI6Hvh/Ar3ZzRuX6CxMz5oE+uyEWw=";
+    hash = "sha256-mrKHoDOkdCdnvLZpj7YCR77veWfXTrlJ96s27oZv8dc=";
   };
 
   build-system = [
