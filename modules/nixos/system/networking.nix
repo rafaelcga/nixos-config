@@ -1,6 +1,7 @@
 {
   config,
   lib,
+  pkgs,
   userName,
   ...
 }:
@@ -35,6 +36,7 @@ in
           enable = true;
           dns = "systemd-resolved";
           wifi.backend = "iwd";
+          plugins = with pkgs; [ networkmanager-openvpn ];
         };
 
         wireless.iwd = {
