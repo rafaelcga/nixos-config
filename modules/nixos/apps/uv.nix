@@ -18,6 +18,9 @@ in
       localBinInPath = true; # adds ~/.local/bin/ to $PATH for uv tool
     };
 
-    programs.nix-ld.enable = true;
+    programs.nix-ld = {
+      enable = true;
+      libraries = with pkgs; [ addDriverRunpath.driverLink ];
+    };
   };
 }
