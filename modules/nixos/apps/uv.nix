@@ -16,11 +16,10 @@ in
     environment = {
       systemPackages = with pkgs; [ uv ];
       localBinInPath = true; # adds ~/.local/bin/ to $PATH for uv tool
+      # Enable GPU acceleration for Python libraries
+      sessionVariables.LD_LIBRARY_PATH = [ "${pkgs.addDriverRunpath.driverLink}/lib" ];
     };
 
-    programs.nix-ld = {
-      enable = true;
-      libraries = with pkgs; [ addDriverRunpath.driverLink ];
-    };
+    programs.nix-ld.enable = true;
   };
 }
