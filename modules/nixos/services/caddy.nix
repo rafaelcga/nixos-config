@@ -180,7 +180,8 @@ in
 
         services.crowdsec = {
           hub.collections = [ "crowdsecurity/caddy" ];
-          localConfig.acquisitions = [
+
+          settings.acquisitions = [
             {
               source = "file";
               filenames = [ "${config.services.caddy.logDir}/*.log" ];
