@@ -13,6 +13,7 @@ in
       settings = {
         window-padding-x = 10;
         window-padding-y = 10;
+        shell-integration-features = true;
       };
     };
   };
