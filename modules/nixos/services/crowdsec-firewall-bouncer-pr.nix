@@ -155,6 +155,8 @@ in
       update_frequency = lib.mkDefault "10s";
       log_mode = lib.mkDefault "stdout";
       log_level = lib.mkDefault "info";
+      # FIX: Standard log_dir (maybe go further to account for user defined ones
+      # in the systemd-service with ReadWritePaths and such)
       log_dir = lib.mkDefault "/var/log/crowdsec-firewall-bouncer";
 
       # iptables-specific config
