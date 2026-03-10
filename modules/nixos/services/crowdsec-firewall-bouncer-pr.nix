@@ -313,8 +313,7 @@ in
               umask 077
 
               # Copy the template to the final location
-              +cp ${format.generate "crowdsec-firewall-bouncer-config-template.yml" cfg.settings} ${final-config-file}
-              +chown ${config.services.crowdsec.user}:${config.services.crowdsec.group} ${final-config-file}
+              cp ${format.generate "crowdsec-firewall-bouncer-config-template.yml" cfg.settings} ${final-config-file}
               chmod 0600 ${final-config-file}
 
               # Replace the api_key placeholder with the secret
