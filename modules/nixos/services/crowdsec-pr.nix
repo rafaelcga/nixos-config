@@ -195,8 +195,9 @@ in
 
                   hub_dir = lib.mkOption {
                     type = lib.types.path;
-                    default = "${config_paths.data_dir}/hub";
-                    defaultText = lib.literalExpression "\${config.services.crowdsec.settings.config.config_paths.data_dir}/hub";
+                    # FIX: Change this from /hub to /state/hub
+                    default = "${config_paths.data_dir}/state/hub";
+                    defaultText = lib.literalExpression "\${config.services.crowdsec.settings.config.config_paths.data_dir}/state/hub";
                     description = "Directory where `cscli` will store parsers, scenarios, collections and such.";
                   };
 
@@ -847,6 +848,7 @@ in
           let
             cscliWrapper = pkgs.symlinkJoin {
               name = "cscli";
+              # FIX: hub directory
               paths = [
                 (pkgs.writeShellScriptBin "cscli" ''
                   exec systemd-run \
@@ -859,7 +861,7 @@ in
                     --property=User=${cfg.user} \
                     --property=Group=${cfg.group} \
                     --property=DynamicUser=true \
-                    --property=StateDirectory="crowdsec crowdsec/hub" \
+                    --property=StateDirectory="crowdsec crowdsec/state crowdsec/state/hub" \
                     --property=StateDirectoryMode="0750" \
                     --property=ConfigurationDirectory="crowdsec crowdsec/acquis.d" \
                     --property=ConfigurationDirectoryMode="0750" \
@@ -990,7 +992,8 @@ in
                 "AF_INET6"
               ];
 
-              StateDirectory = "crowdsec crowdsec/hub";
+              # FIX: hub directory
+              StateDirectory = "crowdsec crowdsec/state crowdsec/state/hub";
               StateDirectoryMode = "0750";
               ConfigurationDirectory = "crowdsec crowdsec/acquis.d";
               ConfigurationDirectoryMode = "0750";
