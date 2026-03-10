@@ -110,8 +110,8 @@ in
   ];
 
   imports = [
-    "./crowdsec-pr.nix"
-    "./crowdsec-firewall-bouncer-pr"
+    ./crowdsec-pr.nix
+    ./crowdsec-firewall-bouncer-pr
   ];
 
   options.modules.nixos.crowdsec = {
