@@ -197,6 +197,12 @@ in
           parsers = [
             "crowdsecurity/whitelists" # Avoid banning LAN
           ];
+          appsec-configs = [
+            "crowdsecurity/appsec-default"
+          ];
+          appsec-rules = [
+            "crowdsecurity/base-config"
+          ];
         };
 
         settings = {
@@ -236,7 +242,10 @@ in
               {
                 source = "appsec";
                 listen_addr = "127.0.0.1:${cfg.appsecPort}";
-                appsec_configs = [ "crowdsecurity/appsec-default" ];
+                appsec_configs = [
+                  "crowdsecurity/appsec-default"
+                  "crowdsecurity/crs"
+                ];
                 labels.type = "appsec";
               }
             ];
