@@ -103,7 +103,7 @@ lib.mkMerge [
 
           listenPort = cfg.containerPort;
           openFirewall = true;
-          environmentFile = config.sops.templates."homepage-env".path;
+          environmentFiles = [ config.sops.templates."homepage-env".path ];
 
           settings = {
             title = "${config.networking.hostName}/Homepage";
