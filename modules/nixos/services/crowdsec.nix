@@ -97,7 +97,7 @@ let
               "~@privileged"
               "~@resources"
             ];
-            UMask = "0077";
+            UMask = "027";
             ExecStart = pkgs.writeShellScript "${serviceName}_script.sh" ''
               set -euo pipefail
 
@@ -177,7 +177,7 @@ in
     environment.etc."crowdsec/config.yaml" = {
       source = format.generate "crowdsec/config.yaml" cfgCrowdsec.settings.general;
       inherit (cfgCrowdsec) user group;
-      mode = "0660";
+      mode = "0750";
     };
 
     services = {
@@ -304,7 +304,7 @@ in
                   rootDir
                   confDir
                 ];
-                UMask = "0077";
+                UMask = "027";
                 ExecStart = pkgs.writeShellScript "enroll-crowdsec-console_script.sh" ''
                   ${cscli} console enroll "$(cat ${
                     config.sops.secrets."crowdsec/enroll_key".path
@@ -345,7 +345,7 @@ in
 
               generateConfig = pkgs.writeShellScript "crowdsec-firewall-bouncer-config" ''
                 set -euo pipefail
-                umask 077
+                umask 027
 
                 # Ensure directory creation
                 mkdir -p "${dirOf configFile}"
@@ -358,7 +358,7 @@ in
 
                 # Return ownership to service user
                 chown ${cfgCrowdsec.user}:${cfgCrowdsec.group} ${configFile}
-                chmod 0600 ${configFile}
+                chmod 0750 ${configFile}
               '';
             in
             rec {
