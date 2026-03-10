@@ -5,14 +5,14 @@
   installShellFiles,
 }:
 
-buildGoModule rec {
+buildGoModule (finalAttrs: {
   pname = "crowdsec";
   version = "1.7.6";
 
   src = fetchFromGitHub {
     owner = "crowdsecurity";
     repo = "crowdsec";
-    tag = "v${version}";
+    tag = "v${finalAttrs.version}";
     hash = "sha256-Qd5EHn7G7bTV+S4bVXfHytoCI5L/gHxAKB9emeKoSLc=";
   };
 
@@ -23,14 +23,21 @@ buildGoModule rec {
   subPackages = [
     "cmd/crowdsec"
     "cmd/crowdsec-cli"
+    "cmd/notification-dummy"
+    "cmd/notification-email"
+    "cmd/notification-file"
+    "cmd/notification-http"
+    "cmd/notification-sentinel"
+    "cmd/notification-slack"
+    "cmd/notification-splunk"
   ];
 
   ldflags = [
     "-s"
     "-w"
-    "-X github.com/crowdsecurity/go-cs-lib/version.Version=v${version}"
+    "-X github.com/crowdsecurity/go-cs-lib/version.Version=v${finalAttrs.version}"
     "-X github.com/crowdsecurity/go-cs-lib/version.BuildDate=1970-01-01_00:00:00"
-    "-X github.com/crowdsecurity/go-cs-lib/version.Tag=v${version}"
+    "-X github.com/crowdsecurity/go-cs-lib/version.Tag=v${finalAttrs.version}"
     "-X github.com/crowdsecurity/crowdsec/pkg/cwversion.Codename=alphaga"
     "-X github.com/crowdsecurity/crowdsec/pkg/csconfig.defaultConfigDir=/etc/crowdsec"
     "-X github.com/crowdsecurity/crowdsec/pkg/csconfig.defaultDataDir=/var/lib/crowdsec/data"
@@ -42,9 +49,13 @@ buildGoModule rec {
     mkdir -p $out/share/crowdsec
     cp -r ./config $out/share/crowdsec/
 
-    mkdir -p $out/lib/systemd/system
-    substitute ./config/crowdsec.service $out/lib/systemd/system/crowdsec.service \
-      --replace-fail /usr/local $out
+    install -D $out/bin/notification-dummy -t $out/libexec/crowdsec/plugins/
+    install -D $out/bin/notification-email -t $out/libexec/crowdsec/plugins/
+    install -D $out/bin/notification-file -t $out/libexec/crowdsec/plugins/
+    install -D $out/bin/notification-http -t $out/libexec/crowdsec/plugins/
+    install -D $out/bin/notification-sentinel -t $out/libexec/crowdsec/plugins/
+    install -D $out/bin/notification-slack -t $out/libexec/crowdsec/plugins/
+    install -D $out/bin/notification-splunk -t $out/libexec/crowdsec/plugins/
 
     installShellCompletion --cmd cscli \
       --bash <($out/bin/cscli completion bash) \
@@ -56,15 +67,16 @@ buildGoModule rec {
   preCheck = ''
     version=$($GOPATH/bin/cscli version 2>&1 | sed -nE 's/^version: (.*)/\1/p')
 
-    if [ "$version" != "v${version}" ]; then
+    if [ "$version" != "v${finalAttrs.version}" ]; then
         echo "Invalid version string: '$version'"
         exit 1
     fi
   '';
 
   meta = {
+    mainProgram = "crowdsec";
     homepage = "https://crowdsec.net/";
-    changelog = "https://github.com/crowdsecurity/crowdsec/releases/tag/v${version}";
+    changelog = "https://github.com/crowdsecurity/crowdsec/releases/tag/v${finalAttrs.version}";
     description = "Free, open-source and collaborative IPS";
     longDescription = ''
       CrowdSec is a free, modern & collaborative behavior detection engine,
@@ -82,4 +94,4 @@ buildGoModule rec {
       jk
     ];
   };
-}
+})

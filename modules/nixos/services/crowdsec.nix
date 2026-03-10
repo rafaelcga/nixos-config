@@ -17,6 +17,17 @@ let
   lapiFile = "${rootDir}/lapi_credentials.yaml";
   capiFile = "${rootDir}/capi_credentials.yaml";
 
+  cscliWrapper = pkgs.writeShellScriptBin "cscli-systemd-run" ''
+    exec systemd-run \
+      -pDynamicUser=true \
+      -pUser=crowdsec \
+      -pGroup=crowdsec \
+      -pStateDirectory=crowdsec \
+      --pty bash \
+      -- \
+      /run/current-system/sw/bin/cscli "$@"
+  '';
+
   bouncerOpts =
     { name, config, ... }:
     {
@@ -66,7 +77,6 @@ let
         serviceConfig =
           let
             jq = lib.getExe pkgs.jq;
-            cscli = "/run/current-system/sw/bin/cscli";
           in
           {
             Type = "oneshot";
@@ -101,7 +111,7 @@ let
             ExecStart = pkgs.writeShellScript "${serviceName}_script.sh" ''
               set -euo pipefail
 
-              if ${cscli} bouncers list --output json \
+              if ${cscliWrapper} bouncers list --output json \
                 | ${jq} -e -- ${lib.escapeShellArg "any(.[]; .name == \"${bouncerName}\")"} >/dev/null; then
                 # Bouncer already registered. Verify the API key is still present
                 if [[ ! -f ${apiKeyFile} ]]; then
@@ -113,7 +123,7 @@ let
                 # Remove any previously saved API key
                 rm -f "${apiKeyFile}"
                 # Register the bouncer and save the new API key
-                if ! ${cscli} bouncers add --output raw \
+                if ! ${cscliWrapper} bouncers add --output raw \
                   -- ${lib.escapeShellArg bouncerName} >${apiKeyFile}; then
                   # Failed to register the bouncer
                   rm -f "${apiKeyFile}"
@@ -292,25 +302,21 @@ in
             wantedBy = [ "multi-user.target" ];
             after = [ "crowdsec.service" ];
             wants = after;
-            serviceConfig =
-              let
-                cscli = "/run/current-system/sw/bin/cscli";
-              in
-              {
-                Type = "oneshot";
-                User = cfgCrowdsec.user;
-                Group = cfgCrowdsec.group;
-                ReadWritePaths = [
-                  rootDir
-                  confDir
-                ];
-                UMask = "027";
-                ExecStart = pkgs.writeShellScript "enroll-crowdsec-console_script.sh" ''
-                  ${cscli} console enroll "$(cat ${
-                    config.sops.secrets."crowdsec/enroll_key".path
-                  })" --name ${cfgCrowdsec.name}
-                '';
-              };
+            serviceConfig = {
+              Type = "oneshot";
+              User = cfgCrowdsec.user;
+              Group = cfgCrowdsec.group;
+              ReadWritePaths = [
+                rootDir
+                confDir
+              ];
+              UMask = "027";
+              ExecStart = pkgs.writeShellScript "enroll-crowdsec-console_script.sh" ''
+                ${cscliWrapper} console enroll "$(cat ${
+                  config.sops.secrets."crowdsec/enroll_key".path
+                })" --name ${cfgCrowdsec.name}
+              '';
+            };
           };
 
           # Patched the upstream implementation; cscli needs to be run as
@@ -318,7 +324,6 @@ in
           crowdsec-update-hub = {
             serviceConfig =
               let
-                cscli = "/run/current-system/sw/bin/cscli";
                 systemctl = lib.getExe' pkgs.systemd "systemctl";
               in
               lib.mkForce {
@@ -329,7 +334,7 @@ in
                   rootDir
                   confDir
                 ];
-                ExecStart = "${cscli} --error hub update";
+                ExecStart = "${cscliWrapper} --error hub update";
                 ExecStartPost = [
                   "+${systemctl} stop crowdsec.service"
                   "+${systemctl} start crowdsec.service"
