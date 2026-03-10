@@ -313,6 +313,7 @@ in
               umask 077
 
               # Copy the template to the final location
+              mkdir -p "$(dirname ${final-config-file})" || true
               cp ${format.generate "crowdsec-firewall-bouncer-config-template.yml" cfg.settings} ${final-config-file}
               chmod 0600 ${final-config-file}
 
