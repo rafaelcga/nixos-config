@@ -364,6 +364,9 @@ in
               DynamicUser = true;
               RuntimeDirectory = runtime-dir-name;
 
+              # FIX: Explicitly grant write access to the log directory
+              LogsDirectory = "crowdsec";
+
               StateDirectory = "crowdsec-firewall-bouncer-register crowdsec";
               StateDirectoryMode = "0750";
 
