@@ -197,12 +197,6 @@ in
           parsers = [
             "crowdsecurity/whitelists" # Avoid banning LAN
           ];
-          appsec-configs = [
-            "crowdsecurity/appsec-default"
-          ];
-          appsec-rules = [
-            "crowdsecurity/base-config"
-          ];
         };
 
         settings = {

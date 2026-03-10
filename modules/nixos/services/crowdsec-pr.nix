@@ -685,7 +685,7 @@ in
               x:
               lib.optionalString (
                 builtins.isList cfg.hub.${x} && cfg.hub.${x} != [ ]
-              ) "cscli ${lib.toLower x} install ${argString cfg.hub.${x}}";
+              ) "cscli ${lib.toLower x} install ${argString cfg.hub.${x}} --force";
 
             installNotificationPlugin = name: ''
               install -o ${cfg.user} -g ${cfg.group} -m 0750 -D ${cfg.package}/libexec/crowdsec/plugins/${name} ${cfg.settings.config.config_paths.data_dir}/plugins/${name}
@@ -1040,6 +1040,9 @@ in
               serviceConfig = createServiceConfig {
                 Type = "oneshot";
                 ExecStart = lib.getExe setupScript;
+
+                ConfigurationDirectory = "";
+                ReadWritePaths = [ cfg.settings.config.config_paths.config_dir ];
               };
             };
 
