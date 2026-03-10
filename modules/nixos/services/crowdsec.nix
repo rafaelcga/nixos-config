@@ -111,7 +111,7 @@ in
 
   imports = [
     ./crowdsec-pr.nix
-    ./crowdsec-firewall-bouncer-pr
+    ./crowdsec-firewall-bouncer-pr.nix
   ];
 
   options.modules.nixos.crowdsec = {
