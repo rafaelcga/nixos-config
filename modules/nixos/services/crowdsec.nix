@@ -179,6 +179,7 @@ in
       crowdsec = {
         enable = true;
         autoUpdateService = true;
+        openFirewall = true;
         package = pkgs.local.crowdsec;
 
         hub = {
