@@ -155,6 +155,7 @@ in
       update_frequency = lib.mkDefault "10s";
       log_mode = lib.mkDefault "stdout";
       log_level = lib.mkDefault "info";
+      log_dir = lib.mkDefault "/var/log/crowdsec-firewall-bouncer";
 
       # iptables-specific config
       blacklists_ipv4 = lib.mkDefault "crowdsec-blacklists";

@@ -8,7 +8,6 @@ let
   cfg = config.modules.nixos.crowdsec;
   cfgCrowdsec = config.services.crowdsec;
 
-  logDir = "/var/log/crowdsec";
   config_paths = cfgCrowdsec.settings.config.config_paths;
 
   # See https://github.com/NixOS/nixpkgs/blob/master/nixos/modules/services/security/crowdsec-firewall-bouncer.nix
@@ -168,13 +167,6 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    systemd.tmpfiles.settings = {
-      "10-crowdsec-log"."${logDir}".d = {
-        inherit (cfgCrowdsec) user group;
-        mode = "0755";
-      };
-    };
-
     services = {
       crowdsec = {
         enable = true;
@@ -252,7 +244,6 @@ in
 
         settings = {
           log_mode = "file";
-          log_dir = logDir;
           log_compression = true;
           log_max_size = 100;
           log_max_backups = 3;
