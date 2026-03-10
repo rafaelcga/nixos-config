@@ -8,53 +8,8 @@ let
   cfg = config.modules.nixos.crowdsec;
   cfgCrowdsec = config.services.crowdsec;
 
-  format = pkgs.formats.yaml { };
-
-  rootDir = "/var/lib/crowdsec";
-  confDir = "/etc/crowdsec";
   logDir = "/var/log/crowdsec";
-
-  lapiFile = "${rootDir}/lapi_credentials.yaml";
-  capiFile = "${rootDir}/capi_credentials.yaml";
-
-  cscliWrapper = pkgs.writeShellScriptBin "cscli-systemd-run" ''
-    exec systemd-run \
-      -pDynamicUser=true \
-      -pUser=crowdsec \
-      -pGroup=crowdsec \
-      -pStateDirectory=crowdsec \
-      --pty bash \
-      -- \
-      /run/current-system/sw/bin/cscli "$@"
-  '';
-
-  bouncerOpts =
-    { name, config, ... }:
-    {
-      options = {
-        enable = lib.mkEnableOption "Enable bouncer";
-
-        bouncerName = lib.mkOption {
-          type = lib.types.str;
-          default = "crowdsec-${name}-bouncer";
-          description = "Name to register the bouncer as to the CrowdSec API";
-        };
-
-        apiKeyFile = lib.mkOption {
-          type = lib.types.str;
-          default = "/var/lib/crowdsec-${name}-bouncer-register/api-key.cred";
-          description = "Path to the API key generated to register bouncer";
-        };
-
-        serviceName = lib.mkOption {
-          type = lib.types.str;
-          default = "${config.bouncerName}-register";
-          readOnly = true;
-          internal = true;
-          description = "Name of the service generating the API key";
-        };
-      };
-    };
+  config_paths = cfgCrowdsec.settings.config.config_paths;
 
   # See https://github.com/NixOS/nixpkgs/blob/master/nixos/modules/services/security/crowdsec-firewall-bouncer.nix
   registerBouncer =
@@ -69,73 +24,96 @@ let
     in
     {
       "${serviceName}" = lib.mkIf enable rec {
-        description = "Register the CrowdSec Bouncer to the local CrowdSec service";
+        description = "Register ${bouncerName} to the local CrowdSec service";
         wantedBy = [ "multi-user.target" ];
         after = [ "crowdsec.service" ];
         wants = after;
+        path = [ config.services.crowdsec.configuredCscli ];
 
-        serviceConfig =
-          let
-            jq = lib.getExe pkgs.jq;
-          in
-          {
-            Type = "oneshot";
-            User = cfgCrowdsec.user;
-            Group = cfgCrowdsec.group;
-            StateDirectory = serviceName;
-            # Needs write permissions to add the bouncer
-            ReadWritePaths = [ rootDir ];
-            DynamicUser = true;
-            LockPersonality = true;
-            PrivateDevices = true;
-            ProcSubset = "pid";
-            ProtectClock = true;
-            ProtectControlGroups = true;
-            ProtectHome = true;
-            ProtectHostname = true;
-            ProtectKernelLogs = true;
-            ProtectKernelModules = true;
-            ProtectKernelTunables = true;
-            ProtectProc = "invisible";
-            RestrictNamespaces = true;
-            RestrictRealtime = true;
-            SystemCallArchitectures = "native";
-            RestrictAddressFamilies = "none";
-            CapabilityBoundingSet = [ "" ];
-            SystemCallFilter = [
-              "@system-service"
-              "~@privileged"
-              "~@resources"
-            ];
-            UMask = "027";
-            ExecStart = pkgs.writeShellScript "${serviceName}_script.sh" ''
-              set -euo pipefail
+        script = ''
+          # Ensure the directory exists
+          mkdir -p "$(dirname ${apiKeyFile})" || true
 
-              if ${cscliWrapper} bouncers list --output json \
-                | ${jq} -e -- ${lib.escapeShellArg "any(.[]; .name == \"${bouncerName}\")"} >/dev/null; then
-                # Bouncer already registered. Verify the API key is still present
-                if [[ ! -f ${apiKeyFile} ]]; then
-                  echo "Bouncer registered but API key is not present"
-                  exit 1
-                fi
-              else
-                # Bouncer not registered
-                # Remove any previously saved API key
-                rm -f "${apiKeyFile}"
-                # Register the bouncer and save the new API key
-                if ! ${cscliWrapper} bouncers add --output raw \
-                  -- ${lib.escapeShellArg bouncerName} >${apiKeyFile}; then
-                  # Failed to register the bouncer
-                  rm -f "${apiKeyFile}"
-                  exit 1
-                fi
-              fi
-            '';
-          };
+          echo "Checking bouncer registration..."
+          if cscli bouncers list --output json | ${lib.getExe pkgs.jq} -e -- ${lib.escapeShellArg "any(.[]; .name == \"${bouncerName}\")"} >/dev/null; then
+
+            echo "Bouncer already registered. Verify the API key is still present"
+            if [ ! -f ${apiKeyFile} ]; then
+              echo "Bouncer registered but API key is not present"
+              echo "Unregistering bouncer..."
+              cscli bouncers delete ${bouncerName} || true
+            else
+              echo "API key file exists, nothing to do"
+              exit 0
+            fi
+          else
+            echo "Bouncer not registered"
+            echo "Remove any previously saved API key"
+            rm -f '${apiKeyFile}'
+          fi
+
+          echo "Register the bouncer and save the new API key"
+          if ! cscli bouncers add --output raw -- ${lib.escapeShellArg bouncerName} > ${apiKeyFile} 2>&1; then
+            echo "Failed to register the bouncer"
+            cat ${apiKeyFile} || true  # Show error message
+            rm -f ${apiKeyFile}
+              exit 1
+          fi
+
+          chmod 0440 ${apiKeyFile} || true
+          echo "Successfully registered bouncer and saved API key"
+
+          cscli bouncers list
+        '';
+        serviceConfig = {
+          Type = "oneshot";
+
+          # Run as crowdsec user to be able to use cscli
+          User = cfgCrowdsec.user;
+          Group = cfgCrowdsec.group;
+
+          StateDirectory = "${serviceName} crowdsec";
+          StateDirectoryMode = "0750";
+
+          DynamicUser = true;
+          LockPersonality = true;
+          PrivateDevices = true;
+          ProcSubset = "pid";
+          ProtectClock = true;
+          ProtectControlGroups = true;
+          ProtectHome = true;
+          ProtectHostname = true;
+          ProtectKernelLogs = true;
+          ProtectKernelModules = true;
+          ProtectKernelTunables = true;
+          ProtectProc = "invisible";
+          RestrictNamespaces = true;
+          RestrictRealtime = true;
+          SystemCallArchitectures = "native";
+
+          RestrictAddressFamilies = "none";
+          CapabilityBoundingSet = [ "" ];
+          SystemCallFilter = [
+            "@system-service"
+            "~@privileged"
+            "~@resources"
+          ];
+          UMask = "0077";
+        };
       };
     };
 in
 {
+  disabledModules = [
+    "services/security/crowdsec.nix"
+    "services/security/crowdsec-firewall-bouncer.nix"
+  ];
+
+  imports = [
+    "./crowdsec-pr.nix"
+    "./crowdsec-firewall-bouncer-pr"
+  ];
+
   options.modules.nixos.crowdsec = {
     enable = lib.mkEnableOption "Enable CrowdSec";
 
@@ -154,40 +132,47 @@ in
     };
 
     bouncers = lib.mkOption {
-      type = lib.types.attrsOf (lib.types.submodule bouncerOpts);
+      type = lib.types.attrsOf (
+        lib.types.submodule (
+          { name, config, ... }:
+          {
+            options = {
+              enable = lib.mkEnableOption "Enable bouncer";
+
+              bouncerName = lib.mkOption {
+                type = lib.types.str;
+                default = "crowdsec-${name}-bouncer";
+                description = "Name to register the bouncer as to the CrowdSec API";
+              };
+
+              apiKeyFile = lib.mkOption {
+                type = lib.types.str;
+                default = "/var/lib/crowdsec-${name}-bouncer-register/api-key.cred";
+                description = "Path to the API key generated to register bouncer";
+              };
+
+              serviceName = lib.mkOption {
+                type = lib.types.str;
+                default = "${config.bouncerName}-register";
+                readOnly = true;
+                internal = true;
+                description = "Name of the service generating the API key";
+              };
+            };
+          }
+        )
+      );
       default = { };
       description = "Bouncers to register in the CrowdSec API";
     };
   };
 
   config = lib.mkIf cfg.enable {
-    # See https://github.com/nixos/nixpkgs/issues/446764
-    systemd.tmpfiles.settings =
-      let
+    systemd.tmpfiles.settings = {
+      "10-crowdsec-log"."${logDir}".d = {
         inherit (cfgCrowdsec) user group;
-      in
-      {
-        "10-crowdsec" = {
-          "${rootDir}".d = {
-            inherit user group;
-            mode = "0755";
-          };
-          "${logDir}".d = {
-            inherit user group;
-            mode = "0755";
-          };
-          "${capiFile}".f = {
-            inherit user group;
-            mode = "0750";
-          };
-        };
+        mode = "0755";
       };
-
-    # Generate the config.yaml for cscli to read in certain operations
-    environment.etc."crowdsec/config.yaml" = {
-      source = format.generate "crowdsec/config.yaml" cfgCrowdsec.settings.general;
-      inherit (cfgCrowdsec) user group;
-      mode = "0750";
     };
 
     services = {
@@ -195,29 +180,6 @@ in
         enable = true;
         autoUpdateService = true;
         package = pkgs.local.crowdsec;
-
-        settings = {
-          general.api.server = {
-            enable = true;
-            listen_uri = "127.0.0.1:${cfg.lapiPort}";
-          };
-
-          # See https://github.com/NixOS/nixpkgs/issues/445342
-          lapi.credentialsFile = lapiFile;
-          capi.credentialsFile = capiFile;
-
-          console = {
-            # See https://github.com/NixOS/nixpkgs/issues/445342
-            # tokenFile = config.sops.secrets."crowdsec/enroll_key".path;
-            configuration = {
-              share_custom = true;
-              share_manual_decisions = true;
-              share_tainted = true;
-              share_context = true;
-              console_management = true;
-            };
-          };
-        };
 
         hub = {
           collections = [
@@ -236,42 +198,54 @@ in
           ];
         };
 
-        localConfig.acquisitions =
-          # crowdsecurity/linux-lpe
-          (
-            let
-              acquisTemplate = filterName: {
+        settings = {
+          config = {
+            api.server = {
+              listen_uri = "127.0.0.1:${cfg.lapiPort}";
+              online_client.credentials_path = "${config_paths.data_dir}/online_api_credentials.yaml";
+            };
+          };
+
+          console.enrollKeyFile = config.sops.secrets."crowdsec/enroll_key".path;
+
+          acquisitions =
+            (
+              let
+                acquisTemplate = filterName: {
+                  source = "journalctl";
+                  journalctl_filter = [ "_TRANSPORT=${filterName}" ];
+                  labels.type = "syslog";
+                };
+              in
+              lib.map acquisTemplate [
+                "journal"
+                "syslog"
+                "kernel"
+              ]
+            )
+            ++ [
+              {
                 source = "journalctl";
-                journalctl_filter = [ "_TRANSPORT=${filterName}" ];
+                journalctl_filter = [
+                  "--facility=auth"
+                  "--facility=authpriv"
+                ];
                 labels.type = "syslog";
-              };
-            in
-            lib.map acquisTemplate [
-              "journal"
-              "syslog"
-              "kernel"
-            ]
-          )
-          ++ [
-            {
-              source = "journalctl";
-              journalctl_filter = [
-                "--facility=auth"
-                "--facility=authpriv"
-              ];
-              labels.type = "syslog";
-            }
-            {
-              source = "appsec";
-              listen_addr = "127.0.0.1:${cfg.appsecPort}";
-              appsec_configs = [ "crowdsecurity/appsec-default" ];
-              labels.type = "appsec";
-            }
-          ];
+              }
+              {
+                source = "appsec";
+                listen_addr = "127.0.0.1:${cfg.appsecPort}";
+                appsec_configs = [ "crowdsecurity/appsec-default" ];
+                labels.type = "appsec";
+              }
+            ];
+        };
       };
 
       crowdsec-firewall-bouncer = {
         enable = true;
+        registerBouncer.enable = true;
+
         settings = {
           log_mode = "file";
           log_dir = logDir;
@@ -295,95 +269,6 @@ in
       };
     };
 
-    systemd.services = lib.mkMerge (
-      [
-        {
-          enroll-crowdsec-console = rec {
-            wantedBy = [ "multi-user.target" ];
-            after = [ "crowdsec.service" ];
-            wants = after;
-            serviceConfig = {
-              Type = "oneshot";
-              User = cfgCrowdsec.user;
-              Group = cfgCrowdsec.group;
-              ReadWritePaths = [
-                rootDir
-                confDir
-              ];
-              UMask = "027";
-              ExecStart = pkgs.writeShellScript "enroll-crowdsec-console_script.sh" ''
-                ${cscliWrapper} console enroll "$(cat ${
-                  config.sops.secrets."crowdsec/enroll_key".path
-                })" --name ${cfgCrowdsec.name}
-              '';
-            };
-          };
-
-          # Patched the upstream implementation; cscli needs to be run as
-          # crowdsec user, but systemctl needs root
-          crowdsec-update-hub = {
-            serviceConfig =
-              let
-                systemctl = lib.getExe' pkgs.systemd "systemctl";
-              in
-              lib.mkForce {
-                Type = "oneshot";
-                User = cfgCrowdsec.user;
-                Group = cfgCrowdsec.group;
-                ReadWritePaths = [
-                  rootDir
-                  confDir
-                ];
-                ExecStart = "${cscliWrapper} --error hub update";
-                ExecStartPost = [
-                  "+${systemctl} stop crowdsec.service"
-                  "+${systemctl} start crowdsec.service"
-                ];
-              };
-          };
-
-          crowdsec-firewall-bouncer =
-            let
-              cfgBouncer = config.services.crowdsec-firewall-bouncer;
-              runtimeDirName = "crowdsec-firewall-bouncer";
-              configFile = "/run/${runtimeDirName}/config.yaml";
-
-              generateConfig = pkgs.writeShellScript "crowdsec-firewall-bouncer-config" ''
-                set -euo pipefail
-                umask 027
-
-                # Ensure directory creation
-                mkdir -p "${dirOf configFile}"
-
-                # Copy the template to the final location
-                cp ${format.generate "crowdsec-firewall-bouncer-config-template.yml" cfgBouncer.settings} ${configFile}
-
-                # Replace the api_key placeholder with the secret
-                ${lib.getExe pkgs.replace-secret} '@API_KEY_FILE@' "$CREDENTIALS_DIRECTORY/API_KEY_FILE" ${configFile}
-
-                # Return ownership to service user
-                chown ${cfgCrowdsec.user}:${cfgCrowdsec.group} ${configFile}
-                chmod 0750 ${configFile}
-              '';
-            in
-            rec {
-              after = [ "crowdsec-firewall-bouncer-register.service" ];
-              wants = after;
-              serviceConfig = {
-                DynamicUser = lib.mkForce false;
-                RuntimeDirectory = lib.mkForce runtimeDirName;
-                User = cfgCrowdsec.user;
-                Group = cfgCrowdsec.group;
-
-                ExecStartPre = lib.mkForce [
-                  "+${generateConfig}"
-                  "${lib.getExe cfgBouncer.package} -c ${configFile} -t"
-                ];
-              };
-            };
-        }
-      ]
-      ++ lib.mapAttrsToList registerBouncer cfg.bouncers
-    );
+    systemd.services = lib.mkMerge (lib.mapAttrsToList registerBouncer cfg.bouncers);
   };
 }
