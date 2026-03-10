@@ -9,7 +9,7 @@ let
   yaml = pkgs.formats.yaml { };
 
   configuredCscli = pkgs.writeShellScriptBin "cscli" ''
-    ${lib.getExe' cfg.package "cscli"} -c="${cfg.settings.config.config_paths.config_dir}/config.yaml" -c="${cfg.settings.config.config_paths.config_dir}/config.yaml.local" "$@"
+    ${lib.getExe' cfg.package "cscli"} -c="${cfg.settings.config.config_paths.config_dir}/config.yaml" "$@"
   '';
 
   config_paths = cfg.settings.config.config_paths;
@@ -962,14 +962,21 @@ in
               UMask = "0077";
 
               DynamicUser = true;
+              # Add this line to allow journalctl acquisitions!
+              SupplementaryGroups = [ "systemd-journal" ];
+
               ProtectHome = true;
               PrivateDevices = true;
-              ProtectHostname = "true:${cfg.name}";
+
+              # Fix: These must be strict booleans
+              ProtectHostname = true;
+              ProtectControlGroups = true;
+              ProtectSystem = "strict";
+
               ProtectClock = true;
               ProtectKernelTunables = true;
               ProtectKernelModules = true;
               ProtectKernelLogs = true;
-              ProtectControlGroups = "strict";
               ProtectProc = "invisible";
 
               LockPersonality = true;
