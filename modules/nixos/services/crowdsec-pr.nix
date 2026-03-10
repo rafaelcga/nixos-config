@@ -9,7 +9,7 @@ let
   yaml = pkgs.formats.yaml { };
 
   configuredCscli = pkgs.writeShellScriptBin "cscli" ''
-    ${lib.getExe' cfg.package "cscli"} -c="${cfg.settings.config.config_paths.config_dir}/config.yaml" "$@"
+    ${lib.getExe' cfg.package "cscli"} -c="${cfg.settings.config.config_paths.config_dir}/config.yaml" -c="${cfg.settings.config.config_paths.config_dir}/config.yaml.local" "$@"
   '';
 
   config_paths = cfg.settings.config.config_paths;
@@ -685,7 +685,7 @@ in
               x:
               lib.optionalString (
                 builtins.isList cfg.hub.${x} && cfg.hub.${x} != [ ]
-              ) "cscli ${lib.toLower x} install ${argString cfg.hub.${x}} --force";
+              ) "cscli ${lib.toLower x} install ${argString cfg.hub.${x}}";
 
             installNotificationPlugin = name: ''
               install -o ${cfg.user} -g ${cfg.group} -m 0750 -D ${cfg.package}/libexec/crowdsec/plugins/${name} ${cfg.settings.config.config_paths.data_dir}/plugins/${name}
@@ -962,21 +962,14 @@ in
               UMask = "0077";
 
               DynamicUser = true;
-              # Add this line to allow journalctl acquisitions!
-              SupplementaryGroups = [ "systemd-journal" ];
-
               ProtectHome = true;
               PrivateDevices = true;
-
-              # Fix: These must be strict booleans
-              ProtectHostname = true;
-              ProtectControlGroups = true;
-              ProtectSystem = "strict";
-
+              ProtectHostname = "true:${cfg.name}";
               ProtectClock = true;
               ProtectKernelTunables = true;
               ProtectKernelModules = true;
               ProtectKernelLogs = true;
+              ProtectControlGroups = "strict";
               ProtectProc = "invisible";
 
               LockPersonality = true;
@@ -1040,9 +1033,6 @@ in
               serviceConfig = createServiceConfig {
                 Type = "oneshot";
                 ExecStart = lib.getExe setupScript;
-
-                ConfigurationDirectory = "";
-                ReadWritePaths = [ cfg.settings.config.config_paths.config_dir ];
               };
             };
 
