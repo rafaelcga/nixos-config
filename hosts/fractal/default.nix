@@ -2,7 +2,6 @@
   modules.nixos = {
     # System
     fonts.enable = true;
-    zram.enable = true;
     # Hardware
     audio.enable = true;
     graphics = {

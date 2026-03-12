@@ -6,7 +6,6 @@
       defaultInterface = "enp1s0";
     };
     upgrade.enable = true;
-    zram.enable = true;
     # Hardware
     graphics = {
       enable = true;

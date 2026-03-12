@@ -7,6 +7,5 @@
     ./nix-impl.nix
     ./upgrade.nix
     ./user.nix
-    ./zram.nix
   ];
 }
