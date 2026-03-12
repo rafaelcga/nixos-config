@@ -42,15 +42,15 @@ in
         cleanOnBoot = true;
       };
     };
-  };
 
-  services.fwupd.enable = true; # firmware updates
+    services.fwupd.enable = true; # firmware updates
 
-  # github:CachyOS/CachyOS-Settings/blob/master/usr/lib/systemd/zram-generator.conf
-  zramSwap = {
-    enable = true;
-    memoryPercent = 100; # amount of ZRAM == system RAM
-    priority = 100;
-    algorithm = "zstd";
+    # github:CachyOS/CachyOS-Settings/blob/master/usr/lib/systemd/zram-generator.conf
+    zramSwap = {
+      enable = true;
+      memoryPercent = 100; # amount of ZRAM == system RAM
+      priority = 100;
+      algorithm = "zstd";
+    };
   };
 }
