@@ -184,7 +184,6 @@ in
             "crowdsecurity/sshd-impossible-travel"
             "crowdsecurity/appsec-virtual-patching"
             "crowdsecurity/appsec-generic-rules"
-            "crowdsecurity/appsec-crs"
           ];
           parsers = [
             "crowdsecurity/whitelists" # Avoid banning LAN
