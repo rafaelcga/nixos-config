@@ -188,6 +188,9 @@ in
           ];
           parsers = [
             "crowdsecurity/whitelists" # Avoid banning LAN
+          ]
+          ++ lib.optionals config.modules.nixos.containers.services.jellyfin.enable [
+            "crowdsecurity/jellyfin-whitelist" # Avoid banning Jellyfin events
           ];
         };
 
