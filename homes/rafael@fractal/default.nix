@@ -19,6 +19,8 @@
   };
 
   home.packages = with pkgs; [
+    # Audio interface
+    alsa-scarlett-gui
     # General apps
     krita
     # Gaming
