@@ -649,32 +649,6 @@ in
     let
       createDir = d: ''install -d -o ${cfg.user} -g ${cfg.group} -m 750 "${d}"'';
 
-      cleanConfigDirs = ''
-        if [ -d ${config_paths.config_dir}/patterns ]; then
-          rm -rf ${config_paths.config_dir}/patterns
-        fi
-      '';
-
-      createConfigDirs = lib.concatMapStringsSep "\n" createDir [
-        config_paths.config_dir
-        cfg.settings.config.crowdsec_service.acquisition_dir
-        config_paths.notification_dir
-        "${config_paths.config_dir}/appsec-configs"
-        "${config_paths.config_dir}/appsec-rules"
-        "${config_paths.config_dir}/collections"
-        "${config_paths.config_dir}/console"
-        "${config_paths.config_dir}/contexts"
-        "${config_paths.config_dir}/hub"
-        "${config_paths.config_dir}/parsers"
-        "${config_paths.config_dir}/parsers/s00-raw"
-        "${config_paths.config_dir}/parsers/s01-parse"
-        "${config_paths.config_dir}/parsers/s02-enrich"
-        "${config_paths.config_dir}/postoverflows"
-        "${config_paths.config_dir}/postoverflows/s00-enrich"
-        "${config_paths.config_dir}/postoverflows/s01-whitelist"
-        "${config_paths.config_dir}/scenarios"
-      ];
-
       setupScript = pkgs.writeShellApplication {
         name = "crowdsec-setup";
         runtimeInputs = [ configuredCscli ];
