@@ -13,6 +13,10 @@ let
   '';
 
   config_paths = cfg.settings.config.config_paths;
+
+  # Reason:
+  # https://github.com/NixOS/nixpkgs/pull/446307#issuecomment-3955091336
+  secret_path = lib.types.either lib.types.path lib.types.nonEmptyStr;
 in
 {
   imports = [
@@ -292,7 +296,7 @@ in
 
                 api = {
                   client.credentials_path = lib.mkOption {
-                    type = lib.types.path;
+                    type = secret_path;
                     default = "${config_paths.data_dir}/local_api_credentials.yaml";
                     defaultText = lib.literalExpression "\${config.services.crowdsec.settings.config.config_paths.data_dir}/local_api_credentials.yaml";
                     description = "Path to the credential files (contains API url + login/password).";
@@ -326,7 +330,7 @@ in
                     };
 
                     online_client.credentials_path = lib.mkOption {
-                      type = lib.types.nullOr lib.types.path;
+                      type = lib.types.nullOr secret_path;
                       default = null;
                       example = "\${config_paths.data_dir}/online_api_credentials.yaml";
                       description = ''
@@ -643,7 +647,7 @@ in
 
   config =
     let
-      installDir = d: ''install -d -o ${cfg.user} -g ${cfg.group} -m 750 "${d}"'';
+      createDir = d: ''install -d -o ${cfg.user} -g ${cfg.group} -m 750 "${d}"'';
 
       cleanConfigDirs = ''
         if [ -d ${config_paths.config_dir}/patterns ]; then
@@ -651,7 +655,7 @@ in
         fi
       '';
 
-      createConfigDirs = lib.concatMapStringsSep "\n" installDir [
+      createConfigDirs = lib.concatMapStringsSep "\n" createDir [
         config_paths.config_dir
         cfg.settings.config.crowdsec_service.acquisition_dir
         config_paths.notification_dir
@@ -671,11 +675,6 @@ in
         "${config_paths.config_dir}/scenarios"
       ];
 
-      setupConfigDirs = ''
-        ${cleanConfigDirs}
-        ${createConfigDirs}
-      '';
-
       setupScript = pkgs.writeShellApplication {
         name = "crowdsec-setup";
         runtimeInputs = [ configuredCscli ];
@@ -692,14 +691,6 @@ in
               install -o ${cfg.user} -g ${cfg.group} -m 0750 -D ${cfg.package}/libexec/crowdsec/plugins/${name} ${cfg.settings.config.config_paths.data_dir}/plugins/${name}
             '';
 
-            maybeTouchFile =
-              p:
-              lib.optionalString (p != null) ''
-                if [ ! -s ${p} ]; then
-                  touch "${p}"
-                fi
-              '';
-
             maybeInstallConfigFile =
               p: o:
               lib.optionalString (p != null) ''
@@ -715,31 +706,37 @@ in
                   install -o ${cfg.user} -g ${cfg.group} -m 0750 -T ${cfg.package}/share/crowdsec/config/${p} ${cfg.settings.config.config_paths.data_dir}/${o}
                 fi
               '';
-
-            overwriteInstallConfigDir =
-              p:
-              lib.optionalString (p != null) ''
-                # create directory
-                install -d ${config_paths.config_dir}/${p}
-                install -o ${cfg.user} -g ${cfg.group} -m 0750 -t ${config_paths.config_dir}/${p} ${cfg.package}/share/crowdsec/config/${p}/*
-              '';
           in
+          # ${maybeInstallConfigFile "simulation.yaml" "simulation.yaml"}
+          # ${maybeInstallConfigFile "context.yaml" "console/context.yaml"}
           ''
-            ${maybeTouchFile cfg.settings.config.api.client.credentials_path}
-            ${maybeTouchFile cfg.settings.config.api.server.online_client.credentials_path}
+            ${lib.optionalString cfg.settings.config.api.server.enable ''
+              if [ ! -s ${cfg.settings.config.api.client.credentials_path} ]; then
+                echo "No local API credentials currently created. Generating local API credentials..."
+                cscli machines add "${cfg.name}" --auto --file ${cfg.settings.config.api.client.credentials_path}
+              fi
+            ''}
 
-            ${installDir cfg.settings.config.config_paths.hub_dir}
-            ${installDir cfg.settings.config.config_paths.plugin_dir}
+            ${lib.optionalString (cfg.settings.config.api.server.online_client.credentials_path != null) ''
+              if [ ! -s "${cfg.settings.config.api.server.online_client.credentials_path}" ]; then
+                echo "No local online API credentials created. Registering..."
+                cscli capi register
+              fi
+            ''}
+
+            ${lib.optionalString (cfg.settings.console.enrollKeyFile != null) ''
+              if [ -e "$CREDENTIALS_DIRECTORY/enrollKeyFile" ]; then
+                echo "Enrolling to the online console..."
+                cscli console enroll "$(<"$CREDENTIALS_DIRECTORY/enrollKeyFile")" --name ${cfg.name}
+              fi
+            ''}
 
             # needed by `cscli setup`
-            ${installDir "${cfg.settings.config.config_paths.hub_dir}/.cache"}
-            ${installDir "${cfg.settings.config.config_paths.data_dir}/data"}
+            ${createDir "${cfg.settings.config.config_paths.hub_dir}/.cache"}
+            ${createDir "${cfg.settings.config.config_paths.data_dir}/data"}
             ${maybeInstallDataFile "detect.yaml" "data/detect.yaml"}
 
-            ${maybeInstallConfigFile "simulation.yaml" "simulation.yaml"}
-            ${maybeInstallConfigFile "context.yaml" "console/context.yaml"}
             ${maybeInstallConfigFile "console.yaml" "console.yaml"}
-            ${overwriteInstallConfigDir "patterns"}
 
             echo "Updating hub..."
 
@@ -764,27 +761,6 @@ in
             ${installNotificationPlugin "notification-sentinel"}
             ${installNotificationPlugin "notification-slack"}
             ${installNotificationPlugin "notification-splunk"}
-
-            ${lib.optionalString cfg.settings.config.api.server.enable ''
-              if [ ! -s ${cfg.settings.config.api.client.credentials_path} ]; then
-                echo "No local API credentials currently created. Generating local API credentials..."
-                cscli machines add "${cfg.name}" --auto --file ${cfg.settings.config.api.client.credentials_path}
-              fi
-            ''}
-
-            ${lib.optionalString (cfg.settings.config.api.server.online_client.credentials_path != null) ''
-              if [ ! -s "${cfg.settings.config.api.server.online_client.credentials_path}" ]; then
-                echo "No local online API credentials created. Registering..."
-                cscli capi register
-              fi
-            ''}
-
-            ${lib.optionalString (cfg.settings.console.enrollKeyFile != null) ''
-              if [ -e "$CREDENTIALS_DIRECTORY/enrollKeyFile" ]; then
-                echo "Enrolling to the online console..."
-                cscli console enroll "$(<"$CREDENTIALS_DIRECTORY/enrollKeyFile")" --name ${cfg.name}
-              fi
-            ''}
 
             echo "Completed crowdsec setup"
           '';
@@ -841,7 +817,7 @@ in
 
       # From our testing, `environment.etc` isn't fast enough so that the permissions aren't correctly set if the service starts.
       # As a workaround we are creating the required `etc` directories here
-      system.activationScripts.crowdsec = setupConfigDirs;
+      # system.activationScripts.crowdsec = setupConfigDirs;
 
       environment = {
         systemPackages =
@@ -863,7 +839,7 @@ in
                     --property=DynamicUser=true \
                     --property=StateDirectory="crowdsec crowdsec/state crowdsec/state/hub" \
                     --property=StateDirectoryMode="0750" \
-                    --property=ConfigurationDirectory="crowdsec crowdsec/acquis.d" \
+                    --property=ConfigurationDirectory="crowdsec/acquis.d" \
                     --property=ConfigurationDirectoryMode="0750" \
                     -- \
                     ${lib.getExe configuredCscli} "$@"
@@ -886,6 +862,7 @@ in
             start = lib.mapAttrs (name: value: lib.mergeAttrs value entry_permissions) {
               "${config_dir}/config.yaml".source = "${cfg.package}/share/crowdsec/config/config.yaml";
               "${config_dir}/config.yaml.local".source = yaml.generate "config.yaml.local" cfg.settings.config;
+              "${config_dir}/console.yaml".source = "${cfg.package}/share/crowdsec/config/console.yaml";
               "${config_dir}/acquis.d/00-nixos-generated.yaml".source = pkgs.writeText "aquisitions.yaml" ''
                 ---
                 ${lib.strings.concatMapStringsSep "\n---\n" (lib.generators.toYAML { }) cfg.settings.acquisitions}
@@ -896,6 +873,7 @@ in
                 ${lib.strings.concatMapStringsSep "\n---\n" (lib.generators.toYAML { }) cfg.settings.profiles}
                 ---
               '';
+
             };
 
             attrListToEntries =
@@ -992,10 +970,9 @@ in
                 "AF_INET6"
               ];
 
-              # FIX: hub directory
-              StateDirectory = "crowdsec crowdsec/state crowdsec/state/hub";
+              StateDirectory = "crowdsec crowdsec/hub";
               StateDirectoryMode = "0750";
-              ConfigurationDirectory = "crowdsec crowdsec/acquis.d";
+              ConfigurationDirectory = "crowdsec/acquis.d";
               ConfigurationDirectoryMode = "0750";
             } attrs;
         in
@@ -1005,7 +982,8 @@ in
           timers.crowdsec-update-hub = lib.mkIf (cfg.autoUpdateService) {
             description = "Update the crowdsec hub index";
             wantedBy = [ "timers.target" ];
-            after = [ ];
+            # for dns resolving
+            after = [ "network-online.target" ];
             timerConfig = {
               OnCalendar = "daily";
               RandomizedDelaySec = 300;
@@ -1033,6 +1011,8 @@ in
               wantedBy = [ "multi-user.target" ];
               wants = [ "network-online.target" ];
               before = [ "crowdsec.service" ];
+              # for dns resolving
+              after = [ "network-online.target" ];
               serviceConfig = createServiceConfig {
                 Type = "oneshot";
                 ExecStart = lib.getExe setupScript;
@@ -1055,7 +1035,7 @@ in
 
               serviceConfig =
                 let
-                  configuredCrowdsec = "${lib.getExe' cfg.package "crowdsec"} -c ${cfg.settings.config.config_paths.config_dir}/config.yaml";
+                  configuredCrowdsec = "${lib.getExe' cfg.package "crowdsec"} -c ${cfg.settings.config.config_paths.config_dir}/config.yaml -c ${cfg.settings.config.config_paths.config_dir}/config.yaml.local";
                 in
                 createServiceConfig {
                   Type = "notify";

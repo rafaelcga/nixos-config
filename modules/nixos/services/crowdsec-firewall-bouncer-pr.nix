@@ -240,7 +240,6 @@ in
 
             echo "Checking bouncer registration..."
             if cscli bouncers list --output json | ${lib.getExe pkgs.jq} -e -- ${lib.escapeShellArg "any(.[]; .name == \"${cfg.registerBouncer.bouncerName}\")"} >/dev/null; then
-
               echo "Bouncer already registered. Verify the API key is still present"
               if [ ! -f ${apiKeyFile} ]; then
                 echo "Bouncer registered but API key is not present"
@@ -368,8 +367,7 @@ in
               RuntimeDirectory = runtime-dir-name;
 
               # FIX: Explicitly grant write access to the log directory
-              LogsDirectory = "crowdsec";
-
+              LogsDirectory = "crowdsec-firewall-bouncer";
               StateDirectory = "crowdsec-firewall-bouncer-register crowdsec";
               StateDirectoryMode = "0750";
 
