@@ -155,8 +155,6 @@ in
       update_frequency = lib.mkDefault "10s";
       log_mode = lib.mkDefault "stdout";
       log_level = lib.mkDefault "info";
-      # FIX: Standard log_dir (maybe go further to account for user defined ones
-      # in the systemd-service with ReadWritePaths and such)
       log_dir = lib.mkDefault "/var/log/crowdsec-firewall-bouncer";
 
       # iptables-specific config
@@ -325,7 +323,11 @@ in
           rec {
             description = "CrowdSec Firewall Bouncer";
             wantedBy = [ "multi-user.target" ];
-            after = [ "network.target" ] ++ (lib.optional config.services.crowdsec.enable "crowdsec.service");
+            after = [
+              "network.target"
+            ]
+            ++ (lib.optional config.services.crowdsec.enable "crowdsec.service")
+            ++ (lib.optional cfg.registerBouncer.enable "crowdsec-firewall-bouncer-register.service");
             wants = after;
             requires = lib.optional cfg.registerBouncer.enable "crowdsec-firewall-bouncer-register.service";
 
@@ -366,10 +368,9 @@ in
               DynamicUser = true;
               RuntimeDirectory = runtime-dir-name;
 
-              # FIX: Explicitly grant write access to the log directory
-              LogsDirectory = "crowdsec-firewall-bouncer";
               StateDirectory = "crowdsec-firewall-bouncer-register crowdsec";
               StateDirectoryMode = "0750";
+              LogsDirectory = "crowdsec-firewall-bouncer";
 
               LockPersonality = true;
               PrivateDevices = true;
