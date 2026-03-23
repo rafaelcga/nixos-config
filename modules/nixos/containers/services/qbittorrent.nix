@@ -19,7 +19,6 @@ lib.mkMerge [
   (lib.mkIf cfg.enable {
     containers.qbittorrent = {
       config =
-        { pkgs, ... }:
         let
           savePath = "${cfg.dataDir}/downloads";
           tempPath = "${savePath}/incomplete";
@@ -62,8 +61,6 @@ lib.mkMerge [
                   Password_PBKDF2 = "@ByteArray(4quLRWi4zO+tAPClYLWbaw==:P5PWcrBP/z/uZhVGn18vCK4ryKT/xvL4nAFxx/qlUPX2/9DWF7Q0L0jZR7Ii4863PH6YQj8s8d7U0Otjuuv2+Q==)";
                   HostHeaderValidation = false;
                   CSRFProtection = false;
-                  AlternativeUIEnabled = true;
-                  RootFolder = "${pkgs.vuetorrent}/share/vuetorrent";
                 };
               };
             };

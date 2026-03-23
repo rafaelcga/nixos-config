@@ -66,8 +66,7 @@ lib.mapAttrs mkServiceData {
   };
 
   qbittorrent = {
-    displayName = "VueTorrent";
-    icon = "vuetorrent";
+    displayName = "qBittorrent";
     description = "BitTorrent client";
     apiAuth = "password";
     widgetFields = [
