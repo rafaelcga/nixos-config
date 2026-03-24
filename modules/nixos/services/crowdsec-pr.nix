@@ -240,7 +240,7 @@ in
 
                   pattern_dir = lib.mkOption {
                     type = lib.types.path;
-                    default = pkgs.buildPackages.symlinkJoin {
+                    default = pkgs.symlinkJoin {
                       name = "crowdsec-patterns";
                       paths = [
                         cfg.settings.patterns
@@ -318,8 +318,8 @@ in
 
                     console_path = lib.mkOption {
                       type = lib.types.path;
-                      default = "${config_paths.data_dir}/console.yaml";
-                      defaultText = lib.literalExpression "\${config.services.crowdsec.settings.config.config_paths.data_dir}/console.yaml";
+                      default = "${config_paths.config_dir}/console.yaml";
+                      defaultText = lib.literalExpression "\${config.services.crowdsec.settings.config.config_paths.config_dir}/console.yaml";
                       description = "The path to the console configuration.";
                     };
 
@@ -654,8 +654,6 @@ in
 
   config =
     let
-      createDir = d: ''install -d -o ${cfg.user} -g ${cfg.group} -m 750 "${d}"'';
-
       setupScript = pkgs.writeShellApplication {
         name = "crowdsec-setup";
         runtimeInputs = [ configuredCscli ];
@@ -671,27 +669,19 @@ in
             installNotificationPlugin = name: ''
               install -o ${cfg.user} -g ${cfg.group} -m 0750 -D ${cfg.package}/libexec/crowdsec/plugins/${name} ${cfg.settings.config.config_paths.data_dir}/plugins/${name}
             '';
-
-            maybeInstallDataFile =
-              p: o:
-              lib.optionalString (p != null) ''
-                if [ ! -f ${cfg.settings.config.config_paths.data_dir}/${o} ]; then
-                  install -o ${cfg.user} -g ${cfg.group} -m 0750 -T ${cfg.package}/share/crowdsec/config/${p} ${cfg.settings.config.config_paths.data_dir}/${o}
-                fi
-              '';
           in
           ''
-            ${lib.optionalString cfg.settings.config.api.server.enable ''
-              if [ ! -s ${cfg.settings.config.api.client.credentials_path} ]; then
-                echo "No local API credentials currently created. Generating local API credentials..."
-                cscli machines add "${cfg.name}" --auto --file ${cfg.settings.config.api.client.credentials_path}
-              fi
-            ''}
-
             ${lib.optionalString (cfg.settings.config.api.server.online_client.credentials_path != null) ''
               if [ ! -s "${cfg.settings.config.api.server.online_client.credentials_path}" ]; then
                 echo "No local online API credentials created. Registering..."
                 cscli capi register
+              fi
+            ''}
+
+            ${lib.optionalString cfg.settings.config.api.server.enable ''
+              if [ ! -s ${cfg.settings.config.api.client.credentials_path} ]; then
+                echo "No local API credentials currently created. Generating local API credentials..."
+                cscli machines add "${cfg.name}" --auto --file ${cfg.settings.config.api.client.credentials_path}
               fi
             ''}
 
@@ -701,11 +691,6 @@ in
                 cscli console enroll "$(<"$CREDENTIALS_DIRECTORY/enrollKeyFile")" --name ${cfg.name}
               fi
             ''}
-
-            # needed by `cscli setup`
-            ${createDir "${cfg.settings.config.config_paths.hub_dir}/.cache"}
-            ${createDir "${cfg.settings.config.config_paths.data_dir}/data"}
-            ${maybeInstallDataFile "detect.yaml" "data/detect.yaml"}
 
             echo "Updating hub..."
 
@@ -814,6 +799,73 @@ in
             };
           in
           [ cscliWrapper ];
+
+        # TODO: Add warning if config_paths are different
+        etc =
+          let
+            config_dir = "crowdsec";
+
+            start = lib.mapAttrs (name: value: lib.mergeAttrs value entry_permissions) {
+              "${config_dir}/console/context.yaml".source = "${cfg.package}/share/crowdsec/config/context.yaml";
+              "${config_dir}/console.yaml".source = "${cfg.package}/share/crowdsec/config/console.yaml";
+              "${config_dir}/acquis.d/00-nixos-generated.yaml".source = pkgs.writeText "aquisitions.yaml" ''
+                ---
+                ${lib.strings.concatMapStringsSep "\n---\n" (lib.generators.toYAML { }) cfg.settings.acquisitions}
+                ---
+              '';
+              # for `cfg.settings.config.api.server.profiles_path`
+              "${config_dir}/profiles.yaml".source = pkgs.writeText "profiles.yaml" ''
+                ---
+                ${lib.strings.concatMapStringsSep "\n---\n" (lib.generators.toYAML { }) cfg.settings.profiles}
+                ---
+              '';
+            };
+
+            attrListToEntries =
+              attrList: target_dir:
+              let
+                file_paths = map (yaml.generate "crowdsec-setting.yaml") attrList;
+
+                # Example usage:
+                #   enumerated_entries 0 ["path1" "path2"]
+                #   =>
+                #     [
+                #         { name = "${target_dir}/0-nixos-generated.yaml"; source = path1; }
+                #         { name = "${target_dir}/1-nixos-generated.yaml"; source = path2; }
+                #     ]
+                enumerated_entries =
+                  idx: paths:
+                  if paths == [ ] then
+                    [ ]
+                  else
+                    let
+                      dst_path = "${config_dir}/${target_dir}/${toString idx}-nixos-generated.yaml";
+
+                      src_path = builtins.head paths;
+                      rest = builtins.tail paths;
+
+                      entry = {
+                        name = dst_path;
+
+                        value = lib.mergeAttrs entry_permissions {
+                          source = src_path;
+                        };
+                      };
+                    in
+                    [ entry ] ++ (enumerated_entries (idx + 1) rest);
+              in
+              builtins.listToAttrs (enumerated_entries 0 file_paths);
+
+          in
+          builtins.foldl' lib.mergeAttrs start [
+            (attrListToEntries cfg.settings.scenarios "scenarios")
+            (attrListToEntries cfg.settings.parsers.s00Raw "parsers/s00-raw")
+            (attrListToEntries cfg.settings.parsers.s01Parse "parsers/s01-parse")
+            (attrListToEntries cfg.settings.parsers.s02Enrich "parsers/s02-enrich")
+            (attrListToEntries cfg.settings.postOverflows.s01Whitelist "postoverflows/s01-whitelist")
+            (attrListToEntries cfg.settings.contexts "contexts")
+            (attrListToEntries cfg.settings.notifications "notifications")
+          ];
       };
 
       systemd =
@@ -861,81 +913,6 @@ in
             } attrs;
         in
         {
-          tmpfiles.settings.crowdsec =
-            let
-              start = {
-                "${cfg.settings.config.crowdsec_service.acquisition_dir}".d = entry_permissions;
-                "${cfg.settings.config.crowdsec_service.acquisition_dir}/00-nixos-generated.yaml"."f+" =
-                  lib.recursiveUpdate entry_permissions
-                    {
-                      mode = "0660";
-                      argument = ''
-                        ---
-                        ${lib.strings.concatMapStringsSep "\n---\n" (lib.generators.toYAML { }) cfg.settings.acquisitions}
-                        ---
-                      '';
-                    };
-
-                "${cfg.settings.config.api.server.console_path}"."f+" = lib.recursiveUpdate entry_permissions {
-                  mode = "0660";
-                  argument = builtins.readFile "${cfg.package}/share/crowdsec/config/console.yaml";
-                };
-
-                "${cfg.settings.config.api.server.profiles_path}"."f+" = lib.recursiveUpdate entry_permissions {
-                  mode = "0660";
-                  argument = ''
-                    ---
-                    ${lib.strings.concatMapStringsSep "\n---\n" (lib.generators.toYAML { }) cfg.settings.profiles}
-                    ---
-                  '';
-                };
-              };
-
-              attrListToEntries =
-                attrList: target_dir:
-                let
-                  file_paths = map (yaml.generate "file.yaml") attrList;
-
-                  # Example usage:
-                  #   enumerated_entries 0 ["path1" "path2"]
-                  #   =>
-                  #     [
-                  #         { name = "${config_dir}/${target_dir}/0-nixos-generated.yaml"; "L+".argument = path1; }
-                  #         { name = "${config_dir}/${target_dir}/1-nixos-generated.yaml"; "L+".argument = path2; }
-                  #     ]
-                  enumerated_entries =
-                    idx: paths:
-                    if paths == [ ] then
-                      [ ]
-                    else
-                      let
-                        dst_path = "${cfg.settings.config.config_paths.config_dir}/${target_dir}/${toString idx}-nixos-generated.yaml";
-
-                        src_path = builtins.head paths;
-                        rest = builtins.tail paths;
-
-                        entry = {
-                          name = dst_path;
-
-                          value = {
-                            "L+".argument = toString src_path;
-                          };
-                        };
-                      in
-                      [ entry ] ++ (enumerated_entries (idx + 1) rest);
-                in
-                builtins.listToAttrs (enumerated_entries 0 file_paths);
-            in
-            builtins.foldl' lib.mergeAttrs start [
-              (attrListToEntries cfg.settings.scenarios "scenarios")
-              (attrListToEntries cfg.settings.parsers.s00Raw "parsers/s00-raw")
-              (attrListToEntries cfg.settings.parsers.s01Parse "parsers/s01-parse")
-              (attrListToEntries cfg.settings.parsers.s02Enrich "parsers/s02-enrich")
-              (attrListToEntries cfg.settings.postOverflows.s01Whitelist "postoverflows/s01-whitelist")
-              (attrListToEntries cfg.settings.contexts "contexts")
-              (attrListToEntries cfg.settings.notifications "notifications")
-            ];
-
           timers.crowdsec-update-hub = lib.mkIf (cfg.autoUpdateService) {
             description = "Update the crowdsec hub index";
             wantedBy = [ "timers.target" ];
