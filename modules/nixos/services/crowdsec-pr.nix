@@ -292,12 +292,14 @@ in
                     type = lib.types.str;
                     description = "The user to run crowdsec plugins as";
                     default = cfg.user;
+                    defaultText = lib.literalExpression "\${config.services.crowdsec.user}";
                   };
 
                   group = lib.mkOption {
                     type = lib.types.str;
                     description = "The group to run crowdsec plugins as";
                     default = cfg.group;
+                    defaultText = lib.literalExpression "\${config.services.crowdsec.group}";
                   };
                 };
 
@@ -711,6 +713,18 @@ in
             # NOTE: THE CODE BELOW NEEDS TO STAY BELOW
             #       Don't move code logic below this comment to the top of this comment because it expects
             #
+            echo "Updating hub..."
+
+            cscli hub update
+
+            echo "Installing resources..."
+
+            ${maybeInstall "collections"}
+            ${maybeInstall "scenarios"}
+            ${maybeInstall "parsers"}
+            ${maybeInstall "postoverflows"}
+            ${maybeInstall "appsec-configs"}
+            ${maybeInstall "appsec-rules"}
 
             ${lib.optionalString (cfg.settings.config.api.server.online_client.credentials_path != null) ''
               if [ ! -s "${cfg.settings.config.api.server.online_client.credentials_path}" ]; then
@@ -732,20 +746,6 @@ in
                 cscli console enroll "$(<"$CREDENTIALS_DIRECTORY/enrollKeyFile")" --name ${cfg.name}
               fi
             ''}
-
-            echo "Updating hub..."
-
-            cscli hub update
-
-            echo "Installing resources..."
-
-            ${maybeInstall "collections"}
-            ${maybeInstall "scenarios"}
-            ${maybeInstall "parsers"}
-            ${maybeInstall "postoverflows"}
-            ${maybeInstall "appsec-configs"}
-            ${maybeInstall "appsec-rules"}
-
             echo "Completed crowdsec setup"
           '';
       };
