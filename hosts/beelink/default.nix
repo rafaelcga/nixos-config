@@ -27,7 +27,7 @@
     };
     # Services
     caddy.enable = true;
-    crowdsec.enable = false;
+    crowdsec.enable = true;
     # Containers
     containers.services = {
       homepage = {
