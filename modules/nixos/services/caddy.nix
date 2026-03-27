@@ -93,7 +93,7 @@ let
               crowdsec
               appsec
             ''}
-            respond "OK" 200
+            respond 200
         }
       '';
     };
