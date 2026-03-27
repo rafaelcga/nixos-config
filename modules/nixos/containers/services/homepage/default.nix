@@ -94,7 +94,7 @@ lib.mkMerge [
             }"
           ]
           ++ lib.optionals caddy.enable [
-            "HOMEPAGE_VAR_CADDY_HEALTH=http://health.${config.sops.placeholder."web_domain"}"
+            "HOMEPAGE_VAR_DOMAIN=${config.sops.placeholder."web_domain"}"
           ]
         );
     };
@@ -220,7 +220,7 @@ lib.mkMerge [
                     "Caddy" = {
                       icon = "caddy.svg";
                       description = "Web server with automatic HTTPS";
-                      siteMonitor = "{{HOMEPAGE_VAR_CADDY_HEALTH}}";
+                      siteMonitor = "https://health.{{HOMEPAGE_VAR_DOMAIN}}";
                       widget = {
                         type = "caddy";
                         url = "http://${bridge.ipv4.host}:${toString caddy.adminPort}";
