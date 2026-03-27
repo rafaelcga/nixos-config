@@ -45,6 +45,23 @@ let
     header -Server
   '';
 
+  mkLogFormat =
+    hostName:
+    let
+      fileName = "access${lib.optionalString (hostName != "") "-${hostName}"}.log";
+    in
+    ''
+      output file ${config.services.caddy.logDir}/${fileName} {
+          mode 644
+          roll_size 100MiB
+          roll_keep 5
+          roll_keep_for 14d
+      }
+      format console {
+          time_format rfc3339
+      }
+    '';
+
   mkVirtualHost =
     name: host:
     let
@@ -57,6 +74,7 @@ let
       ];
     in
     lib.nameValuePair "${name}.{$DOMAIN}" {
+      logFormat = mkLogFormat name;
       extraConfig = ''
         ${commonBlock}
         route {
@@ -64,8 +82,22 @@ let
             reverse_proxy ${host.originHost}:${host.originPort}
         }
       '';
-      logFormat = null;
     };
+
+  healthEndpoint = {
+    "health.{$DOMAIN}" = {
+      logFormat = mkLogFormat "health";
+      extraConfig = ''
+        route {
+            ${lib.optionalString crowdsec.enable ''
+              crowdsec
+              appsec
+            ''}
+            respond "OK" 200
+        }
+      '';
+    };
+  };
 
   virtualHostOpts = {
     options = {
@@ -128,18 +160,8 @@ in
           package = pkgs.local.caddy-with-plugins;
 
           inherit globalConfig;
-          logFormat = ''
-            output file ${config.services.caddy.logDir}/access.log {
-                mode 644
-                roll_size 100MiB
-                roll_keep 5
-                roll_keep_for 14d
-            }
-            format console {
-                time_format rfc3339
-            }
-          '';
-          virtualHosts = lib.mapAttrs' mkVirtualHost cfg.virtualHosts;
+          logFormat = mkLogFormat "";
+          virtualHosts = lib.recursiveUpdate (lib.mapAttrs' mkVirtualHost cfg.virtualHosts) healthEndpoint;
         };
 
         networking.firewall =

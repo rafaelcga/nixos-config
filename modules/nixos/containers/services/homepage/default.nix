@@ -67,7 +67,10 @@ lib.mkMerge [
               "${getSecretName service}" = { };
             };
         in
-        lib.concatMapAttrs mkSecret serviceData;
+        lib.mkMerge [
+          (lib.concatMapAttrs mkSecret serviceData)
+          { "web_domain" = { }; }
+        ];
 
       templates."homepage-env".content =
         let
@@ -86,6 +89,7 @@ lib.mkMerge [
         lib.concatStringsSep "\n" (
           lib.mapAttrsToList mkEnvVar serviceData
           ++ [
+            "HOMEPAGE_VAR_DOMAIN=${config.sops.placeholder."web_domain"}"
             "HOMEPAGE_ALLOWED_HOSTS=${
               lib.concatMapStringsSep "," (host: "${host}:${toString cfg.hostPort}") allowedHosts
             }"
@@ -214,7 +218,7 @@ lib.mkMerge [
                     "Caddy" = {
                       icon = "caddy.svg";
                       description = "Web server with automatic HTTPS";
-                      siteMonitor = "http://${bridge.ipv4.host}:80";
+                      siteMonitor = "http://health.{{HOMEPAGE_VAR_DOMAIN}}";
                       widget = {
                         type = "caddy";
                         url = "http://${bridge.ipv4.host}:${toString caddy.adminPort}";
