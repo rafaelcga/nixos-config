@@ -300,7 +300,8 @@ in
               "~@resources"
             ];
             UMask = "0077";
-            ExecStartPost = "+systemctl try-restart crowdsec-firewall-bouncer.service";
+            # Fixes deadlock when performing a nixos-rebuild
+            ExecStartPost = "+systemctl --no-block try-restart crowdsec-firewall-bouncer.service";
           };
         };
 
