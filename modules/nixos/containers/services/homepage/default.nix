@@ -9,7 +9,7 @@
 let
   cfg_containers = config.modules.nixos.containers.services;
   cfg = cfg_containers.homepage;
-  inherit (config.modules.nixos) caddy;
+  inherit (config.modules.nixos) caddy home-vpn;
   inherit (config.modules.nixos.containers) bridge;
 
   utils = import "${inputs.self}/lib/utils.nix" { inherit lib; };
@@ -76,11 +76,19 @@ lib.mkMerge [
             lib.optionalString (needsSecret data) ''
               ${getEnvVarName service}=${config.sops.placeholder.${getSecretName service}}
             '';
+          allowedHosts = [
+            hostLocalIp
+          ]
+          ++ lib.optionals home-vpn.enable [
+            (utils.addToLastOctet home-vpn.network.address 1) # Wireguard VPN server IP
+          ];
         in
         lib.concatStringsSep "\n" (
           lib.mapAttrsToList mkEnvVar serviceData
           ++ [
-            "HOMEPAGE_ALLOWED_HOSTS=${hostLocalIp}:${toString cfg.hostPort}"
+            "HOMEPAGE_ALLOWED_HOSTS=${
+              lib.concatMapStringsSep "," (host: "${host}:${toString cfg.hostPort}") allowedHosts
+            }"
           ]
         );
     };
