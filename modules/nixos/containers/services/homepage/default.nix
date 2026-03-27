@@ -210,22 +210,17 @@ lib.mkMerge [
               }
               {
                 "Home Network" = [
-                  (
-                    let
-                      adminUrl = "http://${bridge.ipv4.host}:${toString caddy.adminPort}";
-                    in
-                    lib.optionalAttrs caddy.enable {
-                      "Caddy" = {
-                        icon = "caddy.svg";
-                        description = "Web server with automatic HTTPS";
-                        siteMonitor = "${adminUrl}/config/";
-                        widget = {
-                          type = "caddy";
-                          url = adminUrl;
-                        };
+                  (lib.optionalAttrs caddy.enable {
+                    "Caddy" = {
+                      icon = "caddy.svg";
+                      description = "Web server with automatic HTTPS";
+                      siteMonitor = "http://${bridge.ipv4.host}:80";
+                      widget = {
+                        type = "caddy";
+                        url = "http://${bridge.ipv4.host}:${toString caddy.adminPort}";
                       };
-                    }
-                  )
+                    };
+                  })
                 ]
                 ++ (mkGroup [
                   "adguard"
