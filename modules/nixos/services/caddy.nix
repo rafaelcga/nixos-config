@@ -66,40 +66,31 @@ let
       }
     '';
 
-  mkVirtualHost =
-    name: host:
-    let
-      preProxyBlock = lib.concatStringsSep "\n" [
-        host.extraConfig
-        (lib.optionalString crowdsec.enable ''
+  mkRoute = directives: ''
+    ${commonBlock}
+    route {
+        ${lib.optionalString crowdsec.enable ''
           crowdsec
           appsec
-        '')
-      ];
-    in
+        ''}
+        ${directives}
+    }
+  '';
+
+  mkVirtualHost =
+    name: host:
     lib.nameValuePair "${name}.{$DOMAIN}" {
       logFormat = mkLogFormat name;
-      extraConfig = ''
-        ${commonBlock}
-        route {
-            ${preProxyBlock}
-            reverse_proxy ${host.originHost}:${host.originPort}
-        }
+      extraConfig = mkRoute ''
+        ${host.extraConfig}
+        reverse_proxy ${host.originHost}:${host.originPort}
       '';
     };
 
   healthEndpoint = {
     "health.{$DOMAIN}" = {
       logFormat = mkLogFormat "health";
-      extraConfig = ''
-        route {
-            ${lib.optionalString crowdsec.enable ''
-              crowdsec
-              appsec
-            ''}
-            respond 200
-        }
-      '';
+      extraConfig = mkRoute "respond 200";
     };
   };
 
