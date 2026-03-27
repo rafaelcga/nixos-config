@@ -89,10 +89,12 @@ lib.mkMerge [
         lib.concatStringsSep "\n" (
           lib.mapAttrsToList mkEnvVar serviceData
           ++ [
-            "HOMEPAGE_VAR_DOMAIN=${config.sops.placeholder."web_domain"}"
             "HOMEPAGE_ALLOWED_HOSTS=${
               lib.concatMapStringsSep "," (host: "${host}:${toString cfg.hostPort}") allowedHosts
             }"
+          ]
+          ++ lib.optionals caddy.enable [
+            "HOMEPAGE_VAR_CADDY_HEALTH=http://health.${config.sops.placeholder."web_domain"}"
           ]
         );
     };
@@ -218,7 +220,7 @@ lib.mkMerge [
                     "Caddy" = {
                       icon = "caddy.svg";
                       description = "Web server with automatic HTTPS";
-                      siteMonitor = "http://health.{{HOMEPAGE_VAR_DOMAIN}}";
+                      siteMonitor = "{{HOMEPAGE_VAR_CADDY_HEALTH}}";
                       widget = {
                         type = "caddy";
                         url = "http://${bridge.ipv4.host}:${toString caddy.adminPort}";
