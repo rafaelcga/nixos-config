@@ -13,10 +13,6 @@ let
       ''
         admin :${toString cfg.adminPort}
 
-        tls {
-            resolvers 9.9.9.9 1.1.1.1
-        }
-
         acme_dns porkbun {
             api_key {$PORKBUN_API_KEY}
             api_secret_key {$PORKBUN_API_SECRET_KEY}
@@ -35,6 +31,10 @@ let
   );
 
   commonBlock = ''
+    tls {
+        resolvers 9.9.9.9 1.1.1.1
+    }
+
     encode
 
     header {
