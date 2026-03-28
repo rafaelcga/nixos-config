@@ -80,9 +80,9 @@ let
       isLocal ? false,
     }:
     ''
-      ${lib.optionalString isLocal abortNonLocal}
       ${commonBlock}
       route {
+          ${lib.optionalString isLocal abortNonLocal}
           ${lib.optionalString crowdsec.enable ''
             crowdsec
             appsec
