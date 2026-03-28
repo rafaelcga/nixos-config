@@ -56,7 +56,7 @@ in
       {
         hardware = {
           enableAllFirmware = true; # Enables all firmware regardless of license
-          graphics = {
+          graphics = lib.mkDefault {
             inherit (cfg) enable enable32Bit;
             inherit extraPackages;
           };
