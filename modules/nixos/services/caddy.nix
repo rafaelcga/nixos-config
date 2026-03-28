@@ -100,6 +100,7 @@ let
           ${host.extraConfig}
           reverse_proxy ${host.originHost}:${host.originPort}
         '';
+        inherit (host) isLocal;
       };
     };
 
@@ -143,6 +144,12 @@ let
           Additional lines of configuration appended to this virtual host in the
           automatically generated `Caddyfile`
         '';
+      };
+
+      isLocal = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+        description = "Whether to serve the route only to local systems";
       };
     };
   };
