@@ -31,7 +31,10 @@
     cachyos-settings.enable = true;
     flatpak.enable = true;
     # Apps
-    steam.enable = true;
+    steam = {
+      enable = true;
+      protonWayland.enable = true;
+    };
     uv.enable = true;
   };
 

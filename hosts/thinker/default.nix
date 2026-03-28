@@ -32,6 +32,11 @@
     # Features
     cachyos-settings.enable = true;
     flatpak.enable = true;
+    # Apps
+    steam = {
+      enable = true;
+      protonWayland.enable = true;
+    };
   };
 
   # Native NixOS modules and stand-alone configurations
