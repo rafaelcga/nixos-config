@@ -52,6 +52,11 @@ let
     header -Server
   '';
 
+  abortNonLocal = ''
+    @denied not remote_ip private_ranges {$PUBLIC_IP}
+    abort @denied
+  '';
+
   mkLogFormat =
     hostName:
     let
@@ -69,31 +74,42 @@ let
       }
     '';
 
-  mkRoute = directives: ''
-    ${commonBlock}
-    route {
-        ${lib.optionalString crowdsec.enable ''
-          crowdsec
-          appsec
-        ''}
-        ${directives}
-    }
-  '';
+  mkRoute =
+    {
+      directives,
+      isLocal ? false,
+    }:
+    ''
+      ${lib.optionalString isLocal abortNonLocal}
+      ${commonBlock}
+      route {
+          ${lib.optionalString crowdsec.enable ''
+            crowdsec
+            appsec
+          ''}
+          ${directives}
+      }
+    '';
 
   mkVirtualHost =
     name: host:
     lib.nameValuePair "${name}.{$DOMAIN}" {
       logFormat = mkLogFormat name;
-      extraConfig = mkRoute ''
-        ${host.extraConfig}
-        reverse_proxy ${host.originHost}:${host.originPort}
-      '';
+      extraConfig = mkRoute {
+        directives = ''
+          ${host.extraConfig}
+          reverse_proxy ${host.originHost}:${host.originPort}
+        '';
+      };
     };
 
   healthEndpoint = {
     "health.{$DOMAIN}" = {
       logFormat = mkLogFormat "health";
-      extraConfig = mkRoute "respond 200";
+      extraConfig = mkRoute {
+        directives = "respond 200";
+        isLocal = true;
+      };
     };
   };
 

@@ -186,28 +186,32 @@ in
           wantedBy = [ "multi-user.target" ];
           after = [ "NetworkManager.service" ];
           requires = after;
-          serviceConfig =
-            let
-              echo = lib.getExe' pkgs.coreutils "echo";
-              nmcli = lib.getExe' pkgs.networkmanager "nmcli";
-            in
-            {
-              Type = "oneshot";
-              ExecStart = pkgs.writeShellScript "nmcli_import_wg_home.sh" ''
-                if ${nmcli} connection show ${cfg.interfaceName} >/dev/null 2>&1; then
-                  ${echo} "Interface found already, deleting..."
-                  ${nmcli} connection delete ${cfg.interfaceName}
-                fi
+          serviceConfig = {
+            Type = "oneshot";
+            ExecStart = lib.getExe (
+              pkgs.writeShellApplication {
+                name = "nmcli-import-wg-home";
+                runtimeInputs = with pkgs; [
+                  coreutils
+                  networkmanager
+                ];
+                text = ''
+                  if nmcli connection show ${cfg.interfaceName} >/dev/null 2>&1; then
+                    echo "Interface found already, deleting..."
+                    nmcli connection delete ${cfg.interfaceName}
+                  fi
 
-                ${echo} "Importing WireGuard configuration..."
-                ${nmcli} connection import \
-                  type wireguard \
-                  file "${config.sops.templates."wireguard/${cfg.interfaceName}.conf".path}"
-                ${nmcli} connection down ${cfg.interfaceName}
-                ${nmcli} connection modify \
-                  ${cfg.interfaceName} connection.autoconnect no
-              '';
-            };
+                  echo "Importing WireGuard configuration..."
+                  nmcli connection import \
+                    type wireguard \
+                    file "${config.sops.templates."wireguard/${cfg.interfaceName}.conf".path}"
+                  nmcli connection down ${cfg.interfaceName}
+                  nmcli connection modify \
+                    ${cfg.interfaceName} connection.autoconnect no
+                '';
+              }
+            );
+          };
         };
       })
     ]
