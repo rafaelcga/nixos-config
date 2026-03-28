@@ -8,6 +8,9 @@ let
   inherit (config.modules.nixos) crowdsec;
   cfg = config.modules.nixos.caddy;
 
+  ipUpdateServiceName = "caddy-ip-updater";
+  envFile = "/var/lib/${ipUpdateServiceName}/caddy.env";
+
   globalConfig = lib.concatStringsSep "\n" (
     [
       ''
@@ -151,7 +154,7 @@ in
         services.caddy = {
           enable = true;
           enableReload = false; # Needs to be false for admin API to work
-          environmentFile = config.sops.templates."caddy-env".path;
+          environmentFile = envFile;
           package = pkgs.local.caddy-with-plugins;
 
           inherit globalConfig;
@@ -183,11 +186,87 @@ in
           '';
         };
 
-        systemd.tmpfiles.settings = {
-          "10-caddy-logs" = {
-            "${config.services.caddy.logDir}".d = {
+        systemd = {
+          services =
+            let
               inherit (config.services.caddy) user group;
-              mode = "0755";
+            in
+            {
+              "${ipUpdateServiceName}" = rec {
+                description = "Fetches the server's public IP and adds it as an environment variable PUBLIC_IP";
+                wantedBy = [
+                  "multi-user.target"
+                  "caddy.service"
+                ];
+                before = [ "caddy.service" ];
+                after = [
+                  "sops-nix.service"
+                  "network-online.target"
+                ];
+                wants = after;
+                serviceConfig =
+                  let
+                    prevState = "/var/lib/${ipUpdateServiceName}/prev-ip";
+                  in
+                  {
+                    Type = "oneshot";
+                    Restart = "on-failure";
+                    RestartSec = "10s";
+                    StateDirectory = ipUpdateServiceName;
+                    ExecStart = lib.getExe (
+                      pkgs.writeShellApplication {
+                        name = "update-caddy-ip";
+                        runtimeInputs = with pkgs; [
+                          coreutils
+                          curl
+                          systemd
+                        ];
+                        text = ''
+                          CURR_IP="$(curl -s -m 5 https://checkip.amazonaws.com)"
+                          PREV_IP="$(cat "${prevState}" 2>/dev/null || echo "$CURR_IP")"
+
+                          if [[ -z "$CURR_IP" ]]; then
+                            echo "Error: Could not fetch public IP."
+                            exit 1
+                          fi
+
+                          if [[ "$CURR_IP" != "$PREV_IP" || ! -f "${envFile}" ]]; then
+                            cat "${config.sops.templates."caddy-env".path}" >"${envFile}"
+                            echo "PUBLIC_IP=$CURR_IP" >>"${envFile}"
+
+                            chown ${user}:${group} "${envFile}"
+                            chmod 0600 "${envFile}"
+
+                            if systemctl is-active --quiet caddy; then
+                              echo "Restarting Caddy to apply new IP..."
+                              systemctl restart caddy
+                            else
+                              echo "Caddy is not currently active; skipping restart."
+                            fi
+                          fi
+
+                          echo "$CURR_IP" >"${prevState}"
+                        '';
+                      }
+                    );
+                  };
+              };
+            };
+
+          timers."${ipUpdateServiceName}" = {
+            description = "Run Caddy IP Updater periodically";
+            wantedBy = [ "timers.target" ];
+            timerConfig = {
+              OnUnitActiveSec = "5min";
+            };
+          };
+
+          tmpfiles.settings = {
+            "10-caddy-logs" = {
+              "${config.services.caddy.logDir}".d = {
+                inherit (config.services.caddy) user group;
+                mode = "0755";
+              };
             };
           };
         };
@@ -213,48 +292,49 @@ in
           let
             inherit (config.services.caddy) user group;
             inherit (crowdsec.bouncers.caddy)
-              bouncerName
               apiKeyFile
               serviceName
               ;
 
-            envFile = "/run/${bouncerName}/caddy.env";
-            genServiceName = "generate-caddy-env-file";
+            bouncerEnvServiceName = "caddy-bouncer-env-generator";
+            bouncerEnvFile = "/var/lib/${bouncerEnvServiceName}/caddy.env";
           in
           {
-            "${genServiceName}" = rec {
+            "${bouncerEnvServiceName}" = rec {
               description = "Append CrowdSec's API key to Caddy's environment variables";
               wantedBy = [ "multi-user.target" ];
-              after = [ "${serviceName}.service" ];
+              after = [
+                "${serviceName}.service"
+                "${ipUpdateServiceName}.service"
+              ];
               wants = after;
-              serviceConfig =
-                let
-                  cat = lib.getExe' pkgs.coreutils "cat";
-                  chmod = lib.getExe' pkgs.coreutils "chmod";
-                  chown = lib.getExe' pkgs.coreutils "chown";
-                  echo = lib.getExe' pkgs.coreutils "echo";
-                  mkdir = lib.getExe' pkgs.coreutils "mkdir";
-                in
-                {
-                  Type = "oneshot";
-                  ExecStartPre = "${mkdir} -p \"${dirOf envFile}\"";
-                  ExecStart = pkgs.writeShellScript "caddy/add_crowdsec_api.sh" ''
-                    ${cat} ${config.sops.templates."caddy-env".path} >"${envFile}"
-                    ${echo} "CROWDSEC_API_KEY=$(${cat} ${apiKeyFile})" >>"${envFile}"
-                  '';
-                  ExecStartPost = [
-                    "${chown} ${user}:${group} \"${envFile}\""
-                    "${chmod} 0600 \"${envFile}\""
-                  ];
-                };
+              serviceConfig = {
+                Type = "oneshot";
+                StateDirectory = bouncerEnvServiceName;
+                ExecStart = lib.getExe (
+                  pkgs.writeShellApplication {
+                    name = "add-crowdsec-api-caddy";
+                    runtimeInputs = with pkgs; [ coreutils ];
+                    text = ''
+                      echo "CROWDSEC_API_KEY=$(cat ${apiKeyFile})" >"${bouncerEnvFile}"
+
+                      chown ${user}:${group} "${bouncerEnvFile}"
+                      chmod 0600 "${bouncerEnvFile}"
+                    '';
+                  }
+                );
+              };
             };
 
             caddy = rec {
-              after = [ "${genServiceName}.service" ];
+              after = [ "${bouncerEnvServiceName}.service" ];
               wants = after;
               serviceConfig = {
                 TimeoutStopSec = lib.mkForce "20s";
-                EnvironmentFile = lib.mkForce envFile;
+                EnvironmentFile = lib.mkForce [
+                  envFile
+                  bouncerEnvFile
+                ];
               };
             };
           };

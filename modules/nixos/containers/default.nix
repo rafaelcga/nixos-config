@@ -200,17 +200,18 @@ in
                 description = "Set the current and default ACL to rwX for user mounts";
                 before = lib.mapAttrsToList (name: _: "container@${name}.service") withUserMounts;
                 wantedBy = before;
-                serviceConfig =
-                  let
-                    setfacl = lib.getExe' pkgs.acl "setfacl";
-                    chmodScriptText = lib.concatMapStringsSep "\n" (mountPath: ''
-                      ${setfacl} -Rm g::rwX,d:g::rwX "${mountPath}"
-                    '') userMountPaths;
-                  in
-                  {
-                    Type = "oneshot";
-                    ExecStart = pkgs.writeShellScript "setfacl_user_mounts.sh" chmodScriptText;
-                  };
+                serviceConfig = {
+                  Type = "oneshot";
+                  ExecStart = lib.getExe (
+                    pkgs.writeShellApplication {
+                      name = "setfacl-user-mounts";
+                      runtimeInputs = with pkgs; [ acl ];
+                      text = lib.concatMapStringsSep "\n" (mountPath: ''
+                        setfacl -Rm g::rwX,d:g::rwX "${mountPath}"
+                      '') userMountPaths;
+                    }
+                  );
+                };
               };
             };
           in
