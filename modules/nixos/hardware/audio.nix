@@ -32,16 +32,19 @@ in
       pam.loginLimits = [
         {
           domain = "@audio";
+          item = "rtprio";
+          type = "-";
+          value = 95;
+        }
+        {
+          domain = "@audio";
           item = "memlock";
           type = "-";
           value = "unlimited";
         }
       ];
     };
-    users.users.${userName}.extraGroups = [
-      "audio"
-      "realtime"
-    ];
+    users.users.${userName}.extraGroups = [ "audio" ];
 
     services.pipewire = {
       enable = true;
