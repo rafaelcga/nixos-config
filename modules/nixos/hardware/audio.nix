@@ -1,4 +1,5 @@
 {
+  inputs,
   config,
   lib,
   userName,
@@ -9,6 +10,8 @@ let
   usesBluetooth = config.hardware.bluetooth.enable;
 in
 {
+  imports = [ inputs.musnix.nixosModules.musnix ];
+
   options.modules.nixos.audio = {
     enable = lib.mkEnableOption "Enable audio through PipeWire";
 
@@ -26,24 +29,8 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    # Real-time audio
-    security = {
-      rtkit.enable = true;
-      pam.loginLimits = [
-        {
-          domain = "@audio";
-          item = "rtprio";
-          type = "-";
-          value = 95;
-        }
-        {
-          domain = "@audio";
-          item = "memlock";
-          type = "-";
-          value = "unlimited";
-        }
-      ];
-    };
+    # Real-time audio with musnix
+    musnix.enable = true;
     users.users.${userName}.extraGroups = [ "audio" ];
 
     services.pipewire = {
