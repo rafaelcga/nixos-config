@@ -38,6 +38,7 @@ in
       alsa.enable = true;
       alsa.support32Bit = true;
       pulse.enable = true;
+      jack.enable = true;
 
       wireplumber.extraConfig.bluetoothEnhancements = lib.mkIf usesBluetooth {
         "monitor.bluez.properties" = {
