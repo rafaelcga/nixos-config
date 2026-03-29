@@ -29,8 +29,8 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    # Real-time audio with musnix
     musnix.enable = true;
+    security.rtkit.enable = true;
     users.users.${userName}.extraGroups = [ "audio" ];
 
     services.pipewire = {
