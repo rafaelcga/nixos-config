@@ -52,24 +52,28 @@ in
             "default.clock.max-quantum" = cfg.bufferSize;
           };
         };
-        pipewire-pulse."92-low-latency" = {
-          context.modules = [
-            {
-              name = "libpipewire-module-protocol-pulse";
-              args = {
-                pulse.min.req = "${cfg.bufferSize}/${cfg.sampleRate}";
-                pulse.default.req = "${cfg.bufferSize}/${cfg.sampleRate}";
-                pulse.max.req = "${cfg.bufferSize}/${cfg.sampleRate}";
-                pulse.min.quantum = "${cfg.bufferSize}/${cfg.sampleRate}";
-                pulse.max.quantum = "${cfg.bufferSize}/${cfg.sampleRate}";
-              };
-            }
-          ];
-          stream.properties = {
-            node.latency = "${cfg.bufferSize}/${cfg.sampleRate}";
-            resample.quality = 1;
+        pipewire-pulse."92-low-latency" =
+          let
+            latency = "${toString cfg.bufferSize}/${toString cfg.sampleRate}";
+          in
+          {
+            context.modules = [
+              {
+                name = "libpipewire-module-protocol-pulse";
+                args = {
+                  pulse.min.req = latency;
+                  pulse.default.req = latency;
+                  pulse.max.req = latency;
+                  pulse.min.quantum = latency;
+                  pulse.max.quantum = latency;
+                };
+              }
+            ];
+            stream.properties = {
+              node.latency = latency;
+              resample.quality = 1;
+            };
           };
-        };
       };
     };
   };
