@@ -27,8 +27,21 @@ in
 
   config = lib.mkIf cfg.enable {
     # Real-time audio
-    security.rtkit.enable = true;
-    users.users.${userName}.extraGroups = [ "audio" ];
+    security = {
+      rtkit.enable = true;
+      pam.loginLimits = [
+        {
+          domain = "@audio";
+          item = "memlock";
+          type = "-";
+          value = "unlimited";
+        }
+      ];
+    };
+    users.users.${userName}.extraGroups = [
+      "audio"
+      "realtime"
+    ];
 
     services.pipewire = {
       enable = true;
