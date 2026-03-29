@@ -1,4 +1,9 @@
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  userName,
+  ...
+}:
 let
   cfg = config.modules.nixos.audio;
   usesBluetooth = config.hardware.bluetooth.enable;
@@ -21,7 +26,10 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    # Real-time audio
     security.rtkit.enable = true;
+    users.users.${userName}.extraGroups = [ "audio" ];
+
     services.pipewire = {
       enable = true;
       alsa.enable = true;
