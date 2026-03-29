@@ -27,7 +27,7 @@ in
       alsa.enable = true;
       alsa.support32Bit = true;
       pulse.enable = true;
-      #jack.enable = true;
+      jack.enable = true;
 
       wireplumber.extraConfig.bluetoothEnhancements = lib.mkIf usesBluetooth {
         "monitor.bluez.properties" = {
@@ -43,12 +43,32 @@ in
         };
       };
 
-      extraConfig.pipewire."92-low-latency" = {
-        "context.properties" = {
-          "default.clock.rate" = cfg.sampleRate;
-          "default.clock.quantum" = cfg.bufferSize;
-          "default.clock.min-quantum" = cfg.bufferSize;
-          "default.clock.max-quantum" = cfg.bufferSize;
+      extraConfig = {
+        pipewire."92-low-latency" = {
+          "context.properties" = {
+            "default.clock.rate" = cfg.sampleRate;
+            "default.clock.quantum" = cfg.bufferSize;
+            "default.clock.min-quantum" = cfg.bufferSize;
+            "default.clock.max-quantum" = cfg.bufferSize;
+          };
+        };
+        pipewire-pulse."92-low-latency" = {
+          context.modules = [
+            {
+              name = "libpipewire-module-protocol-pulse";
+              args = {
+                pulse.min.req = "${cfg.bufferSize}/${cfg.sampleRate}";
+                pulse.default.req = "${cfg.bufferSize}/${cfg.sampleRate}";
+                pulse.max.req = "${cfg.bufferSize}/${cfg.sampleRate}";
+                pulse.min.quantum = "${cfg.bufferSize}/${cfg.sampleRate}";
+                pulse.max.quantum = "${cfg.bufferSize}/${cfg.sampleRate}";
+              };
+            }
+          ];
+          stream.properties = {
+            node.latency = "${cfg.bufferSize}/${cfg.sampleRate}";
+            resample.quality = 1;
+          };
         };
       };
     };
