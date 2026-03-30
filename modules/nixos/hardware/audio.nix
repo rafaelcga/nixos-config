@@ -7,7 +7,6 @@
 }:
 let
   cfg = config.modules.nixos.audio;
-  usesBluetooth = config.hardware.bluetooth.enable;
 in
 {
   imports = [ inputs.musnix.nixosModules.musnix ];
@@ -39,7 +38,7 @@ in
       alsa.support32Bit = true;
       pulse.enable = true;
 
-      wireplumber.extraConfig.bluetoothEnhancements = lib.mkIf usesBluetooth {
+      wireplumber.extraConfig.bluetoothEnhancements = lib.mkIf config.hardware.bluetooth.enable {
         "monitor.bluez.properties" = {
           "bluez5.enable-sbc-xq" = true;
           "bluez5.enable-msbc" = true;
