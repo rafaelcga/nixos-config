@@ -3,6 +3,8 @@
 
 set -euo pipefail
 
+REPO_DIR="$(dirname "$(dirname "$(realpath "${BASH_SOURCE[0]}")")")"
+
 function usage() {
   echo "Usage: $(basename "${BASH_SOURCE[0]}") -p <path_to_nix_file>"
   echo ""
@@ -26,11 +28,16 @@ if [[ -z "$pkg_path" || ! -f "$pkg_path" ]]; then
   usage
 fi
 
-echo "Attempting to build $pkg_path to detect hash..."
+if [[ "$(basename "$pkg_path")" == "package.nix" ]]; then
+  pkg_name=$(basename "$(dirname "$pkg_path")")
+else
+  pkg_name=$(basename "$pkg_path" .nix)
+fi
+echo "Attempting to build $pkg_name to detect hash..."
 
 # Temporarily disable exit-on-error to capture the output of a failing build
 set +e
-output=$(nix-build -E "with import <nixpkgs> {}; callPackage $pkg_path {}" 2>&1)
+output=$(nix build "$REPO_DIR#$pkg_name" --no-link --print-build-logs 2>&1)
 status=$?
 set -e
 
