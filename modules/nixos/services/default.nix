@@ -3,5 +3,6 @@
     ./caddy.nix
     ./crowdsec.nix
     ./home-vpn.nix
+    ./unmanic.nix
   ];
 }
