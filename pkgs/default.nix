@@ -4,4 +4,5 @@
   papermc = pkgs.callPackage ./papermc/package.nix { };
   cachyos-settings = pkgs.callPackage ./cachyos-settings.nix { };
   crowdsec = pkgs.callPackage ./crowdsec.nix { };
+  unmanic = pkgs.callPackage ./unmanic.nix { };
 }
