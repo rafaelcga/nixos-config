@@ -27,12 +27,13 @@ lib.mkMerge [
           user = user.name;
           package = pkgs.local.unmanic;
           inherit (user) group;
-
-          port = cfg.containerPort;
           openFirewall = true;
 
           inherit (cfg) dataDir;
-          cacheDir = "${cfg.dataDir}/cache"; # Don't use /tmp in case its in RAM
+          settings = {
+            ui_port = cfg.containerPort;
+            cache_path = "${cfg.dataDir}/cache"; # Don't use /tmp in case its in RAM
+          };
         };
       };
     };
