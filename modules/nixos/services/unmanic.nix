@@ -264,7 +264,7 @@ in
     environment.systemPackages = [ cfg.package ];
 
     networking.firewall = lib.mkIf cfg.openFirewall {
-      allowedTCPPorts = [ cfg.port ];
+      allowedTCPPorts = [ cfg.settings.ui_port ];
     };
 
     systemd.services.unmanic = rec {
@@ -325,7 +325,7 @@ in
             }
           );
 
-        ExecStart = "${lib.getExe cfg.package} --port ${toString cfg.port}";
+        ExecStart = "${lib.getExe cfg.package}";
         Restart = "always";
         RestartSec = 30;
 
