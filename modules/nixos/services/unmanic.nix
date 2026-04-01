@@ -105,18 +105,15 @@ in
         RestrictNamespaces = !config.boot.isContainer;
         RestrictRealtime = true;
         RestrictSUIDSGID = true;
-        ProcSubset = "pid";
         ProtectControlGroups = !config.boot.isContainer;
         ProtectClock = true;
         ProtectHostname = true;
         ProtectKernelLogs = !config.boot.isContainer;
         ProtectKernelModules = !config.boot.isContainer;
         ProtectKernelTunables = !config.boot.isContainer;
-        ProtectProc = "invisible";
         ProtectSystem = true;
         LockPersonality = true;
         PrivateTmp = !config.boot.isContainer;
-        PrivateUsers = true;
         RemoveIPC = true;
         SystemCallFilter = [
           "@system-service"
