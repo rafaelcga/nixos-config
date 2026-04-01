@@ -86,7 +86,7 @@ in
         User = cfg.user;
         Group = cfg.group;
 
-        ExecStart = "${lib.getExe cfg.package} --port ${cfg.port}";
+        ExecStart = "${lib.getExe cfg.package} --port ${toString cfg.port}";
         Restart = "always";
         RestartSec = 30;
 
