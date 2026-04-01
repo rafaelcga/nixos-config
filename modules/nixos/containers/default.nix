@@ -124,6 +124,9 @@ in
   };
 
   config = lib.mkIf (enabledContainers != { }) {
+    boot.enableContainers = true;
+    virtualisation.containers.enable = true;
+
     networking = {
       nat = {
         enable = true;
@@ -305,9 +308,17 @@ in
                 ];
 
                 config = {
-                  imports = [ "${inputs.self}/modules/nixos/system/nix-impl.nix" ];
+                  imports = [
+                    "${inputs.self}/modules/nixos/system/nix-impl.nix"
+                  ]
+                  ++ lib.optionals containerConfig.gpuPassthrough [
+                    "${inputs.self}/modules/nixos/hardware/graphics.nix"
+                  ];
+
+                  _module.args.userName = user.name;
 
                   modules.nixos.nix-impl = config.modules.nixos.nix-impl;
+                  modules.nixos.graphics = lib.mkIf containerConfig.gpuPassthrough config.modules.nixos.graphics;
 
                   # Use systemd-resolved inside the container
                   # Workaround for bug https://github.com/NixOS/nixpkgs/issues/162686

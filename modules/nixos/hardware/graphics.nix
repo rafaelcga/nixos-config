@@ -55,7 +55,7 @@ in
     lib.mkMerge [
       {
         hardware = {
-          enableAllFirmware = true; # Enables all firmware regardless of license
+          enableAllFirmware = !config.boot.isContainer; # Enables all firmware regardless of license
           graphics = lib.mkDefault {
             inherit (cfg) enable enable32Bit;
             inherit extraPackages;
@@ -69,14 +69,14 @@ in
         ];
       }
       (lib.mkIf (lib.elem "intel" cfg.vendors) {
-        boot.kernelParams = [ "i915.enable_guc=3" ];
-        services.xserver.videoDrivers = [ "modesetting" ];
+        boot.kernelParams = lib.mkIf (!config.boot.isContainer) [ "i915.enable_guc=3" ];
+        services.xserver.videoDrivers = lib.mkIf (!config.boot.isContainer) [ "modesetting" ];
         environment.sessionVariables.LIBVA_DRIVER_NAME = "iHD";
       })
-      (lib.mkIf (lib.elem "amd" cfg.vendors) {
+      (lib.mkIf (lib.elem "amd" cfg.vendors && !config.boot.isContainer) {
         services.xserver.videoDrivers = [ "amdgpu" ];
       })
-      (lib.mkIf (lib.elem "nvidia" cfg.vendors) {
+      (lib.mkIf (lib.elem "nvidia" cfg.vendors && !config.boot.isContainer) {
         hardware.nvidia.open = true; # Open-source kernel module
         services.xserver.videoDrivers = [ "nvidia" ];
       })

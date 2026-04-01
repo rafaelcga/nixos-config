@@ -1,9 +1,4 @@
-{
-  inputs,
-  config,
-  lib,
-  ...
-}:
+{ config, lib, ... }:
 let
   cfg = config.modules.nixos.containers.services.jellyfin;
   inherit (config.modules.nixos.containers) user;
@@ -21,12 +16,6 @@ lib.mkMerge [
       config =
         { config, pkgs, ... }:
         {
-          imports = [ "${inputs.self}/modules/nixos/hardware/graphics.nix" ];
-
-          _module.args.userName = user.name;
-
-          modules.nixos.graphics = lib.mkIf cfg.gpuPassthrough configModules.graphics;
-
           services.jellyfin = {
             enable = true;
             user = user.name;
@@ -44,6 +33,9 @@ lib.mkMerge [
             jellyfin-web
             jellyfin-ffmpeg
           ];
+
+          systemd.services.jellyfin.environment.LIBVA_DRIVER_NAME =
+            config.environment.sessionVariables.LIBVA_DRIVER_NAME;
 
           systemd.tmpfiles.settings =
             let
