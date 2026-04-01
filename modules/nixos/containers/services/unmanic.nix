@@ -32,6 +32,8 @@ lib.mkMerge [
           inherit (cfg) dataDir;
           settings = {
             ui_port = cfg.containerPort;
+            enable_library_scanner = true;
+            run_full_scan_on_start = true;
             cache_path = "${cfg.dataDir}/cache"; # Don't use /tmp in case its in RAM
           };
         };
