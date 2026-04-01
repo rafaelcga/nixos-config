@@ -307,28 +307,24 @@ in
                   containerConfig.userMounts
                 ];
 
-                config = {
-                  imports = [
-                    "${inputs.self}/modules/nixos/system/nix-impl.nix"
-                  ]
-                  ++ lib.optionals containerConfig.gpuPassthrough [
-                    "${inputs.self}/modules/nixos/hardware/graphics.nix"
-                  ];
+                config = lib.mkMerge [
+                  {
+                    # Use systemd-resolved inside the container
+                    # Workaround for bug https://github.com/NixOS/nixpkgs/issues/162686
+                    networking.useHostResolvConf = lib.mkForce false;
+                    services.resolved.enable = true;
 
-                  _module.args.userName = user.name;
+                    users.users."${cfg.user.name}" = config.users.users.${cfg.user.name};
 
-                  modules.nixos.nix-impl = config.modules.nixos.nix-impl;
-                  modules.nixos.graphics = lib.mkIf containerConfig.gpuPassthrough config.modules.nixos.graphics;
+                    system.stateVersion = config.system.stateVersion;
+                  }
+                  (lib.mkIf containerConfig.gpuPassthrough {
+                    imports = [ "${inputs.self}/modules/nixos/hardware/graphics.nix" ];
 
-                  # Use systemd-resolved inside the container
-                  # Workaround for bug https://github.com/NixOS/nixpkgs/issues/162686
-                  networking.useHostResolvConf = lib.mkForce false;
-                  services.resolved.enable = true;
-
-                  users.users."${cfg.user.name}" = config.users.users.${cfg.user.name};
-
-                  system.stateVersion = config.system.stateVersion;
-                };
+                    _module.args.userName = user.name;
+                    modules.nixos.graphics = config.modules.nixos.graphics;
+                  })
+                ];
               };
           in
           lib.mapAttrs mkBaseConfig enabledContainers;
