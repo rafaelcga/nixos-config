@@ -49,7 +49,6 @@
       jellyfin = {
         enable = true;
         hostPort = 8003;
-        gpuPassthrough = true;
         userMounts."/media" = {
           hostPath = "/mnt/media";
           isReadOnly = true;
@@ -71,6 +70,14 @@
       qbittorrent = {
         enable = true;
         hostPort = 8008;
+      };
+      unmanic = {
+        enable = true;
+        hostPort = 8009;
+        userMounts."/media" = {
+          hostPath = "/mnt/media";
+          isReadOnly = false;
+        };
       };
     };
   };

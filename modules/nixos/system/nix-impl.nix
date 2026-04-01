@@ -69,7 +69,7 @@ in
       # };
     };
 
-    programs.nh = {
+    programs.nh = lib.mkIf (!config.boot.isContainer) {
       enable = true;
       clean = {
         enable = true; # nh clean as a service
