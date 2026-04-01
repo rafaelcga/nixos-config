@@ -8,7 +8,6 @@
 let
   cfg = config.modules.nixos.containers.services.unmanic;
   inherit (config.modules.nixos.containers) user;
-  package = pkgs.local.unmanic;
 in
 lib.mkMerge [
   {
@@ -26,7 +25,7 @@ lib.mkMerge [
         modules.nixos.unmanic = {
           enable = true;
           user = user.name;
-          inherit package;
+          package = pkgs.local.unmanic;
           inherit (user) group;
 
           port = cfg.containerPort;
