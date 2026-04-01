@@ -17,7 +17,7 @@ let
         extraConfig = { };
       };
     in
-    defaultData // data;
+    lib.recursiveUpdate defaultData data;
 in
 lib.mapAttrs mkServiceData {
   lidarr = {
