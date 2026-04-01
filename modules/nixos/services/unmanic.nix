@@ -22,6 +22,12 @@ in
       '';
     };
 
+    cacheDir = lib.mkOption {
+      type = lib.types.str;
+      default = "/tmp/unmanic";
+      description = "The directory where Unmanic will store temporary files";
+    };
+
     port = lib.mkOption {
       type = lib.types.port;
       default = 8888;
@@ -79,6 +85,7 @@ in
 
       environment = {
         HOME_DIR = cfg.dataDir;
+        cache_path = cfg.cacheDir; # Overriding setting.json through environment
       };
 
       serviceConfig = {
