@@ -207,6 +207,7 @@ lib.mkMerge [
                   "sonarr"
                   "prowlarr"
                   "qbittorrent"
+                  "unmanic"
                 ];
               }
               {

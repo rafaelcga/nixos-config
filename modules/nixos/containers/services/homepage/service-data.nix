@@ -112,4 +112,13 @@ lib.mapAttrs mkServiceData {
       "status"
     ];
   };
+
+  unmanic = {
+    description = "Library optimiser";
+    widgetFields = [
+      "active_workers"
+      "total_workers"
+      "records_total"
+    ];
+  };
 }
