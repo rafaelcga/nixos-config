@@ -309,6 +309,10 @@ in
 
                 config = lib.mkMerge [
                   {
+                    imports = [ "${inputs.self}/modules/nixos/system/nix-impl.nix" ];
+
+                    modules.nixos.nix-impl = config.modules.nixos.nix-impl;
+
                     # Use systemd-resolved inside the container
                     # Workaround for bug https://github.com/NixOS/nixpkgs/issues/162686
                     networking.useHostResolvConf = lib.mkForce false;
