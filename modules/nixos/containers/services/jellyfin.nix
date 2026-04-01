@@ -9,6 +9,7 @@ lib.mkMerge [
     modules.nixos.containers.services.jellyfin = {
       containerPort = 8096;
       dataDir = "/var/lib/jellyfin";
+      gpuPassthrough = lib.mkDefault true;
     };
   }
   (lib.mkIf cfg.enable {

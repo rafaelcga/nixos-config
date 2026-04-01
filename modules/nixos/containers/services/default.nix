@@ -8,5 +8,6 @@
     ./proton-vpn.nix
     ./qbittorrent.nix
     ./servarr.nix
+    ./unmanic.nix
   ];
 }
