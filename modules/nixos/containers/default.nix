@@ -314,17 +314,14 @@ in
                     networking.useHostResolvConf = lib.mkForce false;
                     services.resolved.enable = true;
 
-                    users = {
-                      users."${cfg.user.name}" = config.users.users.${cfg.user.name};
-                      groups."${cfg.user.group}" = config.users.groups.${cfg.user.group};
-                    };
+                    users.users."${cfg.user.name}" = config.users.users.${cfg.user.name};
 
                     system.stateVersion = config.system.stateVersion;
                   }
                   (lib.mkIf containerConfig.gpuPassthrough {
                     imports = [ "${inputs.self}/modules/nixos/hardware/graphics.nix" ];
 
-                    _module.args.userName = user.name;
+                    _module.args.userName = cfg.user.name;
                     modules.nixos.graphics = config.modules.nixos.graphics;
                   })
                 ];
