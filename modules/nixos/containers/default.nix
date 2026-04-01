@@ -314,7 +314,10 @@ in
                     networking.useHostResolvConf = lib.mkForce false;
                     services.resolved.enable = true;
 
-                    users.users."${cfg.user.name}" = config.users.users.${cfg.user.name};
+                    users = {
+                      users."${cfg.user.name}" = config.users.users.${cfg.user.name};
+                      groups."${cfg.user.group}" = config.users.groups.${cfg.user.group};
+                    };
 
                     system.stateVersion = config.system.stateVersion;
                   }
