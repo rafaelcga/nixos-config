@@ -284,7 +284,6 @@ in
         SupplementaryGroups = [
           "video"
           "render"
-          "media"
         ];
 
         ExecStartPre =
