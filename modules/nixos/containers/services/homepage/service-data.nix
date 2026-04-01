@@ -7,7 +7,7 @@ let
     let
       defaultData = {
         displayName = utils.capitalizeFirst name;
-        icon = "${name}.svg";
+        icon = name;
         description = "";
         type = name;
         container = name;
