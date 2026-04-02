@@ -270,7 +270,9 @@ python3.pkgs.buildPythonApplication (finalAttrs: {
       rm -rf ${webServerPath}/frontend
     '';
 
-  makeWrapperArgs = [ "--prefix PATH : ${lib.makeBinPath [ pkgs.ffmpeg ]}" ];
+  makeWrapperArgs = [
+    "--prefix PATH : ${lib.makeBinPath [ (pkgs.ffmpeg-full.override { withUnfree = true; }) ]}"
+  ];
 
   meta = {
     description = "Unmanic - Library Optimiser";
