@@ -3,6 +3,8 @@ let
   inherit (config.home) homeDirectory;
   cfg = config.modules.home-manager.yt-dlp;
 
+  cacheDir = "${homeDirectory}/.cache/yt-dlp";
+
   settings = {
     # Output
     output = "${homeDirectory}/Videos/%(playlist)s/%(title)s.%(ext)s";
@@ -18,7 +20,7 @@ let
     ignore-errors = true;
     continue = true;
     no-overwrites = true;
-    download-archive = "${homeDirectory}/.cache/yt-dlp/downloads.txt";
+    download-archive = "${cacheDir}/downloads.txt";
     # Post-processing options
     remux-video = "mkv";
     embed-chapters = true;
@@ -41,5 +43,7 @@ in
       inherit settings;
       enable = true;
     };
+
+    systemd.user.tmpfiles.rules = [ "d ${cacheDir} 0755 - - - -" ];
   };
 }
