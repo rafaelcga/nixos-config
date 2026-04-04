@@ -28,7 +28,7 @@ let
       Python = {
         language_servers = [
           "ty"
-          "!basedpyright"
+          "ruff"
         ];
         format_on_save = "on";
         formatter = [
