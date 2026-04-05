@@ -122,7 +122,7 @@ in
           modules = [ ./container-options.nix ];
           specialArgs = {
             inherit inputs;
-            hostConfig = config; # Pass the host's config cleanly
+            hostConfig = config;
           };
         }
       );
