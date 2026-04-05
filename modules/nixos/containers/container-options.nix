@@ -45,6 +45,11 @@ in
       description = "Container name";
     };
 
+    uid = lib.mkOption {
+      type = lib.types.int;
+      description = "Unique ID for the container";
+    };
+
     address = lib.mkOption {
       type = lib.types.str;
       default = utils.removeMask containers.${name}.localAddress;

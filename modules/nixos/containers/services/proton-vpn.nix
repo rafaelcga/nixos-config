@@ -25,6 +25,7 @@ in
 lib.mkMerge [
   {
     modules.nixos.containers.services.proton-vpn = {
+      uid = 5;
       enable = containersBehindVpn != { };
     };
   }

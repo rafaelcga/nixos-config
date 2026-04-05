@@ -121,6 +121,15 @@ in
       default = { };
       description = "Enabled containers";
     };
+
+    gpuDevices = lib.mkOption {
+      type = lib.types.listOf lib.types.str;
+      default = [
+        "/dev/dri/card0"
+        "/dev/dri/renderD128"
+      ];
+      description = "List of available GPU devices";
+    };
   };
 
   config = lib.mkIf (enabledContainers != { }) {
@@ -210,7 +219,7 @@ in
                       name = "setfacl-user-mounts";
                       runtimeInputs = with pkgs; [ acl ];
                       text = lib.concatMapStringsSep "\n" (mountPath: ''
-                        setfacl -Rm g::rwX,d:g::rwX "${mountPath}"
+                        setfacl -m g::rwX,d:g::rwX "${mountPath}"
                       '') userMountPaths;
                     }
                   );
@@ -225,6 +234,9 @@ in
 
         tmpfiles.settings =
           let
+            withDataDir = lib.filterAttrs (
+              _: containerConfig: containerConfig.dataDir != null
+            ) enabledContainers;
             settingTemplate =
               name: _:
               lib.nameValuePair "${cfg.dataDir}/${name}" {
@@ -236,7 +248,7 @@ in
               };
           in
           {
-            "10-make-container-dirs" = lib.mapAttrs' settingTemplate enabledContainers;
+            "10-make-container-dirs" = lib.mapAttrs' settingTemplate withDataDir;
           };
       };
 
@@ -244,119 +256,106 @@ in
       let
         baseConfigs =
           let
-            mkBaseConfig =
-              name: containerConfig:
-              let
-                gpuDevices = [
-                  "/dev/dri/card0"
-                  "/dev/dri/renderD128"
-                ];
-              in
-              {
-                autoStart = true;
-                privateNetwork = true;
-                privateUsers = "identity";
+            mkBaseConfig = name: containerConfig: {
+              autoStart = true;
+              privateNetwork = true;
+              privateUsers = "identity";
 
-                forwardPorts =
-                  let
-                    mkForwardPort =
-                      serviceName:
-                      let
-                        hostPort = containerConfig.hostPorts.${serviceName};
-                        containerPort = containerConfig.containerPorts.${serviceName};
-                      in
-                      lib.optionals (hostPort != null && containerPort != null) [
-                        { inherit hostPort containerPort; }
-                      ];
-
-                    # Get name of services from hostPorts present in containerPorts
-                    serviceNames = lib.attrNames (
-                      lib.intersectAttrs containerConfig.containerPorts containerConfig.hostPorts
-                    );
-                  in
-                  lib.concatMap mkForwardPort serviceNames;
-
-                allowedDevices =
-                  let
-                    mkAllowedDevice = node: {
-                      inherit node;
-                      modifier = "rw";
-                    };
-                  in
-                  lib.mkIf containerConfig.gpuPassthrough (lib.map mkAllowedDevice gpuDevices);
-
-                bindMounts = lib.mkMerge [
-                  (lib.mkIf (containerConfig.dataDir != null) {
-                    "${containerConfig.dataDir}" = {
-                      hostPath = "${cfg.dataDir}/${name}";
-                      isReadOnly = false;
-                    };
-                  })
-                  (
+              forwardPorts =
+                let
+                  mkForwardPort =
+                    serviceName:
                     let
-                      mkValuePairs = name: {
-                        inherit name;
-                        value = {
-                          isReadOnly = false;
-                        };
-                      };
-                      gpuBindMounts = lib.listToAttrs (lib.map mkValuePairs gpuDevices);
+                      hostPort = containerConfig.hostPorts.${serviceName};
+                      containerPort = containerConfig.containerPorts.${serviceName};
                     in
-                    lib.mkIf containerConfig.gpuPassthrough gpuBindMounts
-                  )
-                  containerConfig.userMounts
-                ];
+                    lib.optionals (hostPort != null && containerPort != null) [
+                      { inherit hostPort containerPort; }
+                    ];
 
-                config = lib.mkMerge [
-                  {
-                    imports = [ "${inputs.self}/modules/nixos/system/nix-impl.nix" ];
+                  # Get name of services from hostPorts present in containerPorts
+                  serviceNames = lib.attrNames (
+                    lib.intersectAttrs containerConfig.containerPorts containerConfig.hostPorts
+                  );
+                in
+                lib.concatMap mkForwardPort serviceNames;
 
-                    modules.nixos.nix-impl = config.modules.nixos.nix-impl;
+              allowedDevices =
+                let
+                  mkAllowedDevice = node: {
+                    inherit node;
+                    modifier = "rw";
+                  };
+                in
+                lib.mkIf containerConfig.gpuPassthrough (lib.map mkAllowedDevice cfg.gpuDevices);
 
-                    # Use systemd-resolved inside the container
-                    # Workaround for bug https://github.com/NixOS/nixpkgs/issues/162686
-                    networking.useHostResolvConf = lib.mkForce false;
-                    services.resolved.enable = true;
+              bindMounts = lib.mkMerge [
+                (lib.mkIf (containerConfig.dataDir != null) {
+                  "${containerConfig.dataDir}" = {
+                    hostPath = "${cfg.dataDir}/${name}";
+                    isReadOnly = false;
+                  };
+                })
+                (
+                  let
+                    mkValuePairs = name: {
+                      inherit name;
+                      value = {
+                        isReadOnly = false;
+                      };
+                    };
+                    gpuBindMounts = lib.listToAttrs (lib.map mkValuePairs cfg.gpuDevices);
+                  in
+                  lib.mkIf containerConfig.gpuPassthrough gpuBindMounts
+                )
+                containerConfig.userMounts
+              ];
 
-                    users.users."${cfg.user.name}" = config.users.users.${cfg.user.name};
+              config = lib.mkMerge [
+                {
+                  imports = [ "${inputs.self}/modules/nixos/system/nix-impl.nix" ];
 
-                    system.stateVersion = config.system.stateVersion;
-                  }
-                  (lib.mkIf containerConfig.gpuPassthrough {
-                    imports = [ "${inputs.self}/modules/nixos/hardware/graphics.nix" ];
+                  modules.nixos.nix-impl = config.modules.nixos.nix-impl;
 
-                    _module.args.userName = cfg.user.name;
-                    modules.nixos.graphics = config.modules.nixos.graphics;
-                  })
-                ];
-              };
+                  # Use systemd-resolved inside the container
+                  # Workaround for bug https://github.com/NixOS/nixpkgs/issues/162686
+                  networking.useHostResolvConf = lib.mkForce false;
+                  services.resolved.enable = true;
+
+                  users.users."${cfg.user.name}" = config.users.users.${cfg.user.name};
+
+                  system.stateVersion = config.system.stateVersion;
+                }
+                (lib.mkIf containerConfig.gpuPassthrough {
+                  imports = [ "${inputs.self}/modules/nixos/hardware/graphics.nix" ];
+
+                  _module.args.userName = cfg.user.name;
+                  modules.nixos.graphics = config.modules.nixos.graphics;
+                })
+              ];
+            };
           in
           lib.mapAttrs mkBaseConfig enabledContainers;
 
         addressConfigs =
           let
-            sortedNames = lib.sort lib.lessThan (lib.attrNames enabledContainers);
-            # Using imap1, index starts from 1
-            mkValuePairs =
-              index: name:
+            mkAddressConfig =
+              name: containerConfig:
               let
-                localIpv4 = utils.addToAddress cfg.bridge.ipv4.host index;
-                localIpv6 = utils.addToAddress cfg.bridge.ipv6.host index;
+                localIpv4 = utils.addToAddress cfg.bridge.ipv4.host containerConfig.uid;
+                localIpv6 = utils.addToAddress cfg.bridge.ipv6.host containerConfig.uid;
               in
               {
-                inherit name;
-                value = {
-                  hostBridge = cfg.bridge.name;
-                  localAddress = "${localIpv4}/${toString cfg.bridge.ipv4.mask}";
-                  localAddress6 = "${localIpv6}/${toString cfg.bridge.ipv6.mask}";
+                hostBridge = cfg.bridge.name;
+                localAddress = "${localIpv4}/${toString cfg.bridge.ipv4.mask}";
+                localAddress6 = "${localIpv6}/${toString cfg.bridge.ipv6.mask}";
 
-                  config = {
-                    networking.defaultGateway = cfg.bridge.ipv4.host;
-                  };
+                config = {
+                  networking.defaultGateway = cfg.bridge.ipv4.host;
                 };
               };
           in
-          lib.listToAttrs (lib.imap1 mkValuePairs sortedNames);
+          lib.mapAttrs mkAddressConfig enabledContainers;
       in
       lib.mkMerge [
         baseConfigs

@@ -53,6 +53,7 @@ in
 lib.mkMerge [
   {
     modules.nixos.containers.services.homepage = {
+      uid = 1;
       containerPort = 8082;
       dataDir = "/etc/homepage-dashboard";
     };

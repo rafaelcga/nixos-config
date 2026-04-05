@@ -11,6 +11,7 @@ in
 lib.mkMerge [
   {
     modules.nixos.containers.services.qbittorrent = {
+      uid = 6;
       containerPort = 8080;
       dataDir = "/var/lib/qBittorrent";
       behindVpn = true;
