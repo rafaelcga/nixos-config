@@ -6,6 +6,7 @@ in
 lib.mkMerge [
   {
     modules.nixos.containers.services.ddns-updater = {
+      uid = 3;
       containerPort = 8000;
     };
   }

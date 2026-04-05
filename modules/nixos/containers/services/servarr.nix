@@ -14,6 +14,7 @@ in
 lib.mkMerge [
   {
     modules.nixos.containers.services.servarr = {
+      uid = 7;
       containerPorts = {
         lidarr = 8686;
         radarr = 7878;

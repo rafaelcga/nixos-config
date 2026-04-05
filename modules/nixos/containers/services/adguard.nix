@@ -21,6 +21,7 @@ in
 lib.mkMerge [
   {
     modules.nixos.containers.services.adguard = {
+      uid = 2;
       containerPort = 3000;
       dataDir = "/var/lib/AdGuardHome";
     };

@@ -12,6 +12,7 @@ in
 lib.mkMerge [
   {
     modules.nixos.containers.services.unmanic = {
+      uid = 8;
       containerPort = 8888;
       dataDir = "/var/lib/unmanic";
       gpuPassthrough = lib.mkDefault true;
