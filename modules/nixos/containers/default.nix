@@ -215,7 +215,7 @@ in
               in
               lib.mapAttrs' modifyService enabledContainers;
 
-            setfaclUserMounts = {
+            setfaclUserMounts = lib.mkIf (withUserMounts != { }) {
               "setfacl-user-mounts" = rec {
                 description = "Set the current and default ACL to rwX for user mounts";
                 before = lib.mapAttrsToList (name: _: "container@${name}.service") withUserMounts;
