@@ -103,16 +103,6 @@ lib.mapAttrs mkServiceData {
     ];
   };
 
-  minecraft = {
-    description = "PaperMC server";
-    protocol = "udp";
-    widgetFields = [
-      "players"
-      "version"
-      "status"
-    ];
-  };
-
   unmanic = {
     description = "Library optimiser";
     widgetFields = [
