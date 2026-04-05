@@ -19,7 +19,7 @@ let
     # AI
     agent_servers = {
       gemini = {
-        ignore_system_version = false;
+        type = "registry";
       };
     };
     show_edit_predictions = false;
