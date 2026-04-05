@@ -1,22 +1,17 @@
 {
   inputs,
-  config,
-  lib,
-  ...
-}:
-let
-  cfg = config.modules.nixos.containers;
-  inherit (config) containers;
-
-  utils = import "${inputs.self}/lib/utils.nix" { inherit lib; };
-in
-{
+  hostConfig,
   config,
   lib,
   name,
   ...
 }:
 let
+  cfg = hostConfig.modules.nixos.containers;
+  inherit (hostConfig) containers;
+
+  utils = import "${inputs.self}/lib/utils.nix" { inherit lib; };
+
   mountOpts = {
     options = {
       hostPath = lib.mkOption {
