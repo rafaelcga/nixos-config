@@ -64,6 +64,9 @@ lib.mkMerge [
                 ''
                   ${iptablesBin} ${action} INPUT -s ${block} -j ACCEPT
                   ${iptablesBin} ${action} OUTPUT -d ${block} -j ACCEPT
+                  # Allow containers to talk to the LAN and each other through the gateway
+                  ${iptablesBin} ${action} FORWARD -s ${block} -j ACCEPT
+                  ${iptablesBin} ${action} FORWARD -d ${block} -j ACCEPT
                 '';
             in
             lib.concatMapStringsSep "\n" ruleTemplate (localIpv4 ++ localIpv6);
@@ -91,10 +94,15 @@ lib.mkMerge [
                   iptablesBin = lib.getExe' pkgs.iptables binName;
                 in
                 ''
+                  # Block traffic originating from the VPN container itself from leaking
                   ${iptablesBin} ${action} OUTPUT \
                     ! -o ${wireguardInterface} \
                     -m mark ! --mark $(${wg} show ${wireguardInterface} fwmark) \
                     -m addrtype ! --dst-type LOCAL \
+                    -j REJECT
+                  # Block traffic forwarded from other containers from leaking
+                  ${iptablesBin} ${action} FORWARD \
+                    -i eth0 ! -o ${wireguardInterface} \
                     -j REJECT
                 '';
             in
