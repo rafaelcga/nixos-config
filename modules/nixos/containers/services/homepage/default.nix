@@ -236,11 +236,6 @@ lib.mkMerge [
                 ]);
               }
               {
-                "Game Servers" = mkGroup [
-                  "minecraft"
-                ];
-              }
-              {
                 "Release Calendar" = [
                   {
                     "" = {
