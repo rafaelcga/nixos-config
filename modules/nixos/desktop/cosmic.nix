@@ -23,7 +23,6 @@ in
       cosmic.excludePackages = with pkgs; [
         cosmic-term
         cosmic-player
-        cosmic-screenshot
       ];
       systemPackages = with pkgs; [
         loupe
