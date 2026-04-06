@@ -27,6 +27,11 @@ jobs:
           nix_path: nixpkgs=channel:nixos-unstable
           github_access_token: ${{ secrets.GH_TOKEN }}
 
+      - uses: cachix/cachix-action@v17
+        with:
+          name: rafaelcga
+          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+
       - name: Update flake.lock
         run: nix flake update
 

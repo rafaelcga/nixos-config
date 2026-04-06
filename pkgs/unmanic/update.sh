@@ -11,6 +11,7 @@ PKG_NAME="$(basename $ROOT_DIR)"
 echo "Checking for base package updates..."
 (cd "$REPO_DIR" && nix-update "$PKG_NAME" --flake)
 
+echo "Updating npm dependencies hash..."
 fake_hash="sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
 sed -i -E "s|npmDepsHash = \"[^\"]*\"|npmDepsHash = \"$fake_hash\"|" "$PKG_FILE"
 

@@ -41,12 +41,7 @@ grep -oP "github.com/([a-zA-Z0-9_\-]+/?)+@[^\"]+" "$PKG_FILE" \
   done
 
 echo "Updating derivation hash..."
-
-# Replace non-valid strings by a fake hash
 fake_hash="sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
-if ! hash="$(grep -qP "hash\s*=\s*\"\K(sha256-[\w\+\/=]+)" "$PKG_FILE")"; then
-  echo "[❗] Warning: Non-valid string found in hash, replacing with fake hash \"$fake_hash\"."
-  sed -i "s|$hash|$fake_hash|" "$PKG_FILE"
-fi
+sed -i -E "s|hash = \"[^\"]*\"|hash = \"$fake_hash\"|" "$PKG_FILE"
 
 (cd "$REPO_DIR/scripts" && ./update_hash.sh -p "$PKG_FILE")
