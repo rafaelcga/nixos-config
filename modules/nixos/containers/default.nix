@@ -212,6 +212,11 @@ in
             };
           };
           networks = {
+            "30-${cfg.bridge.name}-lan" = {
+              matchConfig.Name = config.modules.nixos.networking.defaultInterface;
+              networkConfig = {
+                Bridge=cfg.bridge.name;
+              };
             "30-${cfg.bridge.name}" = {
               matchConfig.Name = cfg.bridge.name;
               networkConfig = {
