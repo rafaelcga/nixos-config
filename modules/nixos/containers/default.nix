@@ -216,6 +216,7 @@ in
                 "${cfg.bridge.ipv4.host}/${toString cfg.bridge.ipv4.mask}"
                 "${cfg.bridge.ipv6.host}/${toString cfg.bridge.ipv6.mask}"
               ];
+              LinkLocalAddressing = "no";
               IPv6AcceptRA = false;
               ConfigureWithoutCarrier = true;
             };
