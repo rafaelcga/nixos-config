@@ -226,6 +226,9 @@ in
                   "${cfg.bridge.ipv6.host}/${toString cfg.bridge.ipv6.mask}"
                 ];
               };
+              linkConfig = {
+                RequiredForOnline = "routable";
+              };
             };
           };
         };

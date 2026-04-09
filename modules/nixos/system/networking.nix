@@ -106,6 +106,9 @@ in
           Address = "${cfg.staticIp}/24";
           Gateway = cfg.defaultGateway;
         };
+        linkConfig = {
+          RequiredForOnline = "routable";
+        };
       };
     })
   ];
