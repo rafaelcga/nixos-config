@@ -105,6 +105,8 @@ in
         networkConfig = {
           Address = "${cfg.staticIp}/24";
           Gateway = cfg.defaultGateway;
+          DHCP = "ipv6";
+          IPv6AcceptRA = "yes";
         };
         linkConfig.RequiredForOnline = "routable";
       };
