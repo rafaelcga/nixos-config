@@ -350,6 +350,12 @@ in
                       Address = config.containers.${name}.localAddress;
                       Gateway = cfg.bridge.ipv4.host;
                     };
+                    addresses = [
+                      {
+                        Address = config.containers.${name}.localAddress6;
+                        DuplicateAddressDetection = "none";
+                      }
+                    ];
                     linkConfig.RequiredForOnline = "routable";
                   };
                 };
