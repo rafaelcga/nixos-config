@@ -212,14 +212,15 @@ in
           networks."30-${cfg.bridge.name}" = {
             matchConfig.Name = cfg.bridge.name;
             networkConfig = {
-              Address = [
-                "${cfg.bridge.ipv4.host}/${toString cfg.bridge.ipv4.mask}"
-                "${cfg.bridge.ipv6.host}/${toString cfg.bridge.ipv6.mask}"
-              ];
-              # Address = "${cfg.bridge.ipv4.host}/${toString cfg.bridge.ipv4.mask}";
-              IPv6DuplicateAddressDetection = false;
+              Address = "${cfg.bridge.ipv4.host}/${toString cfg.bridge.ipv4.mask}";
               ConfigureWithoutCarrier = true;
             };
+            addresses = [
+              {
+                Address = "${cfg.bridge.ipv6.host}/${toString cfg.bridge.ipv6.mask}";
+                DuplicateAddressDetection = "none";
+              }
+            ];
             linkConfig.RequiredForOnline = "no";
           };
         };
