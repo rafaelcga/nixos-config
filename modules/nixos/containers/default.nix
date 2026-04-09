@@ -176,17 +176,6 @@ in
           "interface-name:${cfg.bridge.name}"
         ];
       };
-
-      firewall =
-        let
-          forwardPorts = lib.concatMap (container: container.forwardPorts) (lib.attrValues config.containers);
-          filterProtocol = protocol: lib.filter (port: port.protocol == protocol) forwardPorts;
-          uniqueHostPorts = protocol: lib.unique (lib.catAttrs "hostPort" (filterProtocol protocol));
-        in
-        {
-          allowedTCPPorts = uniqueHostPorts "tcp";
-          allowedUDPPorts = uniqueHostPorts "udp";
-        };
     };
 
     users.users."${cfg.user.name}" = {
@@ -358,21 +347,15 @@ in
 
         addressConfigs =
           let
-            mkAddressConfig =
-              name: containerConfig:
-              let
-                localIpv4 = utils.addToAddress cfg.bridge.ipv4.host containerConfig.uid;
-                localIpv6 = utils.addToAddress cfg.bridge.ipv6.host containerConfig.uid;
-              in
-              {
-                hostBridge = cfg.bridge.name;
-                localAddress = "${localIpv4}/${toString cfg.bridge.ipv4.mask}";
-                localAddress6 = "${localIpv6}/${toString cfg.bridge.ipv6.mask}";
+            mkAddressConfig = name: containerConfig: {
+              hostBridge = cfg.bridge.name;
+              localAddress = "${containerConfig.address}/${toString cfg.bridge.ipv4.mask}";
+              localAddress6 = "${containerConfig.address6}/${toString cfg.bridge.ipv6.mask}";
 
-                config = {
-                  networking.defaultGateway = cfg.bridge.ipv4.host;
-                };
+              config = {
+                networking.defaultGateway = cfg.bridge.ipv4.host;
               };
+            };
           in
           lib.mapAttrs mkAddressConfig enabledContainers;
       in
