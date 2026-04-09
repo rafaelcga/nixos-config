@@ -176,19 +176,6 @@ in
           "interface-name:${cfg.bridge.name}"
         ];
       };
-
-      firewall.logRefusedPackets = true;
-
-      # firewall =
-      #   let
-      #     forwardPorts = lib.concatMap (container: container.forwardPorts) (lib.attrValues config.containers);
-      #     filterProtocol = protocol: lib.filter (port: port.protocol == protocol) forwardPorts;
-      #     uniqueHostPorts = protocol: lib.unique (lib.catAttrs "hostPort" (filterProtocol protocol));
-      #   in
-      #   {
-      #     allowedTCPPorts = uniqueHostPorts "tcp";
-      #     allowedUDPPorts = uniqueHostPorts "udp";
-      #   };
     };
 
     users.users."${cfg.user.name}" = {
