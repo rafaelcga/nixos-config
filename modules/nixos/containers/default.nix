@@ -150,15 +150,6 @@ in
         enableIPv6 = true;
         externalInterface = config.modules.nixos.networking.defaultInterface;
         internalInterfaces = [ cfg.bridge.name ];
-        # forwardPorts test
-        forwardPorts = [
-          {
-            destination = "172.22.0.2:8082";
-            sourcePort = 8000;
-            proto = "tcp";
-          }
-          # You can add the rest of your containers (8001 -> 172.22.0.3, etc) right here
-        ];
       };
 
       bridges."${cfg.bridge.name}".interfaces = [ ];
