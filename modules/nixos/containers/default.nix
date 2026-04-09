@@ -152,22 +152,6 @@ in
         internalInterfaces = [ cfg.bridge.name ];
       };
 
-      # bridges."${cfg.bridge.name}".interfaces = [ ];
-      # interfaces."${cfg.bridge.name}" = {
-      #   ipv4.addresses = [
-      #     {
-      #       address = cfg.bridge.ipv4.host;
-      #       prefixLength = cfg.bridge.ipv4.mask;
-      #     }
-      #   ];
-      #   ipv6.addresses = [
-      #     {
-      #       address = cfg.bridge.ipv6.host;
-      #       prefixLength = cfg.bridge.ipv6.mask;
-      #     }
-      #   ];
-      # };
-
       # Prevent NetworkManager from managing container interfaces
       # https://nixos.org/manual/nixos/stable/#sec-container-networking
       networkmanager = lib.mkIf config.networking.networkmanager.enable {
