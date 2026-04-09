@@ -47,10 +47,18 @@ in
 
     address = lib.mkOption {
       type = lib.types.str;
-      default = utils.removeMask containers.${name}.localAddress;
+      default = utils.addToAddress cfg.bridge.ipv4.host cfg.services.${name}.uid;
       readOnly = true;
       internal = true;
       description = "IPv4 of the container within the bridge";
+    };
+
+    address6 = lib.mkOption {
+      type = lib.types.str;
+      default = utils.addToAddress cfg.bridge.ipv6.host cfg.services.${name}.uid;
+      readOnly = true;
+      internal = true;
+      description = "IPv6 of the container within the bridge";
     };
 
     hostPort = lib.mkOption {
