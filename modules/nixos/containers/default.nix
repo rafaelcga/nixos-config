@@ -177,11 +177,7 @@ in
         ];
       };
 
-      firewall.extraForwardRules =
-        let
-          bridgeAddress = "${cfg.bridge.ipv4.host}/${toString cfg.bridge.ipv4.mask}";
-        in
-        lib.mkIf config.networking.nftables "ip daddr ${bridgeAddress} accept";
+      firewall.logRefusedPackets = true;
 
       # firewall =
       #   let
