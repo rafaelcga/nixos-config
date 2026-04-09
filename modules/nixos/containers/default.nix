@@ -177,6 +177,12 @@ in
         ];
       };
 
+      firewall.extraForwardRules =
+        let
+          bridgeAddress = "${cfg.bridge.ipv4.host}/${toString cfg.bridge.ipv4.mask}";
+        in
+        lib.mkIf config.networking.nftables "ip daddr ${bridgeAddress} accept";
+
       # firewall =
       #   let
       #     forwardPorts = lib.concatMap (container: container.forwardPorts) (lib.attrValues config.containers);
