@@ -353,7 +353,10 @@ in
               localAddress6 = "${containerConfig.address6}/${toString cfg.bridge.ipv6.mask}";
 
               config = {
-                networking.defaultGateway = cfg.bridge.ipv4.host;
+                networking.defaultGateway = {
+                  address = cfg.bridge.ipv4.host;
+                  interface = "eth0";
+                };
               };
             };
           in

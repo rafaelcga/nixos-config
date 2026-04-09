@@ -190,7 +190,7 @@ lib.mkMerge [
           let
             mkModifiedConfig = name: containerConfig: {
               config = {
-                networking.defaultGateway = lib.mkForce cfg.address;
+                networking.defaultGateway.address = lib.mkForce cfg.address;
               };
             };
           in
