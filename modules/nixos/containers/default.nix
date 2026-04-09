@@ -203,31 +203,23 @@ in
       in
       {
         network = {
-          netdevs = {
-            "20-${cfg.bridge.name}" = {
-              netdevConfig = {
-                Kind = "bridge";
-                Name = cfg.bridge.name;
-              };
+          netdevs."20-${cfg.bridge.name}" = {
+            netdevConfig = {
+              Kind = "bridge";
+              Name = cfg.bridge.name;
             };
           };
-          networks = {
-            "30-${cfg.bridge.name}-lan" = {
-              matchConfig.Name = config.modules.nixos.networking.defaultInterface;
-              networkConfig.Bridge = cfg.bridge.name;
-              linkConfig.RequiredForOnline = "enslaved";
+          networks."30-${cfg.bridge.name}" = {
+            matchConfig.Name = cfg.bridge.name;
+            networkConfig = {
+              Address = [
+                "${cfg.bridge.ipv4.host}/${toString cfg.bridge.ipv4.mask}"
+                "${cfg.bridge.ipv6.host}/${toString cfg.bridge.ipv6.mask}"
+              ];
+              IPv6AcceptRA = false;
+              ConfigureWithoutCarrier = true;
             };
-            "30-${cfg.bridge.name}" = {
-              matchConfig.Name = cfg.bridge.name;
-              networkConfig = {
-                Address = [
-                  "${cfg.bridge.ipv4.host}/${toString cfg.bridge.ipv4.mask}"
-                  "${cfg.bridge.ipv6.host}/${toString cfg.bridge.ipv6.mask}"
-                ];
-                ConfigureWithoutCarrier = true;
-              };
-              linkConfig.RequiredForOnline = "routable";
-            };
+            linkConfig.RequiredForOnline = "routable";
           };
         };
 
