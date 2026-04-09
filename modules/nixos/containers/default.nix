@@ -152,21 +152,21 @@ in
         internalInterfaces = [ cfg.bridge.name ];
       };
 
-      bridges."${cfg.bridge.name}".interfaces = [ ];
-      interfaces."${cfg.bridge.name}" = {
-        ipv4.addresses = [
-          {
-            address = cfg.bridge.ipv4.host;
-            prefixLength = cfg.bridge.ipv4.mask;
-          }
-        ];
-        ipv6.addresses = [
-          {
-            address = cfg.bridge.ipv6.host;
-            prefixLength = cfg.bridge.ipv6.mask;
-          }
-        ];
-      };
+      # bridges."${cfg.bridge.name}".interfaces = [ ];
+      # interfaces."${cfg.bridge.name}" = {
+      #   ipv4.addresses = [
+      #     {
+      #       address = cfg.bridge.ipv4.host;
+      #       prefixLength = cfg.bridge.ipv4.mask;
+      #     }
+      #   ];
+      #   ipv6.addresses = [
+      #     {
+      #       address = cfg.bridge.ipv6.host;
+      #       prefixLength = cfg.bridge.ipv6.mask;
+      #     }
+      #   ];
+      # };
 
       # Prevent NetworkManager from managing container interfaces
       # https://nixos.org/manual/nixos/stable/#sec-container-networking
@@ -202,6 +202,28 @@ in
           lib.unique allUserMountPaths;
       in
       {
+        network = {
+          netdevs = {
+            "20-${cfg.bridge.name}" = {
+              netdevConfig = {
+                Kind = "bridge";
+                Name = cfg.bridge.name;
+              };
+            };
+          };
+          networks = {
+            "30-${cfg.bridge.name}" = {
+              matchConfig.Name = cfg.bridge.name;
+              networkConfig = {
+                Address = [
+                  "${cfg.bridge.ipv4.host}/${toString cfg.bridge.ipv4.mask}"
+                  "${cfg.bridge.ipv6.host}/${toString cfg.bridge.ipv6.mask}"
+                ];
+              };
+            };
+          };
+        };
+
         services =
           let
             addRequiresBridge =

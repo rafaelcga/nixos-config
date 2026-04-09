@@ -92,23 +92,19 @@ in
         };
       };
 
-      systemd.network.wait-online.enable =
-        config.systemd.network.enable && !config.networking.networkmanager.enable;
+      systemd.network = {
+        enable = true;
+        wait-online.enable = !config.networking.networkmanager.enable;
+      };
 
       users.users.${userName}.extraGroups = [ "networkmanager" ];
     }
     (lib.mkIf (cfg.staticIp != null) {
-      networking = {
-        interfaces."${cfg.defaultInterface}".ipv4.addresses = [
-          {
-            address = cfg.staticIp;
-            prefixLength = 24;
-          }
-        ];
-
-        defaultGateway = {
-          address = cfg.defaultGateway;
-          interface = cfg.defaultInterface;
+      systemd.network.networks."10-lan" = {
+        matchConfig.Name = cfg.defaultInterface;
+        networkConfig = {
+          Address = "${cfg.staticIp}/24";
+          Gateway = cfg.defaultGateway;
         };
       };
     })
