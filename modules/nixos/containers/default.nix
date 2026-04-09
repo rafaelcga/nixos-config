@@ -358,9 +358,16 @@ in
               localAddress6 = "${containerConfig.address6}/${toString cfg.bridge.ipv6.mask}";
 
               config = {
-                networking.defaultGateway = {
-                  address = cfg.bridge.ipv4.host;
-                  interface = "eth0";
+                systemd.network = {
+                  enable = true;
+                  networks."10-bridge" = {
+                    matchConfig.Name = "eth0";
+                    networkConfig = {
+                      Address = cfg.services.${name}.localAddress;
+                      Gateway = cfg.bridge.ipv4.host;
+                    };
+                    linkConfig.RequiredForOnline = "routable";
+                  };
                 };
               };
             };
