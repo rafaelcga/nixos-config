@@ -363,7 +363,7 @@ in
                   networks."10-bridge" = {
                     matchConfig.Name = "eth0";
                     networkConfig = {
-                      Address = cfg.services.${name}.localAddress;
+                      Address = config.containers.${name}.localAddress;
                       Gateway = cfg.bridge.ipv4.host;
                     };
                     linkConfig.RequiredForOnline = "routable";
