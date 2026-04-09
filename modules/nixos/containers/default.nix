@@ -214,9 +214,8 @@ in
           networks = {
             "30-${cfg.bridge.name}-lan" = {
               matchConfig.Name = config.modules.nixos.networking.defaultInterface;
-              networkConfig = {
-                Bridge = cfg.bridge.name;
-              };
+              networkConfig.Bridge = cfg.bridge.name;
+              linkConfig.RequiredForOnline = "enslaved";
             };
             "30-${cfg.bridge.name}" = {
               matchConfig.Name = cfg.bridge.name;
@@ -225,7 +224,9 @@ in
                   "${cfg.bridge.ipv4.host}/${toString cfg.bridge.ipv4.mask}"
                   "${cfg.bridge.ipv6.host}/${toString cfg.bridge.ipv6.mask}"
                 ];
+                ConfigureWithoutCarrier = true;
               };
+              linkConfig.RequiredForOnline = "routable";
             };
           };
         };
