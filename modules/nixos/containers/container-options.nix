@@ -8,7 +8,6 @@
 }:
 let
   cfg = hostConfig.modules.nixos.containers;
-  inherit (hostConfig) containers;
 
   utils = import "${inputs.self}/lib/utils.nix" { inherit lib; };
 
