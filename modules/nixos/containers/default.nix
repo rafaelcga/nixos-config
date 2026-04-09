@@ -212,54 +212,37 @@ in
           networks."30-${cfg.bridge.name}" = {
             matchConfig.Name = cfg.bridge.name;
             networkConfig = {
-              # Address = [
-              #   "${cfg.bridge.ipv4.host}/${toString cfg.bridge.ipv4.mask}"
-              #   "${cfg.bridge.ipv6.host}/${toString cfg.bridge.ipv6.mask}"
-              # ];
-              Address = "${cfg.bridge.ipv4.host}/${toString cfg.bridge.ipv4.mask}";
+              Address = [
+                "${cfg.bridge.ipv4.host}/${toString cfg.bridge.ipv4.mask}"
+                "${cfg.bridge.ipv6.host}/${toString cfg.bridge.ipv6.mask}"
+              ];
+              # Address = "${cfg.bridge.ipv4.host}/${toString cfg.bridge.ipv4.mask}";
+              IPv6DuplicateAddressDetection = false;
               ConfigureWithoutCarrier = true;
             };
             linkConfig.RequiredForOnline = "no";
           };
         };
 
-        services =
-          let
-            addRequiresBridge =
-              let
-                modifyService =
-                  name: containerConfig:
-                  lib.nameValuePair "container@${name}" rec {
-                    after = [ "network-addresses-${cfg.bridge.name}.service" ];
-                    requires = after;
-                  };
-              in
-              lib.mapAttrs' modifyService enabledContainers;
-
-            setfaclUserMounts = lib.mkIf (withUserMounts != { }) {
-              "setfacl-user-mounts" = rec {
-                description = "Set the current and default ACL to rwX for user mounts";
-                before = lib.mapAttrsToList (name: _: "container@${name}.service") withUserMounts;
-                wantedBy = before;
-                serviceConfig = {
-                  Type = "oneshot";
-                  ExecStart = lib.getExe (
-                    pkgs.writeShellApplication {
-                      name = "setfacl-user-mounts";
-                      runtimeInputs = with pkgs; [ acl ];
-                      text = lib.concatMapStringsSep "\n" (mountPath: ''
-                        setfacl -m g::rwX,d:g::rwX "${mountPath}"
-                      '') userMountPaths;
-                    }
-                  );
-                };
-              };
+        services = lib.mkIf (withUserMounts != { }) {
+          "setfacl-user-mounts" = rec {
+            description = "Set the current and default ACL to rwX for user mounts";
+            before = lib.mapAttrsToList (name: _: "container@${name}.service") withUserMounts;
+            wantedBy = before;
+            serviceConfig = {
+              Type = "oneshot";
+              ExecStart = lib.getExe (
+                pkgs.writeShellApplication {
+                  name = "setfacl-user-mounts";
+                  runtimeInputs = with pkgs; [ acl ];
+                  text = lib.concatMapStringsSep "\n" (mountPath: ''
+                    setfacl -m g::rwX,d:g::rwX "${mountPath}"
+                  '') userMountPaths;
+                }
+              );
             };
-          in
-          lib.mkMerge [
-            addRequiresBridge
-            setfaclUserMounts
-          ];
+          };
+        };
 
         tmpfiles.settings =
           let
