@@ -1,4 +1,9 @@
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 let
   cfg = config.modules.nixos.containers.services.jellyfin;
   inherit (config.modules.nixos.containers) user;
@@ -16,7 +21,7 @@ lib.mkMerge [
   (lib.mkIf cfg.enable {
     containers.jellyfin = {
       config =
-        { config, pkgs, ... }:
+        { config, ... }:
         {
           services.jellyfin = {
             enable = true;
@@ -33,7 +38,7 @@ lib.mkMerge [
           environment.systemPackages = with pkgs; [
             jellyfin
             jellyfin-web
-            jellyfin-ffmpeg
+            local.jellyfin-ffmpeg
           ];
 
           systemd.services.jellyfin.environment.LIBVA_DRIVER_NAME =
