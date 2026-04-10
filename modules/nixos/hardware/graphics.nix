@@ -77,17 +77,12 @@ in
         services.xserver.videoDrivers = [ "amdgpu" ];
       })
       (lib.mkIf (lib.elem "nvidia" cfg.vendors && !config.boot.isContainer) {
-        hardware.nvidia = {
-          open = true; # Open-source kernel module
-          modesetting.enable = true;
-        };
+        hardware.nvidia.open = true; # Open-source kernel module
         services.xserver.videoDrivers = [ "nvidia" ];
-        boot.initrd.availableKernelModules = [
-          "nvidia_drm"
-          "nvidia_modeset"
-          "nvidia"
-          "nvidia_uvm"
-        ];
+        environment.sessionVariables = {
+          LIBVA_DRIVER_NAME = "nvidia";
+          __GLX_VENDOR_LIBRARY_NAME = "nvidia";
+        };
       })
     ]
   );
