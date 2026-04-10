@@ -82,13 +82,18 @@ in
           modesetting.enable = true;
         };
         services.xserver.videoDrivers = [ "nvidia" ];
-        nixpkgs.config.cudaSupport = true; # Global package override
         boot.initrd.availableKernelModules = [
           "nvidia_drm"
           "nvidia_modeset"
           "nvidia"
           "nvidia_uvm"
         ];
+
+        nixpkgs.config.cudaSupport = true; # Global package override
+        nix.settings = {
+          substituters = [ "https://cache.nixos-cuda.org" ];
+          trusted-public-keys = [ "cache.nixos-cuda.org:74DUi4Ye579gUqzH4ziL9IyiJBlDpMRn9MBN8oNan9M=" ];
+        };
       })
     ]
   );
