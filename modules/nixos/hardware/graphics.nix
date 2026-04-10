@@ -77,8 +77,18 @@ in
         services.xserver.videoDrivers = [ "amdgpu" ];
       })
       (lib.mkIf (lib.elem "nvidia" cfg.vendors && !config.boot.isContainer) {
-        hardware.nvidia.open = true; # Open-source kernel module
+        hardware.nvidia = {
+          open = true; # Open-source kernel module
+          modesetting.enable = true;
+        };
         services.xserver.videoDrivers = [ "nvidia" ];
+        nixpkgs.config.cudaSupport = true; # Global package override
+        boot.initrd.availableKernelModules = [
+          "nvidia_drm"
+          "nvidia_modeset"
+          "nvidia"
+          "nvidia_uvm"
+        ];
       })
     ]
   );
