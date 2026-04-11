@@ -26,7 +26,8 @@
     };
     catppuccin.enable = true;
     # Desktop
-    cosmic.enable = true;
+    # cosmic.enable = true;
+    plasma.enable = true;
     # Features
     cachyos-settings.enable = true;
     flatpak.enable = true;
