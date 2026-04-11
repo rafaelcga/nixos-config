@@ -82,15 +82,6 @@ in
     lib.mkIf cfg.enable (
       lib.mkMerge [
         themeConfig
-        (lib.mkIf config.services.displayManager.sddm.enable {
-          catppuccin.sddm = {
-            enable = true;
-            font = "JetBrainsMono Nerd Font";
-            fontSize = "12";
-            background = "${inputs.self}/resources/wallpapers/blank_wall.png";
-          };
-          fonts.packages = [ pkgs.nerd-fonts.jetbrains-mono ];
-        })
         {
           home-manager.users.${userName} = {
             imports = [ inputs.catppuccin.homeModules.catppuccin ];
