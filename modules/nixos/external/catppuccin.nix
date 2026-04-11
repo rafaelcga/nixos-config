@@ -95,6 +95,10 @@ in
                     name = cfg.themeName;
                     package = pkgs.catppuccin-kde;
                   };
+                  style = {
+                    name = "kvantum";
+                    package = pkgs.catppuccin-kvantum;
+                  };
                 };
               })
               (lib.mkIf papirus.enable {
