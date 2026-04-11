@@ -20,8 +20,6 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    xdg.icons.enable = true; # Links icons to home using XDG specification
-
     environment.systemPackages = [ cfg.package ];
 
     home-manager.users.${userName} = {
