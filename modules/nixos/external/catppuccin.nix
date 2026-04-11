@@ -88,6 +88,15 @@ in
 
             config = lib.mkMerge [
               themeConfig
+              (lib.mkIf config.modules.nixos.plasma.enable {
+                qt = {
+                  enable = true;
+                  platformTheme = {
+                    name = cfg.themeName;
+                    package = pkgs.catppuccin-kde;
+                  };
+                };
+              })
               (lib.mkIf papirus.enable {
                 modules.home-manager.papirus.package = pkgs.catppuccin-papirus-folders.override {
                   inherit (cfg) accent flavor;
