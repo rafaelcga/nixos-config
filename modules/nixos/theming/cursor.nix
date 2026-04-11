@@ -32,7 +32,9 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    xdg.icons.fallbackCursorThemes = [ cfg.package ];
+    xdg.icons.fallbackCursorThemes = [ cfg.name ];
+
+    environment.systemPackages = [ cfg.package ];
 
     home-manager.users.${userName} = {
       home.pointerCursor = {
