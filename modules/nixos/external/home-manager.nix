@@ -27,7 +27,9 @@
 
     useGlobalPkgs = true;
     useUserPackages = true;
+
     backupFileExtension = "bak";
+    overwriteBackup = true;
 
     extraSpecialArgs = specialArgs;
   };
