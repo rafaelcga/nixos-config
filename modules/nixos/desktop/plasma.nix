@@ -28,10 +28,9 @@ in
         discover
       ];
       systemPackages = with pkgs; [
+        bazaar
         ghostty
         celluloid
-        cosmic-edit
-        cosmic-store
       ];
       sessionVariables.NIXOS_OZONE_WL = "1"; # Hint Electron apps to use Wayland
     };
