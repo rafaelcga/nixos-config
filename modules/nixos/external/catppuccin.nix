@@ -92,13 +92,14 @@ in
                 qt = {
                   enable = true;
                   platformTheme = {
-                    name = cfg.themeName;
-                    package = pkgs.catppuccin-kde;
+                    # name = cfg.themeName;
+                    package = with pkgs; [
+                      catppuccin-kde
+                      catppuccin-kvantum
+                      catppuccin-qt5ct
+                    ];
                   };
-                  style = {
-                    name = "kvantum";
-                    package = pkgs.catppuccin-kvantum;
-                  };
+                  style.name = "kvantum";
                 };
               })
               (lib.mkIf papirus.enable {
