@@ -42,8 +42,6 @@
   # Native NixOS modules and stand-alone configurations
   hardware.opentabletdriver.enable = true;
 
-  environment.sessionVariables.GDK_SCALE = "1.25"; # sets XWayland render scale
-
   boot.loader.systemd-boot.windows."11" = {
     title = "Windows 11";
     efiDeviceHandle = "FS0";
