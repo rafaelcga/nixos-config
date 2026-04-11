@@ -44,4 +44,9 @@
 
   # Native NixOS modules and stand-alone configurations
   hardware.opentabletdriver.enable = true;
+
+  programs.appimage = {
+    enable = true;
+    binfmt = true;
+  };
 }

@@ -45,6 +45,11 @@
   # Native NixOS modules and stand-alone configurations
   hardware.opentabletdriver.enable = true;
 
+  programs.appimage = {
+    enable = true;
+    binfmt = true;
+  };
+
   boot.loader.systemd-boot.windows."11" = {
     title = "Windows 11";
     efiDeviceHandle = "FS0";
