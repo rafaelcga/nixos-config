@@ -8,5 +8,6 @@
     ./hardware
     ./services
     ./system
+    ./theming
   ];
 }

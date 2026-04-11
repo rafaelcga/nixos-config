@@ -3,6 +3,5 @@
     ./apps
     ./external
     ./services
-    ./theming
   ];
 }
