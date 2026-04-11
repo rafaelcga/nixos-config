@@ -79,6 +79,11 @@ in
     lib.mkIf cfg.enable (
       lib.mkMerge [
         themeConfig
+        (lib.mkIf config.modules.nixos.papirus.enable {
+          modules.nixos.papirus.package = pkgs.catppuccin-papirus-folders.override {
+            inherit (cfg) accent flavor;
+          };
+        })
         {
           home-manager.users.${userName} = {
             imports = [ inputs.catppuccin.homeModules.catppuccin ];
@@ -97,11 +102,6 @@ in
                     ];
                   };
                   style.name = "kvantum";
-                };
-              })
-              (lib.mkIf config.modules.nixos.papirus.enable {
-                modules.nixos.papirus.package = pkgs.catppuccin-papirus-folders.override {
-                  inherit (cfg) accent flavor;
                 };
               })
             ];
