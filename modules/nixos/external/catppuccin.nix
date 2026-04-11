@@ -92,7 +92,7 @@ in
                 qt = {
                   enable = true;
                   platformTheme = {
-                    # name = cfg.themeName;
+                    name = cfg.themeName;
                     package = with pkgs; [
                       catppuccin-kde
                       catppuccin-kvantum
