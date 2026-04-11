@@ -28,6 +28,9 @@
     # Desktop
     # cosmic.enable = true;
     plasma.enable = true;
+    # Theming
+    cursor.enable = true;
+    papirus.enable = true;
     # Features
     cachyos-settings.enable = true;
     flatpak.enable = true;

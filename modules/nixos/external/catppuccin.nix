@@ -3,13 +3,10 @@
   config,
   lib,
   pkgs,
-  hmConfig,
   userName,
   ...
 }:
 let
-  inherit (hmConfig.modules.home-manager) papirus;
-
   cfg = config.modules.nixos.catppuccin;
 in
 {
@@ -102,8 +99,8 @@ in
                   style.name = "kvantum";
                 };
               })
-              (lib.mkIf papirus.enable {
-                modules.home-manager.papirus.package = pkgs.catppuccin-papirus-folders.override {
+              (lib.mkIf config.modules.nixos.papirus.enable {
+                modules.nixos.papirus.package = pkgs.catppuccin-papirus-folders.override {
                   inherit (cfg) accent flavor;
                 };
               })

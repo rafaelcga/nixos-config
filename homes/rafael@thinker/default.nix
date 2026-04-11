@@ -1,9 +1,6 @@
 { pkgs, ... }:
 {
   modules.home-manager = {
-    # Theming
-    cursor.enable = true;
-    papirus.enable = true;
     # Apps
     ghostty.enable = true;
     yt-dlp.enable = true;

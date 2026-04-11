@@ -2,13 +2,14 @@
   config,
   lib,
   pkgs,
+  userName,
   ...
 }:
 let
-  cfg = config.modules.home-manager.cursor;
+  cfg = config.modules.nixos.cursor;
 in
 {
-  options.modules.home-manager.cursor = {
+  options.modules.nixos.cursor = {
     enable = lib.mkEnableOption "Enable cursor theming";
 
     name = lib.mkOption {
@@ -31,14 +32,18 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    home.pointerCursor = {
-      inherit (cfg) name package size;
-      enable = true;
-      dotIcons.enable = true;
-      x11.enable = true;
-      gtk.enable = true;
-      hyprcursor.enable = true;
-      sway.enable = true;
+    xdg.icons.fallbackCursorThemes = [ cfg.package ];
+
+    home-manager.users.${userName} = {
+      home.pointerCursor = {
+        inherit (cfg) name package size;
+        enable = true;
+        dotIcons.enable = true;
+        x11.enable = true;
+        gtk.enable = true;
+        hyprcursor.enable = true;
+        sway.enable = true;
+      };
     };
   };
 }

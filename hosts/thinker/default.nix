@@ -29,6 +29,9 @@
     catppuccin.enable = true;
     # Desktop
     cosmic.enable = true;
+    # Theming
+    cursor.enable = true;
+    papirus.enable = true;
     # Features
     cachyos-settings.enable = true;
     flatpak.enable = true;
