@@ -25,10 +25,7 @@ in
     home-manager.users.${userName} = {
       gtk = {
         enable = true;
-        iconTheme = {
-          name = lib.mkDefault "Papirus";
-          package = lib.mkForce cfg.package;
-        };
+        iconTheme.name = lib.mkDefault "Papirus";
       };
     };
   };
