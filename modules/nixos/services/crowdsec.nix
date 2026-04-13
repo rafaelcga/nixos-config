@@ -27,8 +27,7 @@ let
         wantedBy = [ "multi-user.target" ];
         after = [ "crowdsec.service" ];
         wants = after;
-        path = [ config.services.crowdsec.configuredCscli ];
-
+        path = [ config.services.crowdsec.package ];
         script = ''
           # Ensure the directory exists
           mkdir -p "$(dirname ${apiKeyFile})" || true
