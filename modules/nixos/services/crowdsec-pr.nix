@@ -8,10 +8,6 @@ let
   cfg = config.services.crowdsec;
   yaml = pkgs.formats.yaml { };
 
-  configuredCscli = pkgs.writeShellScriptBin "cscli" ''
-    ${lib.getExe' cfg.package "cscli"} "$@"
-  '';
-
   config_paths = cfg.settings.config.config_paths;
 
   # Reason:
@@ -67,13 +63,6 @@ in
 
     package = lib.mkPackageOption pkgs "crowdsec" { };
 
-    configuredCscli = lib.mkOption {
-      type = lib.types.package;
-      description = "The cscli package, using config.yaml";
-      internal = true;
-      default = configuredCscli;
-    };
-
     autoUpdateService = lib.mkEnableOption "if `true` `cscli hub update` will be executed daily. See `https://docs.crowdsec.net/docs/cscli/cscli_hub_update/` for more information";
 
     openFirewall = lib.mkOption {
@@ -104,6 +93,34 @@ in
       '';
       default = config.networking.hostName;
       defaultText = lib.literalExpression "config.networking.hostName";
+    };
+
+    readOnlyPaths = lib.mkOption {
+      type = lib.types.listOf lib.types.str;
+      description = ''
+        Additional read-only paths of the host which the crowdsec service can access.
+
+        Mostly relevant if you'd like to let `crowdsec` read additional log files.
+      '';
+      default = [ ];
+      example = [
+        "/var/log/vaultwarden"
+        "/var/log/nginx"
+      ];
+    };
+
+    extraGroups = lib.mkOption {
+      type = lib.types.listOf lib.types.str;
+      description = ''
+        List of groups which the internal (dynamic-) user should be assigned to.
+
+        Relevant if only some groups are able to read some logs.
+      '';
+      default = [ "systemd-journal" ];
+      example = [
+        "nginx"
+        "log"
+      ];
     };
 
     hub = lib.mkOption {
@@ -359,10 +376,10 @@ in
                     online_client.credentials_path = lib.mkOption {
                       type = lib.types.nullOr secret_path;
                       default = null;
-                      example = "\${config_paths.data_dir}/online_api_credentials.yaml";
+                      example = "\${config.services.crowdsec.settings.config.config_paths.data_dir}/online_api_credentials.yaml";
                       description = ''
                         Path to a file containing credentials for the Central API.
-                        To automatically register with `crowdsec-setup`, set this option (typically to ''${config_paths.data_dir}/online_api_credentials.yaml).
+                        To automatically register with `crowdsec-setup`, set this option (typically to ''${config.services.crowdsec.settings.config.config_paths.data_dir}/online_api_credentials.yaml).
                         The file will be automatically created, unless it already exists.
                       '';
                     };
@@ -673,7 +690,7 @@ in
       setupScript = pkgs.writeShellApplication {
         name = "crowdsec-setup";
         runtimeInputs = [
-          configuredCscli
+          cfg.package
           pkgs.coreutils
         ];
         text =
@@ -684,6 +701,12 @@ in
               lib.optionalString (
                 builtins.isList cfg.hub.${x} && cfg.hub.${x} != [ ]
               ) "cscli ${lib.toLower x} install ${argString cfg.hub.${x}}";
+
+            maybeCopyFile = src: dst: ''
+              if [ ! -e "${dst}" ]; then
+                install ${src} ${dst}
+              fi
+            '';
 
             installNotificationPlugin = name: ''
               install -m 551 -D ${cfg.package}/libexec/crowdsec/plugins/notification-${name} ${cfg.settings.config.config_paths.plugin_dir}/notification-${name}
@@ -707,12 +730,13 @@ in
             ${installNotificationPlugin "splunk"}
 
             echo "Creating files..."
-            install ${cfg.package}/share/crowdsec/config/console.yaml ${cfg.settings.config.api.server.console_path}
-            install ${cfg.package}/share/crowdsec/config/detect.yaml ${cfg.settings.config.config_paths.data_dir}
+
+            ${maybeCopyFile "${cfg.package}/share/crowdsec/config/console.yaml" cfg.settings.config.api.server.console_path}
+            ${maybeCopyFile "${cfg.package}/share/crowdsec/config/detect.yaml" "${cfg.settings.config.config_paths.data_dir}/detect.yaml"}
 
             # NOTE: THE CODE BELOW NEEDS TO STAY BELOW
-            #       Don't move code logic below this comment to the top of this comment because it expects
-            #
+            #       Don't move code logic below this comment to the top of this comment because
+            #       the order in which the commands are gonna be executed is relevant!
             echo "Updating hub..."
 
             cscli hub update
@@ -804,6 +828,7 @@ in
             cscliWrapper = pkgs.symlinkJoin {
               name = "cscli";
               paths = [
+                # `--working-directory=/var/lib/crowdsec/data/hub`: Because `cscli hubtest` needs to be in the `hub` directory.
                 (pkgs.writeShellScriptBin "cscli" ''
                   exec systemd-run \
                     --quiet \
@@ -811,8 +836,9 @@ in
                     --wait \
                     --collect \
                     --pipe \
+                    --service-type=exec \
+                    --working-directory=/var/lib/crowdsec/data/hub \
                     --property=ExecPaths="${cfg.settings.config.config_paths.plugin_dir}" \
-                    --property=ExecPaths="${cfg.package}/bin/crowdsec" \
                     --property=User=${cfg.user} \
                     --property=Group=${cfg.group} \
                     --property=DynamicUser=true \
@@ -821,7 +847,7 @@ in
                     --property=ConfigurationDirectory="crowdsec" \
                     --property=ConfigurationDirectoryMode="0750" \
                     -- \
-                    ${lib.getExe configuredCscli} "$@"
+                    ${lib.getExe' cfg.package "cscli"} "$@"
                 '')
                 (pkgs.runCommand "cscli-completions" { } ''
                   mkdir -p $out/share
@@ -834,6 +860,8 @@ in
           in
           [ cscliWrapper ];
 
+        # NOTE: Is it worth it to create a script instead which removes and (re-)creates those files instead of using `environment.etc`?
+        #       This would fix the permission issue and we wouldn't need the `chmod` and `chown` "hack" in the setup-service.
         etc =
           let
             config_dir = "crowdsec";
@@ -844,8 +872,9 @@ in
             };
 
             start = lib.mapAttrs (name: value: lib.mergeAttrs value entry_permissions) {
+              # for some reason, `-c config` gets ignored for some commands, hence we really need to create the config files
               "${config_dir}/config.yaml".source = "${cfg.package}/share/crowdsec/config/config.yaml";
-              "${config_dir}/config.yaml.local".source = yaml.generate "config.yaml" cfg.settings.config;
+              "${config_dir}/config.yaml.local".source = yaml.generate "config.yaml.local" cfg.settings.config;
               "${config_dir}/acquis.d/00-nixos-generated.yaml".source = pkgs.writeText "aquisitions.yaml" ''
                 ---
                 ${lib.strings.concatMapStringsSep "\n---\n" (lib.generators.toYAML { }) cfg.settings.acquisitions}
@@ -966,8 +995,8 @@ in
               serviceConfig = createServiceConfig {
                 Type = "oneshot";
                 ExecStart = [
-                  "${lib.getExe configuredCscli} --warning hub update"
-                  "${lib.getExe configuredCscli} --warning hub upgrade"
+                  "${lib.getExe' cfg.package "cscli"} --warning hub update"
+                  "${lib.getExe' cfg.package "cscli"} --warning hub upgrade"
                 ];
                 ExecStartPost = "+systemctl reload crowdsec.service";
               };
@@ -1005,7 +1034,7 @@ in
 
               serviceConfig =
                 let
-                  configuredCrowdsec = "${lib.getExe' cfg.package "crowdsec"}";
+                  crowdsec = "${lib.getExe' cfg.package "crowdsec"}";
                 in
                 createServiceConfig {
                   Type = "notify";
@@ -1013,10 +1042,13 @@ in
 
                   ProtectKernelLogs = false;
 
-                  ExecStartPre = "${configuredCrowdsec} -t -error";
-                  ExecStart = "${configuredCrowdsec} -info";
+                  ReadOnlyPaths = cfg.readOnlyPaths;
+                  SupplementaryGroups = cfg.extraGroups;
+
+                  ExecStartPre = "${crowdsec} -t -error";
+                  ExecStart = "${crowdsec} -info";
                   ExecReload = [
-                    "${configuredCrowdsec} -t -error"
+                    "${crowdsec} -t -error"
                     "${lib.getExe' pkgs.coreutils "kill"} -HUP $MAINPID"
                   ];
 
@@ -1027,18 +1059,6 @@ in
             };
           };
         };
-
-      users = {
-        users.${cfg.user} = {
-          name = cfg.user;
-          description = lib.mkDefault "CrowdSec service user";
-          isSystemUser = true;
-          group = cfg.group;
-          extraGroups = [ "systemd-journal" ];
-        };
-
-        groups.${cfg.group} = { };
-      };
 
       networking.firewall.allowedTCPPorts =
         let
