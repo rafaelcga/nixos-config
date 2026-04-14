@@ -22,7 +22,7 @@ in
       packages = [ "io.github.kolunmi.Bazaar" ];
       overrides.global = {
         Environment.GSK_RENDERER = "gl"; # fixes graphical flatpak bug under Wayland
-        filesystems = [
+        Context.filesystems = [
           "${user.home}/.local/share/fonts:ro"
           "${user.home}/.local/share/icons:ro"
           "/nix/store:ro"
