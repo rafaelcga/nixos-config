@@ -65,6 +65,11 @@ lib.mapAttrs mkServiceData {
     ];
   };
 
+  bazarr = {
+    description = "Subtitle downloader and manager for Servarr";
+    container = "servarr";
+  };
+
   qbittorrent = {
     displayName = "qBittorrent";
     description = "BitTorrent client";

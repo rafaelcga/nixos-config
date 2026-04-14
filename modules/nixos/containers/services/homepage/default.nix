@@ -207,6 +207,7 @@ lib.mkMerge [
                   "radarr"
                   "sonarr"
                   "prowlarr"
+                  "bazarr"
                   "qbittorrent"
                   "unmanic"
                 ];

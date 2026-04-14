@@ -21,6 +21,7 @@ lib.mkMerge [
         sonarr = 8989;
         prowlarr = 9696;
         flaresolverr = 8191;
+        bazarr = 6767;
       };
       dataDir = "/var/lib/servarr";
       behindVpn = true;
@@ -81,6 +82,15 @@ lib.mkMerge [
             lib.genAttrs servarrServices mkService
           )
           {
+            bazarr = {
+              enable = true;
+              dataDir = "${cfg.dataDir}/bazarr";
+              listenPort = cfg.containerPorts.bazarr;
+              openFirewall = true;
+              user = user.name;
+              inherit (user) group;
+            };
+
             flaresolverr = {
               enable = true;
               port = cfg.containerPorts.flaresolverr;
