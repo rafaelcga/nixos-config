@@ -28,7 +28,7 @@ in
         discover
       ];
       systemPackages = with pkgs; [
-        bazaar
+        local.bazaar
         ghostty
         celluloid
       ];
