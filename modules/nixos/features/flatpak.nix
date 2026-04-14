@@ -14,12 +14,18 @@ in
 
   options.modules.nixos.flatpak = {
     enable = lib.mkEnableOption "Enable Flatpak support using nix-flatpak";
+
+    packages = lib.mkOption {
+      type = lib.types.listOf lib.types.str;
+      default = [ ];
+      description = "List of Flatpak packages to install";
+    };
   };
 
   config = lib.mkIf cfg.enable {
     services.flatpak = {
       enable = true;
-      packages = [ "io.github.kolunmi.Bazaar" ];
+      inherit (cfg) packages;
       overrides.global = {
         Environment.GSK_RENDERER = "gl"; # fixes graphical flatpak bug under Wayland
         Context.filesystems = [
