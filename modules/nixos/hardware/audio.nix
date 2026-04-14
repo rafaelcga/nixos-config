@@ -22,7 +22,7 @@ in
 
     bufferSize = lib.mkOption {
       type = lib.types.int;
-      default = 256;
+      default = 128;
       description = "Audio buffer size (number of sample)";
     };
   };

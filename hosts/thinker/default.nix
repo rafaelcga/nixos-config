@@ -5,7 +5,7 @@
     # Hardware
     audio = {
       enable = true;
-      bufferSize = 512; # Less CPU intensive
+      bufferSize = 256; # Less CPU intensive
     };
     graphics = {
       enable = true;
