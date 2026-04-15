@@ -2,6 +2,10 @@
   pkgs,
   prev ? pkgs,
 }:
+let
+  mkOverride = name: pkgs.callPackage ./${name}.nix { "${name}" = prev.${name}; };
+  mkOverrideCustom = name: pkgs.callPackage ./${name}/package.nix { "${name}" = prev.${name}; };
+in
 {
   local = {
     caddy-with-plugins = pkgs.callPackage ./caddy-with-plugins/package.nix { };
@@ -10,6 +14,13 @@
   };
 
   crowdsec = pkgs.callPackage ./crowdsec.nix { }; # TODO: use overrideAttrs when PR merges
-  flatpak = pkgs.callPackage ./flatpak.nix { inherit (prev) flatpak; };
-  jellyfin-ffmpeg = pkgs.callPackage ./jellyfin-ffmpeg.nix { inherit (prev) jellyfin-ffmpeg; };
 }
+// (pkgs.lib.genAttrs [
+  "flatpak"
+  "jellyfin-ffmpeg"
+  "papirus-folders"
+] mkOverride)
+// (pkgs.lib.genAttrs [
+  "catppuccin-papirus-folders"
+  "papirus-icon-theme"
+] mkOverrideCustom)
