@@ -31,10 +31,10 @@ stdenv.mkDerivation rec {
   '';
 
   postInstall = ''
-    for f in "$out/lib/udev/rules.d/*.rules"; do
-        substituteInPlace "$f" \
-            --replace-quiet "/usr/bin/bash" "${lib.getExe bash}" \
-            --replace-quiet "/usr/bin/hdparm" "${lib.getExe hdparm}" 2>/dev/null
+    for f in $out/lib/udev/rules.d/*.rules; do
+        substituteInPlace $f \
+            --replace-quiet /usr/bin/bash ${lib.getExe bash} \
+            --replace-quiet /usr/bin/hdparm ${lib.getExe hdparm}
     done
   '';
 
