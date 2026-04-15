@@ -793,12 +793,10 @@ in
               fi
             ''}
 
-            # Use CREDENTIALS_DIRECTORY:- to avoid writeShellApplication from crashing
-            # when checking for the dynamically assigned environment variable
             ${lib.optionalString (cfg.settings.console.enrollKeyFile != null) ''
-              if [ -e "''${CREDENTIALS_DIRECTORY:-}/enrollKeyFile" ]; then
+              if [ -e "$CREDENTIALS_DIRECTORY/enrollKeyFile" ]; then
                 echo "Enrolling to the online console..."
-                cscli console enroll "$(<"''${CREDENTIALS_DIRECTORY:-}/enrollKeyFile")" --name ${cfg.name}
+                cscli console enroll "$(<"$CREDENTIALS_DIRECTORY/enrollKeyFile")" --name ${cfg.name}
               fi
             ''}
             echo "Completed crowdsec setup"
