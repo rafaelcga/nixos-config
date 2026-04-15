@@ -171,7 +171,6 @@ in
         enable = true;
         autoUpdateService = true;
         openFirewall = true;
-        package = pkgs.local.crowdsec;
 
         hub = {
           collections = [

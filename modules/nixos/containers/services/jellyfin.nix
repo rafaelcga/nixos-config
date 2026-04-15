@@ -38,7 +38,7 @@ lib.mkMerge [
           environment.systemPackages = with pkgs; [
             jellyfin
             jellyfin-web
-            local.jellyfin-ffmpeg
+            jellyfin-ffmpeg
           ];
 
           systemd.services.jellyfin.environment.LIBVA_DRIVER_NAME =

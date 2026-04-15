@@ -2,7 +2,10 @@
 {
   perSystem =
     { pkgs, ... }:
+    let
+      flakePkgs = import "${inputs.self}/pkgs" { inherit pkgs; };
+    in
     {
-      packages = import "${inputs.self}/pkgs" { inherit pkgs; };
+      packages = flakePkgs.local // removeAttrs flakePkgs [ "local" ];
     };
 }

@@ -2,7 +2,6 @@
   inputs,
   config,
   lib,
-  pkgs,
   userName,
   ...
 }:
@@ -15,8 +14,6 @@ in
 
   options.modules.nixos.flatpak = {
     enable = lib.mkEnableOption "Enable Flatpak support using nix-flatpak";
-
-    package = lib.mkPackageOption pkgs [ "local" "flatpak" ] { };
 
     packages = lib.mkOption {
       type = lib.types.listOf lib.types.str;
