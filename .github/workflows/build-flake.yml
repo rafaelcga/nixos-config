@@ -59,6 +59,9 @@ jobs:
           token: ${{ secrets.GH_TOKEN }}
           fetch-depth: 0
 
+      - name: Enable unprivileged user namespaces (Fixes Bubblewrap/Nix sandboxing)
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
+
       - name: Install Nix
         uses: cachix/install-nix-action@v31
         with:
