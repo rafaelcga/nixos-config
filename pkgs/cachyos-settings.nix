@@ -2,6 +2,8 @@
   lib,
   stdenv,
   fetchFromGitHub,
+  bash,
+  hdparm,
 }:
 
 stdenv.mkDerivation rec {
@@ -26,6 +28,14 @@ stdenv.mkDerivation rec {
     cp -rv usr/lib $out/
 
     runHook postInstall
+  '';
+
+  postInstall = ''
+    for f in "$out/lib/udev/rules.d/*.rules"; do
+        substituteInPlace "$f" \
+            --replace "/usr/bin/bash" "${lib.getExe bash}" \
+            --replace "/usr/bin/hdparm" "${lib.getExe hdparm}" 2>/dev/null
+    done
   '';
 
   meta = {
