@@ -15,12 +15,12 @@ in
 
   crowdsec = pkgs.callPackage ./crowdsec.nix { }; # TODO: use overrideAttrs when PR merges
 }
-// (pkgs.lib.genAttrs [
+// (prev.lib.genAttrs [
   "flatpak"
   "jellyfin-ffmpeg"
   "papirus-folders"
 ] mkOverride)
-// (pkgs.lib.genAttrs [
+// (prev.lib.genAttrs [
   "catppuccin-papirus-folders"
   "papirus-icon-theme"
 ] mkOverrideCustom)
