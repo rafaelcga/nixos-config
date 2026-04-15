@@ -2,9 +2,6 @@
   lib,
   stdenv,
   fetchFromGitHub,
-
-  bash,
-  hdparm,
 }:
 
 stdenv.mkDerivation rec {
@@ -18,26 +15,17 @@ stdenv.mkDerivation rec {
     sha256 = "sha256-NMoEAKQLPcKbNIuY5jH4iCurHFZa0vZXai+pn8ivCiM=";
   };
 
+  dontBuild = true;
+  dontConfigure = true;
+
   installPhase = ''
     runHook preInstall
 
-    mkdir -p $out/bin
-    mkdir -p $out/etc
-    mkdir -p $out/lib
-
-    cp -v -a $src/etc $out
-    cp -v -a $src/usr/bin $out
-    cp -v -a $src/usr/lib $out
+    mkdir -p $out
+    cp -rv etc $out/
+    cp -rv usr/lib $out/
 
     runHook postInstall
-  '';
-
-  postInstall = ''
-    for f in $(find "$out/lib/udev/rules.d" -type f -name '*'); do
-      substituteInPlace "$f" \
-        --replace "/usr/bin/bash" "${lib.getExe bash}" \
-        --replace "/usr/bin/hdparm" "${lib.getExe hdparm}"
-    done
   '';
 
   meta = {

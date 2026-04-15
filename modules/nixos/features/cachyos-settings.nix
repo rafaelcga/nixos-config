@@ -29,8 +29,8 @@ in
 
     environment = {
       etc = {
-        "sysctl.d/99-cachyos-settings.conf".source =
-          "${cachyos-settings}/lib/sysctl.d/99-cachyos-settings.conf";
+        "sysctl.d/70-cachyos-settings.conf".source =
+          "${cachyos-settings}/lib/sysctl.d/70-cachyos-settings.conf";
         "security/limits.d/20-audio.conf".source =
           "${cachyos-settings}/etc/security/limits.d/20-audio.conf";
       };
