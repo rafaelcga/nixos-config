@@ -3,7 +3,7 @@
   fetchurl,
 }:
 
-flatpak.overrideAttrs (finalAttrs: rec {
+flatpak.overrideAttrs (oldAttrs: rec {
   version = "1.17.6";
 
   src = fetchurl {

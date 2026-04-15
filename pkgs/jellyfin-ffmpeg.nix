@@ -4,7 +4,7 @@
   fetchFromGitHub,
 }:
 
-jellyfin-ffmpeg.overrideAttrs (finalAttrs: rec {
+jellyfin-ffmpeg.overrideAttrs (oldAttrs: rec {
   version = "7.1.3-5";
 
   src = fetchFromGitHub {
