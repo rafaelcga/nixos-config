@@ -256,12 +256,7 @@ in
       };
     };
 
-    sops.secrets = {
-      "crowdsec/enroll_key" = {
-        owner = cfgCrowdsec.user;
-        group = cfgCrowdsec.group;
-      };
-    };
+    sops.secrets."crowdsec/enroll_key" = { };
 
     systemd.services = lib.mkMerge (lib.mapAttrsToList registerBouncer cfg.bouncers);
   };
