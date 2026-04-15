@@ -16,9 +16,4 @@
     };
     firefox.enable = true;
   };
-
-  home.packages = with pkgs; [
-    # General apps
-    krita
-  ];
 }

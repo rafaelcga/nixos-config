@@ -25,10 +25,7 @@ in
         cosmic-player
       ];
       systemPackages = with pkgs; [
-        loupe
         ghostty
-        celluloid
-        gnome-calendar
       ];
       sessionVariables.NIXOS_OZONE_WL = "1"; # Hint Electron apps to use Wayland
     };

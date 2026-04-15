@@ -44,6 +44,9 @@
         "com.discordapp.Discord"
         "com.spotify.Client"
         "com.vysp3r.ProtonPlus"
+        "org.kde.krita"
+        "org.kde.haruna"
+        "org.gnome.Calendar"
       ];
     };
     # Apps
