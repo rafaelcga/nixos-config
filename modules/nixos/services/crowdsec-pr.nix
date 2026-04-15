@@ -687,37 +687,66 @@ in
 
   config =
     let
-      setupScript = pkgs.writeShellApplication {
-        name = "crowdsec-setup";
-        runtimeInputs = [
-          cfg.package
-          pkgs.coreutils
-        ];
-        text =
-          let
-            argString = arg: lib.concatMapStringsSep " " lib.escapeShellArg arg;
-            maybeInstall =
-              x:
-              lib.optionalString (
-                builtins.isList cfg.hub.${x} && cfg.hub.${x} != [ ]
-              ) "cscli ${lib.toLower x} install ${argString cfg.hub.${x}}";
+      setupScript =
+        let
+          maybeInstall =
+            let
+              argString = arg: lib.concatMapStringsSep " " lib.escapeShellArg arg;
+            in
+            x:
+            lib.optionalString (
+              builtins.isList cfg.hub.${x} && cfg.hub.${x} != [ ]
+            ) "cscli ${lib.toLower x} install ${argString cfg.hub.${x}}";
 
-            maybeCopyFile = src: dst: ''
-              if [ ! -e "${dst}" ]; then
-                install ${src} ${dst}
-              fi
-            '';
+          maybeCopyFile = src: dst: ''
+            if [ ! -e "${dst}" ]; then
+              install ${src} ${dst}
+            fi
+          '';
 
-            installNotificationPlugin = name: ''
-              install -m 551 -D ${cfg.package}/libexec/crowdsec/plugins/notification-${name} ${cfg.settings.config.config_paths.plugin_dir}/notification-${name}
-            '';
-          in
-          ''
+          installNotificationPlugin = name: ''
+            install -m 551 -D ${cfg.package}/libexec/crowdsec/plugins/notification-${name} ${cfg.settings.config.config_paths.plugin_dir}/notification-${name}
+          '';
+
+          copyYamlList =
+            list: targetDir:
+            lib.concatImapStringsSep "\n" (
+              idx: item:
+              "cp -f \"${yaml.generate "crowdsec-setting.yaml" item}\" \"${config_paths.config_dir}/${targetDir}/${toString idx}-nixos-generated.yaml\""
+            ) list;
+        in
+        pkgs.writeShellApplication {
+          name = "crowdsec-setup";
+          runtimeInputs = [
+            cfg.package
+            pkgs.coreutils
+          ];
+          text = ''
             echo "Creating directories..."
-            mkdir -p ${config_paths.config_dir}/console
-            mkdir -p ${config_paths.data_dir}
-            mkdir -p ${cfg.settings.config.crowdsec_service.acquisition_dir}
-            mkdir -p ${config_paths.hub_dir}
+            mkdir -p "${config_paths.config_dir}"
+            mkdir -p "${config_paths.data_dir}"
+            mkdir -p "${config_paths.hub_dir}"
+            mkdir -p "${config_paths.notification_dir}"
+            mkdir -p "${config_paths.config_dir}/scenarios"
+            mkdir -p "${config_paths.config_dir}/parsers/s00-raw"
+            mkdir -p "${config_paths.config_dir}/parsers/s01-parse"
+            mkdir -p "${config_paths.config_dir}/parsers/s02-enrich"
+            mkdir -p "${config_paths.config_dir}/postoverflows/s01-whitelist"
+            mkdir -p "${config_paths.config_dir}/contexts"
+            mkdir -p "${cfg.settings.config.crowdsec_service.acquisition_dir}"
+
+            echo "Creating config files..."
+            cp -f "${cfg.package}/share/crowdsec/config/config.yaml" "${config_paths.config_dir}/config.yaml"
+            cp -f "${yaml.generate "config.yaml.local" cfg.settings.config}" "${config_paths.config_dir}/config.yaml.local"
+            # Generates enumerated YAMLs from the config lists
+            ${copyYamlList cfg.settings.acquisitions "acquis.d"}
+            ${copyYamlList cfg.settings.scenarios "scenarios"}
+            ${copyYamlList cfg.settings.parsers.s00Raw "parsers/s00-raw"}
+            ${copyYamlList cfg.settings.parsers.s01Parse "parsers/s01-parse"}
+            ${copyYamlList cfg.settings.parsers.s02Enrich "parsers/s02-enrich"}
+            ${copyYamlList cfg.settings.postOverflows.s01Whitelist "postoverflows/s01-whitelist"}
+            ${copyYamlList cfg.settings.contexts "contexts"}
+            ${copyYamlList cfg.settings.notifications "notifications"}
 
             # to be able to create notifications
             echo "Installing notification plugins..."
@@ -772,7 +801,7 @@ in
             ''}
             echo "Completed crowdsec setup"
           '';
-      };
+        };
     in
     lib.mkIf (cfg.enable) {
 
@@ -859,74 +888,6 @@ in
             };
           in
           [ cscliWrapper ];
-
-        # NOTE: Is it worth it to create a script instead which removes and (re-)creates those files instead of using `environment.etc`?
-        #       This would fix the permission issue and we wouldn't need the `chmod` and `chown` "hack" in the setup-service.
-        etc =
-          let
-            config_dir = "crowdsec";
-
-            entry_permissions = {
-              user = cfg.user;
-              group = cfg.group;
-            };
-
-            start = lib.mapAttrs (name: value: lib.mergeAttrs value entry_permissions) {
-              # for some reason, `-c config` gets ignored for some commands, hence we really need to create the config files
-              "${config_dir}/config.yaml".source = "${cfg.package}/share/crowdsec/config/config.yaml";
-              "${config_dir}/config.yaml.local".source = yaml.generate "config.yaml.local" cfg.settings.config;
-              "${config_dir}/acquis.d/00-nixos-generated.yaml".source = pkgs.writeText "aquisitions.yaml" ''
-                ---
-                ${lib.strings.concatMapStringsSep "\n---\n" (lib.generators.toYAML { }) cfg.settings.acquisitions}
-                ---
-              '';
-            };
-
-            attrListToEntries =
-              attrList: target_dir:
-              let
-                file_paths = map (yaml.generate "crowdsec-setting.yaml") attrList;
-
-                # Example usage:
-                #   enumerated_entries 0 ["path1" "path2"]
-                #   =>
-                #     [
-                #         { name = "${target_dir}/0-nixos-generated.yaml"; source = path1; }
-                #         { name = "${target_dir}/1-nixos-generated.yaml"; source = path2; }
-                #     ]
-                enumerated_entries =
-                  idx: paths:
-                  if paths == [ ] then
-                    [ ]
-                  else
-                    let
-                      dst_path = "${config_dir}/${target_dir}/${toString idx}-nixos-generated.yaml";
-
-                      src_path = builtins.head paths;
-                      rest = builtins.tail paths;
-
-                      entry = {
-                        name = dst_path;
-
-                        value = lib.mergeAttrs entry_permissions {
-                          source = src_path;
-                        };
-                      };
-                    in
-                    [ entry ] ++ (enumerated_entries (idx + 1) rest);
-              in
-              builtins.listToAttrs (enumerated_entries 0 file_paths);
-
-          in
-          builtins.foldl' lib.mergeAttrs start [
-            (attrListToEntries cfg.settings.scenarios "scenarios")
-            (attrListToEntries cfg.settings.parsers.s00Raw "parsers/s00-raw")
-            (attrListToEntries cfg.settings.parsers.s01Parse "parsers/s01-parse")
-            (attrListToEntries cfg.settings.parsers.s02Enrich "parsers/s02-enrich")
-            (attrListToEntries cfg.settings.postOverflows.s01Whitelist "postoverflows/s01-whitelist")
-            (attrListToEntries cfg.settings.contexts "contexts")
-            (attrListToEntries cfg.settings.notifications "notifications")
-          ];
       };
 
       systemd =
@@ -1011,14 +972,6 @@ in
               after = [ "network-online.target" ];
               serviceConfig = createServiceConfig {
                 Type = "oneshot";
-                ExecStartPre = [
-                  # `/etc/crodwsec` MUST be writeable for crowdsec because `cscli` writes and creates new files in its `config_dir`.
-                  # `environment.etc` and `systemd.tmpfiles` are not able to give the directories the correct owner and group
-                  # due to `DynamicUser=true` so `environment.etc` and `systemd.tmpfiles` don't know the user and group `crowdsec`.
-                  # That's why we are doing it ourself.
-                  "+${lib.getExe' pkgs.coreutils "chown"} ${cfg.user}:${cfg.group} -R ${config_paths.config_dir}"
-                  "+${lib.getExe' pkgs.coreutils "chmod"} 750 -R ${config_paths.config_dir}"
-                ];
                 ExecStart = lib.getExe setupScript;
               };
             };
