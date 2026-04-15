@@ -19,6 +19,11 @@ in
     };
     hardware.bluetooth.enable = true;
 
+    # Fix Plasma Login Manager missing icons
+    systemd.tmpfiles.settings."10-icons-symlink" = {
+      "/usr/share/icons"."L+".argument = "/run/current-system/sw/share/icons";
+    };
+
     programs.partition-manager.enable = true;
     environment = {
       plasma6.excludePackages = with pkgs.kdePackages; [
