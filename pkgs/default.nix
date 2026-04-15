@@ -5,4 +5,5 @@
   unmanic = pkgs.callPackage ./unmanic/package.nix { };
   cachyos-settings = pkgs.callPackage ./cachyos-settings.nix { };
   crowdsec = pkgs.callPackage ./crowdsec.nix { };
+  flatpak = pkgs.callPackage ./flatpak.nix { };
 }
