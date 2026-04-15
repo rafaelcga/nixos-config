@@ -1,4 +1,5 @@
 {
+  ffmpeg_7-full,
   jellyfin-ffmpeg,
   fetchFromGitHub,
 }:
@@ -12,4 +13,6 @@ jellyfin-ffmpeg.overrideAttrs (finalAttrs: rec {
     rev = "v${version}";
     hash = "sha256-8cYjrENpLmlZ75I8TpXTuf6juTooCaRjTdPVfDGfpKo=";
   };
+
+  inherit (ffmpeg_7-full) patches;
 })
