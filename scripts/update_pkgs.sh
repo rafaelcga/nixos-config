@@ -47,15 +47,9 @@ function run_nix_update() {
 
 echo "Upgrading local packages..."
 
-find "$PKGS_DIR" -type f \
-  \( -path "$PKGS_DIR/*.nix" -o -path "$PKGS_DIR/*/package.nix" \) \
-  -not -name "default.nix" \
+find "$PKGS_DIR" -type f -path "$PKGS_DIR/*/package.nix" \
   | while read abs_path; do
-    if [[ "$(basename "$abs_path")" == "package.nix" ]]; then
-      pkg_name=$(basename "$(dirname "$abs_path")")
-    else
-      pkg_name=$(basename "$abs_path" .nix)
-    fi
+    pkg_name=$(basename "$(dirname "$abs_path")")
 
     printf "❖ %s " "$pkg_name"
 

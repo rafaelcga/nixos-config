@@ -3,24 +3,53 @@
   prev ? pkgs,
 }:
 let
-  mkOverride = name: pkgs.callPackage ./${name}.nix { "${name}" = prev.${name}; };
-  mkOverrideCustom = name: pkgs.callPackage ./${name}/package.nix { "${name}" = prev.${name}; };
+  inherit (prev) lib;
+
+  callPackage =
+    {
+      name,
+      isOverride ? false,
+    }:
+    pkgs.callPackage ./${name}/package.nix (lib.optionalAttrs isOverride { "${name}" = prev.${name}; });
+
+  mkPackages =
+    {
+      derivations ? [ ],
+      overrides ? [ ],
+    }:
+    (lib.genAttrs derivations (
+      name:
+      callPackage {
+        inherit name;
+        isOverride = false;
+      }
+    ))
+    // (lib.genAttrs overrides (
+      name:
+      callPackage {
+        inherit name;
+        isOverride = true;
+      }
+    ));
 in
 {
-  local = {
-    caddy-with-plugins = pkgs.callPackage ./caddy-with-plugins/package.nix { };
-    unmanic = pkgs.callPackage ./unmanic/package.nix { };
-    cachyos-settings = pkgs.callPackage ./cachyos-settings.nix { };
+  local = mkPackages {
+    derivations = [
+      "cachyos-settings"
+      "caddy-with-plugins"
+      "unmanic"
+    ];
   };
-
-  crowdsec = pkgs.callPackage ./crowdsec.nix { }; # TODO: use overrideAttrs when PR merges
 }
-// (prev.lib.genAttrs [
-  "flatpak"
-  "jellyfin-ffmpeg"
-  "papirus-folders"
-] mkOverride)
-// (prev.lib.genAttrs [
-  "catppuccin-papirus-folders"
-  "papirus-icon-theme"
-] mkOverrideCustom)
+// mkPackages {
+  derivations = [
+    "crowdsec" # TODO: use overrideAttrs when PR merges
+  ];
+  overrides = [
+    "catppuccin-papirus-folders"
+    "flatpak"
+    "jellyfin-ffmpeg"
+    "papirus-folders"
+    "papirus-icon-theme"
+  ];
+}
