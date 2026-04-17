@@ -43,6 +43,8 @@ in
       };
     };
 
+    security.rtkit.enable = true; # enable RealtimeKit (RTKit)
+
     services.fwupd.enable = true; # firmware updates
 
     # github:CachyOS/CachyOS-Settings/blob/master/usr/lib/systemd/zram-generator.conf
