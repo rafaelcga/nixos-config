@@ -66,21 +66,22 @@ in
             latency = "${toString cfg.bufferSize}/${toString cfg.sampleRate}";
           in
           {
-            context.modules = [
+            "context.properties" = [
               {
                 name = "libpipewire-module-protocol-pulse";
-                args = {
-                  pulse.min.req = latency;
-                  pulse.default.req = latency;
-                  pulse.max.req = latency;
-                  pulse.min.quantum = latency;
-                  pulse.max.quantum = latency;
-                };
+                args = { };
               }
             ];
-            stream.properties = {
-              node.latency = latency;
-              resample.quality = 1;
+            "pulse.properties" = {
+              "pulse.min.req" = latency;
+              "pulse.default.req" = latency;
+              "pulse.max.req" = latency;
+              "pulse.min.quantum" = latency;
+              "pulse.max.quantum" = latency;
+            };
+            "stream.properties" = {
+              "node.latency" = latency;
+              "resample.quality" = 1;
             };
           };
       };
