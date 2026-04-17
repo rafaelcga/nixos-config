@@ -26,6 +26,7 @@ in
     services.flatpak = {
       enable = true;
       inherit (cfg) packages;
+
       overrides.global = {
         Environment.GSK_RENDERER = "gl"; # fixes graphical flatpak bug under Wayland
         Context.filesystems = [
