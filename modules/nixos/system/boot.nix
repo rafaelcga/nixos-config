@@ -18,7 +18,6 @@ in
 
   config = {
     boot = {
-      kernelPackages = pkgs.linuxPackages_xanmod_stable;
       initrd = {
         systemd.enable = true;
         verbose = true;
