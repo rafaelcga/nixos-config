@@ -35,6 +35,9 @@ jobs:
       - name: Update flake.lock
         run: nix flake update
 
+      - name: Check Linux kernel update
+        run: ./scripts/update_kernel.sh
+
       - name: Run local packages update script
         run: ./scripts/update_pkgs.sh
 

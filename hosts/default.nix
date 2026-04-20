@@ -1,6 +1,7 @@
 {
   inputs,
   lib,
+  pkgs,
   flakeMeta,
   hostName,
   ...
@@ -12,6 +13,8 @@
       hardwareConfigPath = "${hostConfigPath}/hardware-configuration.nix";
     in
     [ hostConfigPath ] ++ lib.optionals (lib.pathExists hardwareConfigPath) [ hardwareConfigPath ];
+
+  boot.kernelPackages = pkgs."linuxPackages_${lib.replaceString "." "_" flakeMeta.linuxVersion}";
 
   networking.hostName = hostName;
 
