@@ -27,12 +27,21 @@ in
       enable = true;
       packages = [ "io.github.kolunmi.Bazaar" ] ++ cfg.packages;
 
-      overrides.global = {
-        Environment.GSK_RENDERER = "gl"; # fixes graphical flatpak bug under Wayland
-        Context.filesystems = [
-          "${user.home}/.local/share/fonts:ro"
-          "${user.home}/.local/share/icons:ro"
-          "/nix/store:ro"
+      overrides.settings = {
+        global = {
+          Environment = {
+            GSK_RENDERER = "gl"; # fixes graphical flatpak bug under Wayland
+            GTK_THEME = "Adwaita:dark"; # Force correct theme for some GTK apps
+          };
+          Context.filesystems = [
+            "${user.home}/.local/share/fonts:ro"
+            "${user.home}/.local/share/icons:ro"
+            "/nix/store:ro"
+          ];
+        };
+        # Allow Bazaar to manage other Flatpak's data
+        "io.github.kolunmi.Bazaar".Context.filesystems = [
+          "${user.home}/.var/app"
         ];
       };
     };
