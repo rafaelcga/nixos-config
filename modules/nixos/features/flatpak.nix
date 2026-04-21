@@ -31,7 +31,7 @@ in
         global = {
           Environment = {
             GSK_RENDERER = "gl"; # fixes graphical flatpak bug under Wayland
-            GTK_THEME = "Adwaita:dark"; # Force correct theme for some GTK apps
+            ADW_DEBUG_COLOR_SCHEME = "prefer-dark"; # Force dark theme for some GTK apps
           };
           Context.filesystems = [
             "${user.home}/.local/share/fonts:ro"
@@ -39,10 +39,6 @@ in
             "/nix/store:ro"
           ];
         };
-        # Allow Bazaar to manage other Flatpak's data
-        "io.github.kolunmi.Bazaar".Context.filesystems = [
-          "${user.home}/.var/app"
-        ];
       };
     };
   };
