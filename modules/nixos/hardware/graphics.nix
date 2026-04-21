@@ -77,8 +77,18 @@ in
         services.xserver.videoDrivers = [ "amdgpu" ];
       })
       (lib.mkIf (lib.elem "nvidia" cfg.vendors && !config.boot.isContainer) {
-        hardware.nvidia.open = true; # Open-source kernel module
+        hardware.nvidia = {
+          open = true; # Open-source kernel module
+          nvidiaPersistenced = true; # Forces GPU to stay awake
+        };
         services.xserver.videoDrivers = [ "nvidia" ];
+        # Load GPU modules as soon as posible
+        boot.initrd.kernelModules = [
+          "nvidia"
+          "nvidia_modeset"
+          "nvidia_uvm"
+          "nvidia_drm"
+        ];
       })
     ]
   );
