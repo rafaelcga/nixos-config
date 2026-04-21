@@ -25,18 +25,33 @@ in
   config = lib.mkIf cfg.enable {
     services.flatpak = {
       enable = true;
-      packages = [ "io.github.kolunmi.Bazaar" ] ++ cfg.packages;
+      packages = [
+        "io.github.kolunmi.Bazaar"
+        "com.github.tchx84.Flatseal"
+      ]
+      ++ cfg.packages;
 
-      overrides.settings = {
-        global = {
-          Environment = {
-            GSK_RENDERER = "gl"; # fixes graphical flatpak bug under Wayland
+      overrides = {
+        pruneUnmanagedOverrides = true;
+        settings = {
+          global = {
+            Environment = {
+              GSK_RENDERER = "gl"; # fixes graphical flatpak bug under Wayland
+            };
+            Context = {
+              # Force Wayland
+              sockets = [
+                "wayland"
+                "!x11"
+                "!fallback-x11"
+              ];
+              filesystems = [
+                "${user.home}/.local/share/fonts:ro"
+                "${user.home}/.local/share/icons:ro"
+                "/nix/store:ro"
+              ];
+            };
           };
-          Context.filesystems = [
-            "${user.home}/.local/share/fonts:ro"
-            "${user.home}/.local/share/icons:ro"
-            "/nix/store:ro"
-          ];
         };
       };
     };

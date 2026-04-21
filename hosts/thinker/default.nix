@@ -37,7 +37,6 @@
     flatpak = {
       enable = true;
       packages = [
-        "com.github.tchx84.Flatseal"
         "it.mijorus.gearlever"
         "io.ente.auth"
         "com.protonvpn.www"
