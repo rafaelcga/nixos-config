@@ -2,12 +2,10 @@
   inputs,
   config,
   lib,
-  userName,
   ...
 }:
 let
   cfg = config.modules.nixos.flatpak;
-  user = config.users.users.${userName};
 in
 {
   imports = [ inputs.nix-flatpak.nixosModules.nix-flatpak ];
@@ -37,6 +35,7 @@ in
           global = {
             Environment = {
               GSK_RENDERER = "gl"; # fixes graphical flatpak bug under Wayland
+              QT_QPA_PLATFORM = "wayland";
             };
             Context = {
               # Force Wayland
@@ -46,8 +45,8 @@ in
                 "!fallback-x11"
               ];
               filesystems = [
-                "${user.home}/.local/share/fonts:ro"
-                "${user.home}/.local/share/icons:ro"
+                "~/.local/share/fonts:ro"
+                "~/.local/share/icons:ro"
                 "/nix/store:ro"
               ];
             };
