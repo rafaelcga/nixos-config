@@ -29,7 +29,6 @@ in
       ];
       systemPackages = with pkgs; [
         ghostty
-        cosmic-store
       ];
       sessionVariables.NIXOS_OZONE_WL = "1"; # Hint Electron apps to use Wayland
     };

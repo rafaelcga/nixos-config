@@ -25,7 +25,7 @@ in
   config = lib.mkIf cfg.enable {
     services.flatpak = {
       enable = true;
-      inherit (cfg) packages;
+      packages = [ "io.github.kolunmi.Bazaar" ] ++ cfg.packages;
 
       overrides.global = {
         Environment.GSK_RENDERER = "gl"; # fixes graphical flatpak bug under Wayland
