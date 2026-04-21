@@ -35,14 +35,13 @@ in
           global = {
             Environment = {
               GSK_RENDERER = "gl"; # fixes graphical flatpak bug under Wayland
-              QT_QPA_PLATFORM = "wayland";
             };
             Context = {
               # Force Wayland
               sockets = [
                 "wayland"
+                "fallback-x11"
                 "!x11"
-                "!fallback-x11"
               ];
               filesystems = [
                 "~/.local/share/fonts:ro"
