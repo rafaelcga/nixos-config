@@ -31,7 +31,6 @@ in
         global = {
           Environment = {
             GSK_RENDERER = "gl"; # fixes graphical flatpak bug under Wayland
-            ADW_DEBUG_COLOR_SCHEME = "prefer-dark"; # Force dark theme for some GTK apps
           };
           Context.filesystems = [
             "${user.home}/.local/share/fonts:ro"
