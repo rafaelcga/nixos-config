@@ -30,7 +30,9 @@ in
       ++ cfg.packages;
 
       overrides = {
+        writeMode = "replace";
         pruneUnmanagedOverrides = true;
+
         settings = {
           global = {
             Environment = {
@@ -40,8 +42,8 @@ in
               # Force Wayland
               sockets = [
                 "wayland"
-                "fallback-x11"
                 "!x11"
+                "!fallback-x11"
               ];
               filesystems = [
                 "~/.local/share/fonts:ro"
