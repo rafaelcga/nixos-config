@@ -33,26 +33,11 @@ in
         writeMode = "replace";
         pruneUnmanagedOverrides = true;
 
-        settings = {
-          global = {
-            Environment = {
-              GSK_RENDERER = "gl"; # fixes graphical flatpak bug under Wayland
-            };
-            Context = {
-              # Force Wayland
-              sockets = [
-                "wayland"
-                "!x11"
-                "!fallback-x11"
-              ];
-              filesystems = [
-                "~/.local/share/fonts:ro"
-                "~/.local/share/icons:ro"
-                "/nix/store:ro"
-              ];
-            };
-          };
-        };
+        settings.global.Context.filesystems = [
+          "~/.local/share/fonts:ro"
+          "~/.local/share/icons:ro"
+          "/nix/store:ro"
+        ];
       };
     };
   };
