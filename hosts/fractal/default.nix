@@ -1,3 +1,4 @@
+{ pkgs, ... }:
 {
   modules.nixos = {
     # System
@@ -63,6 +64,11 @@
     enable = true;
     binfmt = true;
   };
+
+  environment.systemPackages = with pkgs; [
+    google-chrome
+    firefox
+  ];
 
   boot.loader.systemd-boot.windows."11" = {
     title = "Windows 11";

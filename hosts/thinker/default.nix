@@ -1,3 +1,4 @@
+{ pkgs, ... }:
 {
   modules.nixos = {
     # System
@@ -58,6 +59,11 @@
 
   # Native NixOS modules and stand-alone configurations
   hardware.opentabletdriver.enable = true;
+
+  environment.systemPackages = with pkgs; [
+    google-chrome
+    firefox
+  ];
 
   programs.appimage = {
     enable = true;

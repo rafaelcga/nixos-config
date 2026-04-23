@@ -1,4 +1,3 @@
-{ pkgs, ... }:
 {
   modules.home-manager = {
     # Apps
@@ -7,13 +6,5 @@
     zed-editor.enable = true;
     # Services
     easyeffects.enable = true;
-  };
-
-  programs = {
-    chromium = {
-      enable = true;
-      package = pkgs.google-chrome;
-    };
-    firefox.enable = true;
   };
 }

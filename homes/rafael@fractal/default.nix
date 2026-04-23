@@ -9,14 +9,6 @@
     easyeffects.enable = true;
   };
 
-  programs = {
-    chromium = {
-      enable = true;
-      package = pkgs.google-chrome;
-    };
-    firefox.enable = true;
-  };
-
   home.packages = with pkgs; [
     # Audio interface
     alsa-scarlett-gui
