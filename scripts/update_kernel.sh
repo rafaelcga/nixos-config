@@ -4,7 +4,7 @@
 set -euo pipefail
 
 REPO_DIR="$(dirname "$(dirname "$(realpath "${BASH_SOURCE[0]}")")")"
-UPDATE_COOLDOWN=21
+UPDATE_COOLDOWN=14
 SECONDS_PER_DAY=86400
 
 echo "Fetching latest Linux kernel releases from endoflife.date..."
