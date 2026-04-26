@@ -40,7 +40,6 @@
       packages = [
         "it.mijorus.gearlever"
         "io.ente.auth"
-        "com.protonvpn.www"
         "org.telegram.desktop"
         "com.discordapp.Discord"
         "com.spotify.Client"
@@ -63,6 +62,7 @@
   environment.systemPackages = with pkgs; [
     google-chrome
     firefox
+    proton-vpn-cli
   ];
 
   programs.appimage = {
