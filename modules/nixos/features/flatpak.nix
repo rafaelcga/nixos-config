@@ -6,8 +6,7 @@
 }:
 let
   cfg = config.modules.nixos.flatpak;
-
-  fontDir = "/run/current-system/sw/share/X11/fonts";
+  inherit (config.modules.nixos) fonts;
 in
 {
   imports = [ inputs.nix-flatpak.nixosModules.nix-flatpak ];
@@ -36,12 +35,14 @@ in
         pruneUnmanagedOverrides = true;
 
         settings.global.Context.filesystems = [
-          "~/.fonts:ro"
           "~/.icons:ro"
-          "~/.local/share/fonts:ro"
           "~/.local/share/icons:ro"
           "/nix/store:ro"
-          "${fontDir}:ro"
+        ]
+        ++ lib.optionals fonts.enable [
+          "~/.fonts:ro"
+          "~/.local/share/fonts:ro"
+          "/run/current-system/sw/share/X11/fonts:ro"
         ];
       };
     };
