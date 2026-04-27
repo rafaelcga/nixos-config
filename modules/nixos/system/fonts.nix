@@ -8,8 +8,6 @@
 let
   cfg = config.modules.nixos.fonts;
   user = config.users.users.${userName};
-
-  fontDir = "/run/current-system/sw/share/X11/fonts";
 in
 {
   options.modules.nixos.fonts = {
@@ -33,10 +31,34 @@ in
       ];
     };
 
-    systemd.tmpfiles.settings = {
-      "10-link-system-fonts" = {
-        "${user.home}/.fonts"."L+".argument = fontDir;
-        "${user.home}/.local/share/fonts"."L+".argument = fontDir;
+    systemd.services.copy-link-fonts = {
+      description = "Copies system fonts to user's home";
+      wantedBy = [ "multi-user.target" ];
+      serviceConfig = {
+        Type = "oneshot";
+        User = user.name;
+        Group = user.group;
+        ExecStart =
+          let
+            localFontDir = "${user.home}/.local/share/fonts";
+            pastLocalFontDir = "${user.home}/.fonts";
+          in
+          lib.getExe (
+            pkgs.writeShellApplication {
+              name = "copy-link-fonts-script";
+              runtimeInputs = with pkgs; [ coreutils ];
+              text = ''
+                rm -rf "${localFontDir}"
+                rm -rf "${pastLocalFontDir}"
+
+                mkdir -p "${localFontDir}"
+                cp -rL "/run/current-system/sw/share/X11/fonts/." "${localFontDir}"
+                chmod -R 755 "${localFontDir}"
+
+                ln -s "${localFontDir}" "${pastLocalFontDir}"
+              '';
+            }
+          );
       };
     };
   };

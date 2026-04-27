@@ -42,7 +42,6 @@ in
         ++ lib.optionals fonts.enable [
           "~/.fonts:ro"
           "~/.local/share/fonts:ro"
-          "/run/current-system/sw/share/X11/fonts:ro"
         ];
       };
     };
