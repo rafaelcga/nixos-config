@@ -6,6 +6,8 @@
 }:
 let
   cfg = config.modules.nixos.flatpak;
+
+  fontDir = "/run/current-system/sw/share/X11/fonts";
 in
 {
   imports = [ inputs.nix-flatpak.nixosModules.nix-flatpak ];
@@ -39,6 +41,7 @@ in
           "~/.local/share/fonts:ro"
           "~/.local/share/icons:ro"
           "/nix/store:ro"
+          "${fontDir}:ro"
         ];
       };
     };
