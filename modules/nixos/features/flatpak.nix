@@ -34,6 +34,8 @@ in
         pruneUnmanagedOverrides = true;
 
         settings.global.Context.filesystems = [
+          "~/.fonts:ro"
+          "~/.icons:ro"
           "~/.local/share/fonts:ro"
           "~/.local/share/icons:ro"
           "/nix/store:ro"

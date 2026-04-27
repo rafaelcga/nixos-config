@@ -35,9 +35,8 @@ in
 
     systemd.tmpfiles.settings = {
       "10-link-system-fonts" = {
-        "${user.home}/.local/share/fonts"."L+" = {
-          argument = fontDir;
-        };
+        "${user.home}/.fonts"."L+".argument = fontDir;
+        "${user.home}/.local/share/fonts"."L+".argument = fontDir;
       };
     };
   };
