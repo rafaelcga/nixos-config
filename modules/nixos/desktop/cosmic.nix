@@ -27,7 +27,10 @@ in
       systemPackages = with pkgs; [
         ghostty
       ];
-      sessionVariables.NIXOS_OZONE_WL = "1"; # Hint Electron apps to use Wayland
+      sessionVariables = {
+        NIXOS_OZONE_WL = "1"; # Hint Electron apps to use Wayland
+        GSK_RENDERER = "gl"; # Fix GTK not rendering when using Vulkan
+      };
     };
   };
 }
