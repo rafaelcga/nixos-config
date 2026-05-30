@@ -27,7 +27,7 @@
         };
 
         linuxVersion = "7.0";
-        stateVersion = "26.05";
+        stateVersion = "26.11";
       };
     in
     flake-parts.lib.mkFlake
