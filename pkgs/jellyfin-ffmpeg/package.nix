@@ -5,13 +5,13 @@
 }:
 
 jellyfin-ffmpeg.overrideAttrs (oldAttrs: rec {
-  version = "7.1.3-6";
+  version = "8.1.1-1";
 
   src = fetchFromGitHub {
     owner = "jellyfin";
     repo = "jellyfin-ffmpeg";
     rev = "v${version}";
-    hash = "sha256-B0B3H2CooNo4b00KbatvfYCIdWXH2jU/WLPXp2KwRwQ=";
+    hash = "sha256-ITTnqMDQFabzE+LOcM4Mft7Ctmxut2g04JAUWt1JoHo=";
   };
 
   inherit (ffmpeg_7-full) patches;

@@ -2,13 +2,13 @@
 let
   plugins = [
     "github.com/caddy-dns/porkbun@v0.3.1"
-    "github.com/hslatman/caddy-crowdsec-bouncer/http@v0.12.1"
-    "github.com/hslatman/caddy-crowdsec-bouncer/appsec@v0.12.1"
-    "github.com/hslatman/caddy-crowdsec-bouncer/layer4@v0.12.1"
+    "github.com/hslatman/caddy-crowdsec-bouncer/http@v0.13.1"
+    "github.com/hslatman/caddy-crowdsec-bouncer/appsec@v0.13.1"
+    "github.com/hslatman/caddy-crowdsec-bouncer/layer4@v0.13.1"
   ];
 in
 caddy.withPlugins {
   inherit plugins;
-  hash = "sha256-RE5mAwGdY0ZlbHTO3jg+Bnmr8jgqfqcfwUQbY8z4n1o=";
+  hash = "sha256-r4Aw8SYpVSZcgc6p9HvcIjxCwSEeH1/a0V5kopGY+gM=";
   doInstallCheck = false;
 }
