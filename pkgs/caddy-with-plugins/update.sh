@@ -21,7 +21,7 @@ grep -oP "github.com/([a-zA-Z0-9_\-]+/?)+@[^\"]+" "$PKG_FILE" \
     # Grep the plugin version
     {
       rm -f go.mod go.sum
-      go mod init temp && go get $plugin_path
+      go mod init temp && go get "$plugin_path"
     } >/dev/null 2>&1
 
     new_version="$(grep "$plugin_repo" go.mod | awk '{print $2}')"
