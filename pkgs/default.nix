@@ -47,7 +47,6 @@ in
   ];
   overrides = [
     "catppuccin-papirus-folders"
-    "jellyfin-ffmpeg"
     "papirus-folders"
     "papirus-icon-theme"
   ];
