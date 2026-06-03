@@ -71,6 +71,7 @@ in
       themeConfig = {
         catppuccin = {
           enable = true;
+          autoEnable = true;
           inherit (cfg) flavor accent;
           cache.enable = true;
         };
