@@ -1,4 +1,9 @@
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 let
   cfg = config.modules.nixos.boot;
 in
@@ -28,6 +33,16 @@ in
           editor = false;
           inherit (cfg) configurationLimit;
           edk2-uefi-shell.enable = true;
+
+          # Overwrite new generation with `default @saved` but boot into it after
+          # a nixos-rebuild
+          extraInstallCommands = ''
+            NIXOS_GENERATION=$(grep "^default " /boot/loader/loader.conf | awk '{print $2}')
+            sed -i 's|^default .*|default @saved|' /boot/loader/loader.conf
+            if [[ -n "$NIXOS_GENERATION" ]] && [[ "$NIXOS_GENERATION" != "@saved" ]]; then
+              ${pkgs.systemd}/bin/bootctl set-oneshot "$NIXOS_GENERATION" || true
+            fi
+          '';
         };
       };
 
