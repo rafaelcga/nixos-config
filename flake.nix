@@ -26,7 +26,7 @@
           };
         };
 
-        linuxVersion = "7.0";
+        linuxVersion = "7.1";
         stateVersion = "26.11";
       };
     in
