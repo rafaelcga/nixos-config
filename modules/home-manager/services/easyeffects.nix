@@ -10,11 +10,12 @@ in
   config = lib.mkIf cfg.enable {
     services.easyeffects = {
       enable = true;
-      preset = "perfect-eq";
+      preset = "perfect-eq-and-mic";
       extraPresets = {
-        "perfect-eq" = {
+        "perfect-eq-and-mic" = {
           output = {
             blocklist = [ ];
+            plugins_order = [ "equalizer" ];
             equalizer = {
               input-gain = -2;
               left = {
@@ -226,7 +227,47 @@ in
               };
               split-channels = false;
             };
-            plugins_order = [ "equalizer" ];
+          };
+          input = {
+            blocklist = [ ];
+            plugins_order = [
+              "rnnoise#0"
+              "stereo_tools#0"
+            ];
+            "rnnoise#0" = {
+              bypass = false;
+              enable-vad = false;
+              input-gain = 0;
+              model-name = "\"\"";
+              output-gain = 0;
+              release = 20;
+              use-standard-model = true;
+              vad-thres = 30;
+              wet = 0;
+            };
+            "stereo_tools#0" = {
+              balance-in = 0;
+              balance-out = 0;
+              bypass = false;
+              delay = 0;
+              dry = -100;
+              input-gain = 0;
+              middle-level = 0;
+              middle-panorama = 0;
+              mode = "LR > L+R (Mono Sum L+R)";
+              mutel = false;
+              muter = false;
+              output-gain = 0;
+              phasel = false;
+              phaser = false;
+              sc-level = 1;
+              side-balance = 0;
+              side-level = 0;
+              softclip = false;
+              stereo-base = 0;
+              stereo-phase = 0;
+              wet = 0;
+            };
           };
         };
       };
