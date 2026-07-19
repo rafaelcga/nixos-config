@@ -72,7 +72,7 @@ let
 
           ReadWritePaths = [
             "/var/lib/crowdsec"
-            "/var/lib/crowdsec-${bouncerName}-bouncer-register"
+            "/var/lib/${bouncerName}-register"
           ];
 
           DynamicUser = true;
