@@ -70,8 +70,10 @@ let
           User = cfgCrowdsec.user;
           Group = cfgCrowdsec.group;
 
-          StateDirectory = "${serviceName} crowdsec";
-          StateDirectoryMode = "0750";
+          ReadWritePaths = [
+            "/var/lib/crowdsec"
+            "/var/lib/crowdsec-${bouncerName}-bouncer-register"
+          ];
 
           DynamicUser = true;
           LockPersonality = true;
