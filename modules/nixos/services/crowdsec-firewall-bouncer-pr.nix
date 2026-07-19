@@ -374,6 +374,7 @@ in
 
                 DynamicUser = true;
                 RuntimeDirectory = runtime-dir-name;
+                ReadWritePaths = [ cfg.settings.log_dir ];
 
                 LockPersonality = true;
                 PrivateDevices = true;
