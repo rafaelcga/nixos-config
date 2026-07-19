@@ -170,7 +170,6 @@ in
       crowdsec = {
         enable = true;
         autoUpdateService = true;
-        openFirewall = true;
 
         hub = {
           collections = [
