@@ -241,11 +241,7 @@ in
         registerBouncer.enable = true;
 
         settings = {
-          log_mode = "file";
-          log_compression = true;
-          log_max_size = 100;
-          log_max_backups = 3;
-          log_max_age = 30;
+          log_mode = "stdout";
           deny_log = true;
           iptables_chains = [
             "INPUT"
