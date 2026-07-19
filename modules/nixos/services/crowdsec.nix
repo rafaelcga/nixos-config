@@ -193,7 +193,7 @@ in
         settings = {
           config = {
             api.server = {
-              listen_uri = "127.0.0.1:${cfg.lapiPort}";
+              listen_uri = "0.0.0.0:${cfg.lapiPort}";
               online_client.credentials_path = "${config_paths.data_dir}/online_api_credentials.yaml";
             };
           };
@@ -226,7 +226,7 @@ in
               }
               {
                 source = "appsec";
-                listen_addr = "127.0.0.1:${cfg.appsecPort}";
+                listen_addr = "0.0.0.0:${cfg.appsecPort}";
                 appsec_configs = [
                   "crowdsecurity/appsec-default"
                 ];
