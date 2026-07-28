@@ -70,8 +70,8 @@ in
     let
       themeConfig = {
         catppuccin = {
-          enable = true;
-          autoEnable = true;
+          enable = cfg.enable;
+          autoEnable = cfg.enable;
           inherit (cfg) flavor accent;
           cache.enable = true;
         };
