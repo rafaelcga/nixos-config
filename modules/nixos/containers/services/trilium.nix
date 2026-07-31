@@ -1,4 +1,9 @@
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 let
   cfg = config.modules.nixos.containers.services.trilium;
   configModules = config.modules.nixos;
@@ -17,6 +22,10 @@ lib.mkMerge [
         services.trilium-server = {
           inherit (cfg) enable dataDir;
           port = cfg.containerPort;
+
+          environmentFile = pkgs.writeText "trilium.env" ''
+            TRILIUM_NETWORK_TRUSTEDREVERSEPROXY=1
+          '';
         };
 
         networking.firewall.allowedTCPPorts = [ cfg.containerPort ];
