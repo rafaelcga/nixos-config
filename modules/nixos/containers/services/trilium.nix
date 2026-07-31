@@ -18,9 +18,9 @@ lib.mkMerge [
           inherit (cfg) enable dataDir;
           port = cfg.containerPort;
         };
-      };
 
-      networking.firewall.allowedTCPPorts = [ cfg.containerPort ];
+        networking.firewall.allowedTCPPorts = [ cfg.containerPort ];
+      };
     };
 
     modules.nixos.caddy = lib.mkIf configModules.caddy.enable {
