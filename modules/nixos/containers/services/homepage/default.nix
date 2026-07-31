@@ -218,6 +218,11 @@ lib.mkMerge [
                 ];
               }
               {
+                "Cloud Services" = mkGroup [
+                  "trilium"
+                ];
+              }
+              {
                 "Home Network" = [
                   (lib.optionalAttrs caddy.enable {
                     "Caddy" = {

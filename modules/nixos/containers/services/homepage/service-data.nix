@@ -116,4 +116,8 @@ lib.mapAttrs mkServiceData {
       "records_total"
     ];
   };
+
+  trilium = {
+    description = "Personal knowledge base through notes";
+  };
 }
