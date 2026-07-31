@@ -140,6 +140,10 @@ lib.mkMerge [
                 style = "column";
                 icon = "mdi-broadcast";
               };
+              "Cloud Services" = {
+                style = "column";
+                icon = "mdi-cloud";
+              };
               "Home Network" = {
                 style = "column";
                 icon = "mdi-router-network-wireless";
