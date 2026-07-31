@@ -21,6 +21,7 @@ lib.mkMerge [
       config = {
         services.trilium-server = {
           inherit (cfg) enable dataDir;
+          host = "0.0.0.0";
           port = cfg.containerPort;
 
           environmentFile = pkgs.writeText "trilium.env" ''
