@@ -8,5 +8,6 @@
     ./qbittorrent.nix
     ./servarr.nix
     ./unmanic.nix
+    ./trilium.nix
   ];
 }

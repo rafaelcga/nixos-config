@@ -80,6 +80,10 @@
           isReadOnly = false;
         };
       };
+      trilium = {
+        enable = true;
+        hostPort = 8011;
+      };
     };
   };
 }
