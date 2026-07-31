@@ -19,6 +19,8 @@ lib.mkMerge [
           port = cfg.containerPort;
         };
       };
+
+      networking.firewall.allowedTCPPorts = [ cfg.containerPort ];
     };
 
     modules.nixos.caddy = lib.mkIf configModules.caddy.enable {
