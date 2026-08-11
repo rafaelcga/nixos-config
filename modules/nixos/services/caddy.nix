@@ -245,13 +245,34 @@ in
                           systemd
                         ];
                         text = ''
-                          CURR_IP="$(curl -s -m 5 https://checkip.amazonaws.com)"
-                          PREV_IP="$(cat "${prevState}" 2>/dev/null || echo "$CURR_IP")"
+                          SERVICES=(
+                            "https://checkip.amazonaws.com"
+                            "https://icanhazip.com"
+                            "https://api.ipify.org"
+                            "https://ifconfig.me/ip"
+                          )
 
+                          CURR_IP=""
+
+                          # Loop through services and stop at the first one that returns a valid IP
+                          for url in "''${SERVICES[@]}"; do
+                            # Fetch with a short 3-second timeout and strip trailing whitespace/newlines
+                            res="$(curl -s -f -m 3 "$url" 2>/dev/null | tr -d '[:space:]' || true)"
+
+                            # Validate that the response is strictly an IPv4 address
+                            if [[ "$res" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+                              CURR_IP="$res"
+                              break
+                            fi
+                          done
+
+                          # If none of the services returned a valid IP, fail safely
                           if [[ -z "$CURR_IP" ]]; then
-                            echo "Error: Could not fetch public IP."
+                            echo "Error: All IP lookup providers failed or returned invalid data."
                             exit 1
                           fi
+
+                          PREV_IP="$(cat "${prevState}" 2>/dev/null || echo "$CURR_IP")"
 
                           if [[ "$CURR_IP" != "$PREV_IP" || ! -f "${envFile}" ]]; then
                             cat "${config.sops.templates."caddy-env".path}" >"${envFile}"
@@ -261,7 +282,7 @@ in
                             chmod 0600 "${envFile}"
 
                             if systemctl is-active --quiet caddy; then
-                              echo "Restarting Caddy to apply new IP..."
+                              echo "Restarting Caddy to apply new IP ($CURR_IP)..."
                               systemctl restart caddy
                             else
                               echo "Caddy is not currently active; skipping restart."
