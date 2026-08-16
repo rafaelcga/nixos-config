@@ -243,6 +243,7 @@ python3.pkgs.buildPythonApplication (finalAttrs: {
     tornado
     watchdog
     xxhash
+    sentry-sdk
   ];
 
   pythonImportsCheck = [
