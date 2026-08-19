@@ -10,13 +10,13 @@
   autoPatchelfHook,
 }:
 let
-  version = "0.4.0";
+  version = "0.4.1";
 
   src = fetchFromGitHub {
     owner = "Unmanic";
     repo = "unmanic";
     tag = version;
-    hash = "sha256-mEOO6YHlvcXfBrtidm6PC3m84O2Qn4yMj8aGiZBAXqY=";
+    hash = "sha256-1qbRs9iG1AEogaAa7QUQlLpKx0NXgqYe2VU4/J7vH5E=";
     fetchSubmodules = true;
   };
 
@@ -24,7 +24,7 @@ let
     pname = "unmanic-frontend";
     inherit version src;
     sourceRoot = "${src.name}/unmanic/webserver/frontend";
-    npmDepsHash = "sha256-hQN6t0J9oEBJUQDB/YxUjDbeHSQCGDlZno6YCwoz/Xc=";
+    npmDepsHash = "sha256-is6vKdhsL8QJKZXF3tcj2g7RNIoGrHKgz8R2QXeOjHI=";
 
     nativeBuildInputs = [ autoPatchelfHook ];
 
