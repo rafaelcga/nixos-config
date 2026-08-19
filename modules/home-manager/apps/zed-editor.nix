@@ -143,8 +143,8 @@ in
         caddy
         shfmt
         nixfmt
-        gemini-cli
         shellcheck
+        antigravity-cli
         cfg.font.package
       ];
       extensions = [
