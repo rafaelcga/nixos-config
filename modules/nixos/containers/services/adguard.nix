@@ -143,6 +143,18 @@ lib.mkMerge [
                 name = "uBlock₀ filters – Badware risks";
                 id = 1741743310;
               }
+              {
+                enabled = true;
+                url = "https://adguardteam.github.io/HostlistsRegistry/assets/filter_33.txt";
+                name = "Steven Black's List";
+                id = 1789578839;
+              }
+              {
+                enabled = true;
+                url = "https://adguardteam.github.io/HostlistsRegistry/assets/filter_59.txt";
+                name = "AdGuard DNS Popup Hosts filter";
+                id = 1789578840;
+              }
             ];
           };
         };
