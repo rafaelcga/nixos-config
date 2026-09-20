@@ -281,8 +281,10 @@ in
               User = config.services.crowdsec.user;
               Group = config.services.crowdsec.group;
 
-              StateDirectory = "crowdsec-firewall-bouncer-register";
-              ReadWritePaths = [ "/var/lib/crowdsec" ];
+              ReadWritePaths = [
+                "/var/lib/crowdsec"
+                "/var/lib/crowdsec-firewall-bouncer-register"
+              ];
 
               DynamicUser = true;
               LockPersonality = true;
