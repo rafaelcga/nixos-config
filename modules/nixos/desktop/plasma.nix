@@ -24,7 +24,6 @@ in
       plasma6.excludePackages = with pkgs.kdePackages; [
         kate
         okular
-        kontact
         konsole
         discover
       ];
