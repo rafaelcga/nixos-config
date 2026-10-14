@@ -23,10 +23,6 @@ in
     environment = {
       plasma6.excludePackages = with pkgs.kdePackages; [
         kate
-        kmail
-        ktnef
-        kontact
-        merkuro
         okular
         konsole
         discover
