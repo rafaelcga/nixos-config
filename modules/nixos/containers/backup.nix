@@ -99,6 +99,7 @@ in
                   echo "Seeding initial rclone.conf from sops-nix..."
                   install -m 600 "${config.sops.secrets."rclone_proton_config".path}" "${mutableConfig}"
                 fi
+
                 echo "Starting rclone sync of ${cfg.dataDir} to ${cfg.backup.remotePath}..."
                 rclone sync "${cfg.dataDir}" "${cfg.backup.remotePath}" \
                   --config "${mutableConfig}" \
