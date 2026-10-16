@@ -116,6 +116,19 @@ in
       default = false;
       description = "Whether to protect the container behind a VPN";
     };
+
+    enableBackup = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = "Whether to backup this container's dataDir";
+    };
+
+    excludeFromBackup = lib.mkOption {
+      type = lib.types.listOf lib.types.str;
+      default = [ ];
+      example = [ "downloads/**" ];
+      description = "List of paths or patterns relative to the container's dataDir to exclude";
+    };
   };
 
   config = lib.mkMerge [

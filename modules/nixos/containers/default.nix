@@ -95,7 +95,10 @@ let
   };
 in
 {
-  imports = [ ./services ];
+  imports = [
+    ./services
+    ./backup.nix
+  ];
 
   options.modules.nixos.containers = {
     bridge = lib.mkOption {

@@ -15,6 +15,7 @@ lib.mkMerge [
       containerPort = 8080;
       dataDir = "/var/lib/qBittorrent";
       behindVpn = true;
+      excludeFromBackup = [ "downloads/**" ];
     };
   }
   (lib.mkIf cfg.enable {
