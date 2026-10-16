@@ -2,30 +2,22 @@
   config,
   lib,
   pkgs,
-  userName,
   ...
 }:
 let
   cfg = config.modules.nixos.containers;
-  user = config.users.users.${userName};
-
-  enabledContainers =
-    let
-      isEnabled = _: containerConfig: containerConfig.enable;
-    in
-    lib.filterAttrs isEnabled cfg.services;
 
   withBackup =
     let
-      usesBackup = _: containerConfig: containerConfig.enableBackup;
+      usesBackup = _: containerConfig: containerConfig.enable && containerConfig.enableBackup;
     in
-    lib.filterAttrs usesBackup enabledContainers;
+    lib.filterAttrs usesBackup cfg.services;
 
   withoutBackup =
     let
-      usesBackup = _: containerConfig: !containerConfig.enableBackup;
+      isExcluded = _: containerConfig: !containerConfig.enable || !containerConfig.enableBackup;
     in
-    lib.filterAttrs usesBackup enabledContainers;
+    lib.filterAttrs isExcluded cfg.services;
 
   perContainerExcludes = lib.concatLists (
     lib.mapAttrsToList (
@@ -46,7 +38,7 @@ in
   options.modules.nixos.containers.backup = {
     enable = lib.mkOption {
       type = lib.types.bool;
-      default = withBackup != { };
+      default = true;
       description = "Enable rclone automatic backup of containers' data";
     };
 
@@ -63,11 +55,8 @@ in
     };
   };
 
-  config = lib.mkIf cfg.backup.enable {
-    sops.secrets."rclone_proton_config" = {
-      mode = "0400";
-      owner = user.name;
-    };
+  config = lib.mkIf (cfg.backup.enable && withBackup != { }) {
+    sops.secrets."rclone_proton_config" = { };
 
     systemd.services.rclone-containers-backup = {
       description = "Backup ${cfg.dataDir} to Proton Drive";
@@ -83,7 +72,6 @@ in
         in
         {
           Type = "oneshot";
-          User = user.name;
           StateDirectory = stateDir;
           StateDirectoryMode = "0700";
           ExecStart = lib.getExe (
