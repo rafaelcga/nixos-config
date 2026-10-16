@@ -68,12 +68,12 @@ lib.mkMerge [
 
         services.adguardhome = {
           enable = true;
-          port = cfg.containerPort;
           allowDHCP = false;
           openFirewall = true;
 
           settings = {
             log.enabled = true;
+            http.address = "0.0.0.0:${toString cfg.containerPort}";
             users = [
               {
                 name = userName;

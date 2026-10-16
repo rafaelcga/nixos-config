@@ -85,7 +85,7 @@ lib.mkMerge [
             bazarr = {
               enable = true;
               dataDir = "${cfg.dataDir}/bazarr";
-              listenPort = cfg.containerPorts.bazarr;
+              settings.general.port = cfg.containerPorts.bazarr;
               openFirewall = true;
               user = user.name;
               inherit (user) group;
