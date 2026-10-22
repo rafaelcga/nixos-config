@@ -1,5 +1,5 @@
 #!/usr/bin/env nix-shell
-#!nix-shell --quiet -i bash -p coreutils gnused nix-update
+#!nix-shell --quiet -i bash -p coreutils gnugrep nix-update
 
 set -euo pipefail
 
@@ -14,7 +14,11 @@ function has_custom_update() {
 function run_custom_update() {
   local abs_path="$1"
   echo "through custom script..."
-  (cd "$(dirname "$abs_path")" && ./update.sh)
+  if (cd "$(dirname "$abs_path")" && ./update.sh); then
+    echo "  [✔] custom update succeeded"
+  else
+    echo "  [❌] custom update failed"
+  fi
 }
 
 function run_nix_update() {
@@ -29,7 +33,8 @@ function run_nix_update() {
     local status=$?
     set -e
 
-    local update_line="$(grep -oP "Update \K\S+ -> \S+" <<<"$output")"
+    local update_line
+    update_line="$(grep -oP "Update \K\S+ -> \S+" <<<"$output")"
 
     if [[ $status -eq 0 ]]; then
       if [[ -n "$update_line" ]]; then
@@ -40,7 +45,7 @@ function run_nix_update() {
     else
       echo "[❌] update failed:"
       # Indent the output for readability
-      echo "$output" | sed 's/^/  /'
+      echo "${output//^/  }"
     fi
   )
 }
@@ -48,7 +53,7 @@ function run_nix_update() {
 echo "Upgrading local packages..."
 
 find "$PKGS_DIR" -type f -path "$PKGS_DIR/*/package.nix" \
-  | while read abs_path; do
+  | while IFS= read -r abs_path; do
     pkg_name=$(basename "$(dirname "$abs_path")")
 
     printf "❖ %s " "$pkg_name"
