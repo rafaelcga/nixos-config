@@ -63,7 +63,7 @@ in
       type = lib.types.str;
       default =
         if config.engine == "oci" then
-          "127.0.0.1"
+          cfg.bridge.ipv4.host
         else
           utils.addToAddress cfg.bridge.ipv4.host cfg.services.${name}.uid;
       readOnly = true;
@@ -75,7 +75,7 @@ in
       type = lib.types.str;
       default =
         if config.engine == "oci" then
-          "::1"
+          cfg.bridge.ipv6.host
         else
           utils.addToAddress cfg.bridge.ipv6.host cfg.services.${name}.uid;
       readOnly = true;
