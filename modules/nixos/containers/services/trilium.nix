@@ -32,7 +32,11 @@ lib.mkMerge [
         networking.firewall.allowedTCPPorts = [ cfg.containerPort ];
       };
 
-      extraFlags = [ "--system-call-filter=*" ];
+      # Fixes broken Node.js JIT
+      extraFlags = [
+        "--system-call-filter=*"
+        "--capability=all"
+      ];
     };
 
     modules.nixos.caddy = lib.mkIf configModules.caddy.enable {
