@@ -390,6 +390,7 @@ in
           inherit (containerConfig) image;
 
           user = "${cfg.user.name}:${cfg.user.group}";
+          podman.user = cfg.user.name;
 
           ports =
             let
