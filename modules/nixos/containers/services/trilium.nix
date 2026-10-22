@@ -29,14 +29,14 @@ lib.mkMerge [
           '';
         };
 
+        # Disable the internal systemd sandbox protections preventing V8 execution
+        systemd.services.trilium-server.serviceConfig = {
+          MemoryDenyWriteExecute = lib.mkForce false;
+          SystemCallFilter = lib.mkForce [ ];
+        };
+
         networking.firewall.allowedTCPPorts = [ cfg.containerPort ];
       };
-
-      # Fixes broken Node.js JIT
-      extraFlags = [
-        "--system-call-filter=*"
-        "--capability=all"
-      ];
     };
 
     modules.nixos.caddy = lib.mkIf configModules.caddy.enable {
