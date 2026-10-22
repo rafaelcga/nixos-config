@@ -174,7 +174,7 @@ in
       };
 
       # Open ports of OCI containers to the bridge
-      firewall.interfaces."${cfg.bridge.name}".allowedTCPPorts =
+      firewall.interfaces =
         let
           getOciHostPorts =
             _: containerConfig:
@@ -185,8 +185,15 @@ in
               lib.filter (port: port != null) ports
             else
               [ ];
+
+          uniqueOciPorts = lib.unique (
+            lib.concatLists (lib.mapAttrsToList getOciHostPorts enabledContainers)
+          );
         in
-        lib.unique (lib.concatLists (lib.mapAttrsToList getOciHostPorts enabledContainers));
+        {
+          "${config.modules.nixos.networking.defaultInterface}".allowedTCPPorts = uniqueOciPorts;
+          "${cfg.bridge.name}".allowedTCPPorts = uniqueOciPorts;
+        };
     };
 
     users.users."${cfg.user.name}" = {
