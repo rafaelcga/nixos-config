@@ -177,6 +177,7 @@ in
       createHome = true;
       home = "${cfg.dataDir}/.container-home";
       linger = true;
+      autoSubUidGidRange = true;
       extraGroups = [ "podman" ];
     };
 
