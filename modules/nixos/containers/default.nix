@@ -173,8 +173,10 @@ in
 
     users.users."${cfg.user.name}" = {
       inherit (cfg.user) uid group;
-      linger = true;
       isSystemUser = true;
+      createHome = true;
+      home = "${cfg.dataDir}/.container-home";
+      linger = true;
       extraGroups = [ "podman" ];
     };
 
