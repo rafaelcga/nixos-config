@@ -5,6 +5,7 @@
 }:
 let
   cfg = config.modules.nixos.containers.services.trilium;
+  inherit (config.modules.nixos.containers) user;
   configModules = config.modules.nixos;
 in
 lib.mkMerge [
@@ -20,6 +21,8 @@ lib.mkMerge [
   (lib.mkIf cfg.enable {
     virtualisation.oci-containers.containers.trilium.environment = {
       TRILIUM_NETWORK_TRUSTEDREVERSEPROXY = "1";
+      PUID = "${toString user.uid}";
+      PGID = "${toString config.users.groups.${user.group}.gid}";
     };
 
     modules.nixos.caddy = lib.mkIf configModules.caddy.enable {
