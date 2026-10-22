@@ -102,16 +102,6 @@ let
     };
 in
 {
-  disabledModules = [
-    "services/security/crowdsec.nix"
-    "services/security/crowdsec-firewall-bouncer.nix"
-  ];
-
-  imports = [
-    ./crowdsec-pr.nix
-    ./crowdsec-firewall-bouncer-pr.nix
-  ];
-
   options.modules.nixos.crowdsec = {
     enable = lib.mkEnableOption "Enable CrowdSec";
 

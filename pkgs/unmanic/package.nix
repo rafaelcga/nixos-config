@@ -141,6 +141,15 @@ let
       python3.pkgs.poetry-core
     ];
 
+    # Add these two blocks to relax the dependency constraint
+    nativeBuildInputs = [
+      python3.pkgs.pythonRelaxDepsHook
+    ];
+
+    pythonRelaxDeps = [
+      "peewee"
+    ];
+
     dependencies = with python3.pkgs; [
       click
       peewee
@@ -271,7 +280,12 @@ python3.pkgs.buildPythonApplication (finalAttrs: {
       rm -rf ${webServerPath}/frontend
     '';
 
-  makeWrapperArgs = [ "--prefix PATH : ${lib.makeBinPath [ pkgs.ffmpeg-full ]}" ];
+  makeWrapperArgs = [
+    "--prefix"
+    "PATH"
+    ":"
+    "${lib.makeBinPath [ pkgs.ffmpeg-full ]}"
+  ];
 
   meta = {
     description = "Unmanic - Library Optimiser";
