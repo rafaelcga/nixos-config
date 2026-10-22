@@ -65,6 +65,8 @@ in
         "network-online.target"
         "sops-nix.service"
       ];
+      restartIfChanged = false;
+      stopIfChanged = false;
       serviceConfig =
         let
           stateDir = "rclone-proton";
