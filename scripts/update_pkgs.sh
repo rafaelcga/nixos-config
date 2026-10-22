@@ -16,8 +16,10 @@ function run_custom_update() {
   echo "through custom script..."
   if (cd "$(dirname "$abs_path")" && ./update.sh); then
     echo "  [✔️] custom update succeeded"
+    return 0
   else
     echo "  [❌] custom update failed"
+    return 1
   fi
 }
 
@@ -42,15 +44,19 @@ function run_nix_update() {
       else
         echo "[✔️️] up-to-date"
       fi
+      return 0
     else
       echo "[❌] update failed:"
       # Indent the output for readability
       echo "${output//^/  }"
+      return 1
     fi
   )
 }
 
 echo "Upgrading local packages..."
+
+failed=0
 
 find "$PKGS_DIR" -type f -path "$PKGS_DIR/*/package.nix" \
   | while IFS= read -r abs_path; do
@@ -59,8 +65,13 @@ find "$PKGS_DIR" -type f -path "$PKGS_DIR/*/package.nix" \
     printf "❖ %s " "$pkg_name"
 
     if has_custom_update "$abs_path"; then
-      run_custom_update "$abs_path"
+      run_custom_update "$abs_path" || failed=1
     else
-      run_nix_update "$pkg_name"
+      run_nix_update "$pkg_name" || failed=1
     fi
   done
+
+if [[ $failed -ne 0 ]]; then
+  echo "❌ One or more package updates failed. Failing CI build."
+  exit 1
+fi
