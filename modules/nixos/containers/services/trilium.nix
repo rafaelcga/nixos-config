@@ -31,6 +31,8 @@ lib.mkMerge [
 
         networking.firewall.allowedTCPPorts = [ cfg.containerPort ];
       };
+
+      extraFlags = [ "--system-call-filter=~@clock" ];
     };
 
     modules.nixos.caddy = lib.mkIf configModules.caddy.enable {
