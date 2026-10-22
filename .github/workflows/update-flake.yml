@@ -39,7 +39,13 @@ jobs:
         run: ./scripts/update_kernel.sh
 
       - name: Run local packages update script
-        run: ./scripts/update_pkgs.sh
+        run: |
+          # Restrict Nix concurrency to prevent OOM on standard runners
+          mkdir -p ~/.config/nix
+          echo "max-jobs = 1" >> ~/.config/nix/nix.conf
+          echo "cores = 2" >> ~/.config/nix/nix.conf
+
+          ./scripts/update_pkgs.sh
 
       - name: Create pull request
         uses: peter-evans/create-pull-request@v8
