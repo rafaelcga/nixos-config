@@ -403,7 +403,6 @@ in
 
             user = "${toString cfg.user.uid}:${toString gid}";
             podman.user = cfg.user.name;
-            extraOptions = [ "--userns=keep-id" ];
 
             ports =
               let
