@@ -34,7 +34,7 @@ function run_nix_update() {
     set -e
 
     local update_line
-    update_line="$(grep -oP "Update \K\S+ -> \S+" <<<"$output")"
+    update_line="$(grep -oP "Update \K\S+ -> \S+" <<<"$output" || true)"
 
     if [[ $status -eq 0 ]]; then
       if [[ -n "$update_line" ]]; then
