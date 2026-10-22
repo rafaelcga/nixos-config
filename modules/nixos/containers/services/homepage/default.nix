@@ -167,7 +167,9 @@ lib.mkMerge [
                   containerConfig = cfg_containers.${data.container};
                   hostPort = toString containerConfig.hostPorts.${service};
                   containerPort = toString containerConfig.containerPorts.${service};
-                  serviceUrl = "${data.protocol}://${containerConfig.address}:${containerPort}";
+
+                  listenPort = if containerConfig.engine == "oci" then hostPort else containerPort;
+                  serviceUrl = "${data.protocol}://${containerConfig.address}:${listenPort}";
                 in
                 {
                   "${data.displayName}" = lib.mkIf containerConfig.enable {
