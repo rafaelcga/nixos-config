@@ -15,7 +15,7 @@ function run_custom_update() {
   local abs_path="$1"
   echo "through custom script..."
   if (cd "$(dirname "$abs_path")" && ./update.sh); then
-    echo "  [✔] custom update succeeded"
+    echo "  [✔️] custom update succeeded"
   else
     echo "  [❌] custom update failed"
   fi
