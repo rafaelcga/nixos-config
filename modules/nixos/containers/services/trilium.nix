@@ -12,7 +12,7 @@ lib.mkMerge [
     modules.nixos.containers.services.trilium = {
       uid = 9;
       engine = "oci";
-      image = "triliumnext/trilium:latest";
+      image = "docker.io/triliumnext/trilium:latest";
       containerPort = 8080;
       dataDir = "/home/node/trilium-data";
     };
