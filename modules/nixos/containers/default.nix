@@ -173,7 +173,9 @@ in
 
     users.users."${cfg.user.name}" = {
       inherit (cfg.user) uid group;
+      linger = true;
       isSystemUser = true;
+      extraGroups = [ "podman" ];
     };
 
     systemd =
