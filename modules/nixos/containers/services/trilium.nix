@@ -21,8 +21,8 @@ lib.mkMerge [
   (lib.mkIf cfg.enable {
     virtualisation.oci-containers.containers.trilium.environment = {
       TRILIUM_NETWORK_TRUSTEDREVERSEPROXY = "1";
-      PUID = "${toString user.uid}";
-      PGID = "${toString config.users.groups.${user.group}.gid}";
+      USER_UID = "${toString user.uid}";
+      USER_GID = "${toString config.users.groups.${user.group}.gid}";
     };
 
     modules.nixos.caddy = lib.mkIf configModules.caddy.enable {
