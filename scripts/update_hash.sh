@@ -47,8 +47,9 @@ if [[ $status -eq 0 ]]; then
 fi
 
 # Use \K to ignore lookbehind match
-old_hash=$(echo "$output" | grep -oP 'specified: *\K(sha256-[\w\+\/=]+)')
-new_hash=$(echo "$output" | grep -oP 'got: *\K(sha256-[\w\+\/=]+)')
+# Append || true to prevent set -e from instantly crashing the script
+old_hash=$(echo "$output" | grep -oP 'specified: *\K(sha256-[\w\+\/=]+)' || true)
+new_hash=$(echo "$output" | grep -oP 'got: *\K(sha256-[\w\+\/=]+)' || true)
 
 # If both are non-empty, replace
 if [[ -n "$old_hash" && -n "$new_hash" ]]; then
