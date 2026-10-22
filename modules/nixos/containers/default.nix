@@ -174,7 +174,7 @@ in
       };
 
       # Open ports of OCI containers to the bridge
-      firewall =
+      firewall.interfaces."${cfg.bridge.name}".allowedTCPPorts =
         let
           getOciHostPorts =
             _: containerConfig:
@@ -185,14 +185,8 @@ in
               lib.filter (port: port != null) ports
             else
               [ ];
-          uniqueOciPorts = lib.unique (
-            lib.concatLists (lib.mapAttrsToList getOciHostPorts enabledContainers)
-          );
         in
-        {
-          allowedTCPPorts = uniqueOciPorts;
-          interfaces."${cfg.bridge.name}".allowedTCPPorts = uniqueOciPorts;
-        };
+        lib.unique (lib.concatLists (lib.mapAttrsToList getOciHostPorts enabledContainers));
     };
 
     users.users."${cfg.user.name}" = {
@@ -429,7 +423,7 @@ in
               ) (lib.attrNames (lib.intersectAttrs containerConfig.containerPorts containerConfig.hostPorts));
               mkPort =
                 serviceName:
-                "${containerConfig.address}:${toString containerConfig.hostPorts.${serviceName}}:${
+                "0.0.0.0:${toString containerConfig.hostPorts.${serviceName}}:${
                   toString containerConfig.containerPorts.${serviceName}
                 }";
             in
