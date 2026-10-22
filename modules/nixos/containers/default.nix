@@ -150,8 +150,11 @@ in
 
   config = lib.mkIf (enabledContainers != { }) {
     boot.enableContainers = true;
-    virtualisation.containers.enable = true;
-    virtualisation.oci-containers.backend = "podman";
+    virtualisation = {
+      containers.enable = true;
+      podman.enable = true;
+      oci-containers.backend = "podman";
+    };
 
     networking = {
       nat = {
@@ -391,36 +394,41 @@ in
 
     virtualisation.oci-containers.containers =
       let
-        mkOciConfig = name: containerConfig: {
-          inherit (containerConfig) image;
+        mkOciConfig =
+          let
+            gid = config.users.groups.${cfg.user.group}.gid;
+          in
+          name: containerConfig: {
+            inherit (containerConfig) image;
 
-          user = "${cfg.user.name}:${cfg.user.group}";
-          podman.user = cfg.user.name;
+            user = "${toString cfg.user.uid}:${toString gid}";
+            podman.user = cfg.user.name;
+            extraOptions = [ "--userns=keep-id" ];
 
-          ports =
-            let
-              serviceNames = lib.filter (
-                serviceName:
-                containerConfig.hostPorts.${serviceName} != null
-                && containerConfig.containerPorts.${serviceName} != null
-              ) (lib.attrNames (lib.intersectAttrs containerConfig.containerPorts containerConfig.hostPorts));
-              mkPort =
-                serviceName:
-                "${containerConfig.address}:${toString containerConfig.hostPorts.${serviceName}}:${
-                  toString containerConfig.containerPorts.${serviceName}
-                }";
-            in
-            lib.map mkPort serviceNames;
+            ports =
+              let
+                serviceNames = lib.filter (
+                  serviceName:
+                  containerConfig.hostPorts.${serviceName} != null
+                  && containerConfig.containerPorts.${serviceName} != null
+                ) (lib.attrNames (lib.intersectAttrs containerConfig.containerPorts containerConfig.hostPorts));
+                mkPort =
+                  serviceName:
+                  "${containerConfig.address}:${toString containerConfig.hostPorts.${serviceName}}:${
+                    toString containerConfig.containerPorts.${serviceName}
+                  }";
+              in
+              lib.map mkPort serviceNames;
 
-          volumes =
-            (lib.optionals (containerConfig.dataDir != null) [
-              "${cfg.dataDir}/${name}:${containerConfig.dataDir}"
-            ])
-            ++ (lib.mapAttrsToList (
-              mountPoint: mountConfig:
-              "${hostPathOf mountPoint mountConfig}:${mountPoint}${lib.optionalString mountConfig.isReadOnly ":ro"}"
-            ) containerConfig.userMounts);
-        };
+            volumes =
+              (lib.optionals (containerConfig.dataDir != null) [
+                "${cfg.dataDir}/${name}:${containerConfig.dataDir}"
+              ])
+              ++ (lib.mapAttrsToList (
+                mountPoint: mountConfig:
+                "${hostPathOf mountPoint mountConfig}:${mountPoint}${lib.optionalString mountConfig.isReadOnly ":ro"}"
+              ) containerConfig.userMounts);
+          };
 
         ociContainers =
           let
