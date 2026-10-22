@@ -18,7 +18,7 @@ let
     terminal.dock = "right";
     # AI
     agent_servers = {
-      gemini = {
+      antigravity-acp = {
         type = "registry";
       };
     };
