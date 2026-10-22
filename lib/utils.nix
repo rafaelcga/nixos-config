@@ -9,7 +9,7 @@ rec {
   listSubdirs =
     dirPath:
     let
-      dirContents = lib.readDir dirPath;
+      dirContents = builtins.readDir dirPath;
     in
     lib.attrNames (lib.filterAttrs (_: type: type == "directory") dirContents);
 
@@ -44,12 +44,12 @@ rec {
       newLastHextet = (lib.fromHexString lastHextetStr) + num;
 
       isValidAddress = numHextets > 4;
-      isValidResult = newLastHextet >= 0 && newLastHextet < 65535;
+      isValidResult = newLastHextet >= 0 && newLastHextet < 65536;
     in
     if !isValidAddress then
       throw "addToLastHextet: Invalid IP address format: `${address}`"
     else if !isValidResult then
-      throw "addToLastHextet: Octet overflow"
+      throw "addToLastHextet: Hextet overflow"
     else
       lib.concatStringsSep ":" (restHextets ++ [ (lib.toHexString newLastHextet) ]);
 

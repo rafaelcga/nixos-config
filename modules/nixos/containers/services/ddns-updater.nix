@@ -19,7 +19,7 @@ lib.mkMerge [
       };
       # https://github.com/qdm12/ddns-updater/blob/master/docs/porkbun.md
       templates."ddns-updater/config.json" = {
-        owner = "container";
+        owner = user.name;
         content = ''
           {
             "settings": [

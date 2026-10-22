@@ -1,7 +1,6 @@
 {
   config,
   lib,
-  pkgs,
   ...
 }:
 let
@@ -12,31 +11,15 @@ lib.mkMerge [
   {
     modules.nixos.containers.services.trilium = {
       uid = 9;
+      engine = "oci";
+      image = "triliumnext/trilium:latest";
       containerPort = 8080;
-      dataDir = "/var/lib/trilium";
+      dataDir = "/home/node/trilium-data";
     };
   }
   (lib.mkIf cfg.enable {
-    containers.trilium = {
-      config = {
-        services.trilium-server = {
-          inherit (cfg) enable dataDir;
-          host = "0.0.0.0";
-          port = cfg.containerPort;
-
-          environmentFile = pkgs.writeText "trilium.env" ''
-            TRILIUM_NETWORK_TRUSTEDREVERSEPROXY=1
-          '';
-        };
-
-        # Disable the internal systemd sandbox protections preventing V8 execution
-        systemd.services.trilium-server.serviceConfig = {
-          MemoryDenyWriteExecute = lib.mkForce false;
-          SystemCallFilter = lib.mkForce [ ];
-        };
-
-        networking.firewall.allowedTCPPorts = [ cfg.containerPort ];
-      };
+    virtualisation.oci-containers.containers.trilium.environment = {
+      TRILIUM_NETWORK_TRUSTEDREVERSEPROXY = "1";
     };
 
     modules.nixos.caddy = lib.mkIf configModules.caddy.enable {

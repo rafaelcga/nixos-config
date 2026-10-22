@@ -42,7 +42,7 @@ lib.mkMerge [
           ];
 
           systemd.services.jellyfin.environment.LIBVA_DRIVER_NAME =
-            config.environment.sessionVariables.LIBVA_DRIVER_NAME;
+            config.environment.sessionVariables.LIBVA_DRIVER_NAME or null;
 
           systemd.tmpfiles.settings =
             let

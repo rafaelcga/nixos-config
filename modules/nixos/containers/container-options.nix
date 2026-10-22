@@ -44,20 +44,43 @@ in
       description = "Unique ID for the container";
     };
 
+    engine = lib.mkOption {
+      type = lib.types.enum [
+        "nspawn"
+        "oci"
+      ];
+      default = "nspawn";
+      description = "The container engine to use for this service.";
+    };
+
+    image = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      description = "The container image to use (Required if engine is 'oci').";
+    };
+
     address = lib.mkOption {
       type = lib.types.str;
-      default = utils.addToAddress cfg.bridge.ipv4.host cfg.services.${name}.uid;
+      default =
+        if config.engine == "oci" then
+          "127.0.0.1"
+        else
+          utils.addToAddress cfg.bridge.ipv4.host cfg.services.${name}.uid;
       readOnly = true;
       internal = true;
-      description = "IPv4 of the container within the bridge";
+      description = "IPv4 of the container (localhost for OCI, bridge IP for nspawn)";
     };
 
     address6 = lib.mkOption {
       type = lib.types.str;
-      default = utils.addToAddress cfg.bridge.ipv6.host cfg.services.${name}.uid;
+      default =
+        if config.engine == "oci" then
+          "::1"
+        else
+          utils.addToAddress cfg.bridge.ipv6.host cfg.services.${name}.uid;
       readOnly = true;
       internal = true;
-      description = "IPv6 of the container within the bridge";
+      description = "IPv6 of the container (localhost for OCI, bridge IP for nspawn)";
     };
 
     hostPort = lib.mkOption {
