@@ -172,6 +172,20 @@ in
           "interface-name:${cfg.bridge.name}"
         ];
       };
+
+      firewall.interfaces."${cfg.bridge.name}".allowedTCPPorts =
+        let
+          getOciPorts =
+            _: containerConfig:
+            if containerConfig.engine == "oci" then
+              let
+                ports = lib.attrValues containerConfig.hostPorts;
+              in
+              lib.filter (port: port != null) ports
+            else
+              [ ];
+        in
+        lib.unique (lib.concat (lib.mapAttrsToList getOciPorts enabledContainers));
     };
 
     users.users."${cfg.user.name}" = {
