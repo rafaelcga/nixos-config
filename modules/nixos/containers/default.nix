@@ -152,7 +152,13 @@ in
     boot.enableContainers = true;
     virtualisation = {
       containers.enable = true;
-      podman.enable = true;
+      podman = {
+        enable = true;
+        autoPrune = {
+          enable = true;
+          flags = [ "--all" ];
+        };
+      };
       oci-containers.backend = "podman";
     };
 
