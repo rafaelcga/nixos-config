@@ -7,13 +7,13 @@
 
 buildGoModule (finalAttrs: {
   pname = "crowdsec";
-  version = "1.8.1";
+  version = "1.8.2";
 
   src = fetchFromGitHub {
     owner = "crowdsecurity";
     repo = "crowdsec";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-gyKqMUnAjfg3eAb7Z27qv6AgSxNo8Z7zIhXTUpkD5i4=";
+    hash = "sha256-KFwsU2JVqdsEUUamjaTg0gCeAIgLwZBxACoMM4624Dg=";
   };
 
   vendorHash = "sha256-899kCO6wbiNe1NHmtew3ksQXI51LjdlLo5XAplsHUQQ=";
