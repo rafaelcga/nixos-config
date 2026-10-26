@@ -3,6 +3,7 @@
   buildGoModule,
   fetchFromGitHub,
   installShellFiles,
+  makeBinaryWrapper,
 }:
 
 buildGoModule (finalAttrs: {
@@ -18,7 +19,10 @@ buildGoModule (finalAttrs: {
 
   vendorHash = "sha256-899kCO6wbiNe1NHmtew3ksQXI51LjdlLo5XAplsHUQQ=";
 
-  nativeBuildInputs = [ installShellFiles ];
+  nativeBuildInputs = [
+    installShellFiles
+    makeBinaryWrapper
+  ];
 
   subPackages = [
     "cmd/crowdsec"
@@ -46,16 +50,11 @@ buildGoModule (finalAttrs: {
   postBuild = "mv $GOPATH/bin/{crowdsec-cli,cscli}";
 
   postInstall = ''
+    # so that `bin/crowdsec` is available for `cscli explain` for example
+    wrapProgram $out/bin/cscli --prefix PATH : $out/bin/
+
     mkdir -p $out/share/crowdsec
     cp -r ./config $out/share/crowdsec/
-
-    install -D $out/bin/notification-dummy -t $out/libexec/crowdsec/plugins/
-    install -D $out/bin/notification-email -t $out/libexec/crowdsec/plugins/
-    install -D $out/bin/notification-file -t $out/libexec/crowdsec/plugins/
-    install -D $out/bin/notification-http -t $out/libexec/crowdsec/plugins/
-    install -D $out/bin/notification-sentinel -t $out/libexec/crowdsec/plugins/
-    install -D $out/bin/notification-slack -t $out/libexec/crowdsec/plugins/
-    install -D $out/bin/notification-splunk -t $out/libexec/crowdsec/plugins/
 
     installShellCompletion --cmd cscli \
       --bash <($out/bin/cscli completion bash) \
@@ -92,6 +91,7 @@ buildGoModule (finalAttrs: {
     license = lib.licenses.mit;
     maintainers = with lib.maintainers; [
       jk
+      tornax
     ];
   };
 })
