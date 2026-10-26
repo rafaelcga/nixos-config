@@ -18,11 +18,6 @@ in
 
   config = {
     boot = {
-      initrd = {
-        systemd.enable = true;
-        verbose = true;
-      };
-
       loader = {
         efi = {
           canTouchEfiVariables = true;
