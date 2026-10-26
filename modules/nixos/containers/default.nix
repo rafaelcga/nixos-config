@@ -291,6 +291,12 @@ in
           {
             "10-make-container-dirs" = lib.mapAttrs' settingTemplate withDataDir;
           };
+
+        timers."podman-auto-update" = {
+          enable = true;
+          wantedBy = [ "timers.target" ];
+          timerConfig.OnBootSec = "5m";
+        };
       };
 
     containers =
