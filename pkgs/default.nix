@@ -42,9 +42,7 @@ in
   };
 }
 // mkPackages {
-  derivations = [
-    "crowdsec" # TODO: use overrideAttrs when PR merges
-  ];
+  derivations = [ ];
   overrides = [
     "catppuccin-papirus-folders"
     "papirus-folders"
