@@ -432,6 +432,7 @@ in
           inherit (containerConfig) image;
 
           podman.user = cfg.user.name;
+          pull = "newer";
 
           ports =
             let
