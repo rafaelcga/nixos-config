@@ -70,11 +70,6 @@ lib.mapAttrs mkServiceData {
     container = "servarr";
   };
 
-  jackett = {
-    description = "API Support for your favorite torrent trackers";
-    container = "servarr";
-  };
-
   qbittorrent = {
     displayName = "qBittorrent";
     description = "BitTorrent client";

@@ -1,8 +1,4 @@
-{
-  config,
-  lib,
-  ...
-}:
+{ config, lib, ... }:
 let
   cfg = config.modules.nixos.containers.services.trilium;
   inherit (config.modules.nixos.containers) user;

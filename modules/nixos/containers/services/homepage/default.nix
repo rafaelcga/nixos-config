@@ -216,7 +216,6 @@ lib.mkMerge [
                   "radarr"
                   "sonarr"
                   "prowlarr"
-                  "jackett"
                   "bazarr"
                   "qbittorrent"
                   "unmanic"

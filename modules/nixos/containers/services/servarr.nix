@@ -20,9 +20,7 @@ lib.mkMerge [
         radarr = 7878;
         sonarr = 8989;
         prowlarr = 9696;
-        flaresolverr = 8191;
         bazarr = 6767;
-        jackett = 9117;
       };
       dataDir = "/var/lib/servarr";
       behindVpn = true;
@@ -90,20 +88,6 @@ lib.mkMerge [
               openFirewall = true;
               user = user.name;
               inherit (user) group;
-            };
-
-            jackett = {
-              enable = true;
-              dataDir = "${cfg.dataDir}/jackett";
-              port = cfg.containerPorts.jackett;
-              openFirewall = true;
-              user = user.name;
-              inherit (user) group;
-            };
-
-            flaresolverr = {
-              enable = true;
-              port = cfg.containerPorts.flaresolverr;
             };
           }
         ];
