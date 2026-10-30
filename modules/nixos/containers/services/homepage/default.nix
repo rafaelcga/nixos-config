@@ -178,7 +178,7 @@ lib.mkMerge [
                   "${data.displayName}" = lib.mkIf containerConfig.enable {
                     inherit (data) icon description;
 
-                    href = "http://${hostLocalIp}:${hostPort}";
+                    href = "http://${hostLocalIp}:${hostPort}" + data.extraUrlPath;
                     siteMonitor = lib.mkIf (data.protocol == "http") serviceUrl;
 
                     widget =
@@ -219,6 +219,7 @@ lib.mkMerge [
                   "bazarr"
                   "qbittorrent"
                   "unmanic"
+                  "trawl"
                 ];
               }
               {

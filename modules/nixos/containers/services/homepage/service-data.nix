@@ -13,6 +13,7 @@ let
         container = name;
         apiAuth = null; # key or password
         protocol = "http";
+        extraUrlPath = "";
         widgetFields = [ ];
         extraConfig = { };
       };
@@ -119,5 +120,10 @@ lib.mapAttrs mkServiceData {
 
   trilium = {
     description = "Personal knowledge base through notes";
+  };
+
+  trawl = {
+    description = "Self-hosted scraping engine";
+    extraUrlPath = "/dashboard";
   };
 }
