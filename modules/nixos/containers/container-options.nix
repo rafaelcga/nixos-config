@@ -62,25 +62,25 @@ in
     address = lib.mkOption {
       type = lib.types.str;
       default =
-        if config.engine == "oci" then
+        if config.engine == "oci" && !config.behindVpn then
           cfg.bridge.ipv4.host
         else
-          utils.addToAddress cfg.bridge.ipv4.host cfg.services.${name}.uid;
+          utils.addToAddress cfg.bridge.ipv4.host config.uid;
       readOnly = true;
       internal = true;
-      description = "IPv4 of the container (localhost for OCI, bridge IP for nspawn)";
+      description = "IPv4 of the container (bridge host for plain OCI, unique bridge IP otherwise)";
     };
 
     address6 = lib.mkOption {
       type = lib.types.str;
       default =
-        if config.engine == "oci" then
+        if config.engine == "oci" && !config.behindVpn then
           cfg.bridge.ipv6.host
         else
-          utils.addToAddress cfg.bridge.ipv6.host cfg.services.${name}.uid;
+          utils.addToAddress cfg.bridge.ipv6.host config.uid;
       readOnly = true;
       internal = true;
-      description = "IPv6 of the container (localhost for OCI, bridge IP for nspawn)";
+      description = "IPv6 of the container (bridge host for plain OCI, unique bridge IP otherwise)";
     };
 
     hostPort = lib.mkOption {

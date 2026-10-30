@@ -1,5 +1,6 @@
 {
   config,
+  inputs,
   lib,
   pkgs,
   ...
@@ -9,33 +10,35 @@ let
   cfg = cfg_containers.proton-vpn;
   cfg_bridge = config.modules.nixos.containers.bridge;
 
+  utils = import "${inputs.self}/lib/utils.nix" { inherit lib; };
+
   wireguardInterface = "wg-proton";
 
-  nspawnBehindVpn =
+  # Podman network (macvlan on top of the container bridge) used by OCI containers
+  ociVpnNetwork = "${cfg_bridge.name}-vpn";
+
+  # Host-side macvlan "shim". A macvlan child cannot be reached from its own
+  # parent interface, so without this the host (reverse proxy, etc.) can't talk
+  # to the OCI containers. Pick an offset that no container `uid` uses.
+  shimName = "vpn-shim";
+  shimOffset = 250;
+  shimV4 = utils.addToAddress cfg_bridge.ipv4.host shimOffset;
+  shimV6 = utils.addToAddress cfg_bridge.ipv6.host shimOffset;
+
+  mkBehindVpn =
+    engine:
     let
       doKeep =
         name: containerConfig:
-        let
-          isNotItself = name != cfg.name;
-          isBehindVpn = containerConfig.enable && containerConfig.behindVpn;
-          isNspawn = containerConfig.engine == "nspawn";
-        in
-        isNotItself && isBehindVpn && isNspawn;
+        name != cfg.name
+        && containerConfig.enable
+        && containerConfig.behindVpn
+        && containerConfig.engine == engine;
     in
     lib.filterAttrs doKeep cfg_containers;
 
-  ociBehindVpn =
-    let
-      doKeep =
-        name: containerConfig:
-        let
-          isNotItself = name != cfg.name;
-          isBehindVpn = containerConfig.enable && containerConfig.behindVpn;
-          isOci = containerConfig.engine == "oci";
-        in
-        isNotItself && isBehindVpn && isOci;
-    in
-    lib.filterAttrs doKeep cfg_containers;
+  nspawnBehindVpn = mkBehindVpn "nspawn";
+  ociBehindVpn = mkBehindVpn "oci";
 
   anyBehindVpn = (nspawnBehindVpn != { }) || (ociBehindVpn != { });
 in
@@ -156,31 +159,49 @@ lib.mkMerge [
         '';
     };
 
-    # 1. Manage Lifecycle for both nspawn and OCI containers
+    # 1. Lifecycle for both nspawn and OCI containers
     systemd.services = lib.mkMerge [
-      # Dynamically create the Podman network if any OCI containers need the VPN
+      # FIX 1 (ordering) + FIX 2 (gateway): create the macvlan network as ROOT,
+      # after the bridge exists, with the VPN container as the *only* gateway.
       (lib.mkIf (ociBehindVpn != { }) {
         "podman-network-vpn" = {
           description = "Create Podman network for VPN routed containers";
-          after = [ "network.target" ];
+          after = [
+            "systemd-networkd.service"
+            "container@proton-vpn.service"
+          ];
+          requires = [ "container@proton-vpn.service" ];
           wantedBy = [ "multi-user.target" ];
+          path = [
+            pkgs.podman
+            pkgs.iproute2
+            pkgs.coreutils
+          ];
           serviceConfig = {
             Type = "oneshot";
             RemainAfterExit = true;
           };
           script = ''
-            ${pkgs.podman}/bin/podman network create \
+            # networkd creates the bridge asynchronously; wait for it
+            for _ in $(seq 1 30); do
+              ip link show ${cfg_bridge.name} >/dev/null 2>&1 && break
+              sleep 1
+            done
+            ip link show ${cfg_bridge.name} >/dev/null
+
+            # NOTE: --ignore keeps an existing network untouched. If you change
+            # subnet/gateway later, run `podman network rm ${ociVpnNetwork}` as
+            # root (after stopping the containers) and restart this unit.
+            podman network create \
               --ignore \
               --disable-dns \
               -d macvlan \
               -o parent=${cfg_bridge.name} \
               --subnet ${cfg_bridge.ipv4.address}/${toString cfg_bridge.ipv4.mask} \
-              --gateway ${cfg_bridge.ipv4.host} \
-              --route 0.0.0.0/0,${cfg.address} \
+              --gateway ${cfg.address} \
               --subnet ${cfg_bridge.ipv6.address}/${toString cfg_bridge.ipv6.mask} \
-              --gateway ${cfg_bridge.ipv6.host} \
-              --route ::/0,${cfg.address6} \
-              ${cfg_bridge.name}-vpn
+              --gateway ${cfg.address6} \
+              ${ociVpnNetwork}
           '';
         };
       })
@@ -216,7 +237,49 @@ lib.mkMerge [
       )
     ];
 
-    # 2. Modify nspawn specific network config
+    # FIX 4: host-side macvlan shim so the host can reach OCI containers on the
+    # macvlan network (macvlan parent <-> child traffic is otherwise blocked).
+    systemd.network = lib.mkIf (ociBehindVpn != { }) {
+      netdevs."25-${shimName}" = {
+        netdevConfig = {
+          Kind = "macvlan";
+          Name = shimName;
+        };
+        macvlanConfig.Mode = "bridge";
+      };
+
+      # Attach the shim to the bridge (merges with the existing 30-<bridge> unit)
+      networks."30-${cfg_bridge.name}".networkConfig.MACVLAN = shimName;
+
+      networks."31-${shimName}" = {
+        matchConfig.Name = shimName;
+        networkConfig = {
+          ConfigureWithoutCarrier = true;
+        };
+        addresses = [
+          { Address = "${shimV4}/32"; }
+          {
+            Address = "${shimV6}/128";
+            DuplicateAddressDetection = "none";
+          }
+        ];
+        # More specific /32 and /128 routes beat the connected bridge route
+        routes = lib.concatMap (containerConfig: [
+          {
+            Destination = "${containerConfig.address}/32";
+            PreferredSource = shimV4;
+            Scope = "link";
+          }
+          {
+            Destination = "${containerConfig.address6}/128";
+            PreferredSource = shimV6;
+          }
+        ]) (lib.attrValues ociBehindVpn);
+        linkConfig.RequiredForOnline = "no";
+      };
+    };
+
+    # 2. nspawn: route through the VPN container
     containers =
       let
         vpnContainerConfig = {
@@ -247,13 +310,25 @@ lib.mkMerge [
         modifiedConfigs
       ];
 
-    # 3. Modify OCI specific network config (Point to the new Network)
+    # 3. OCI: attach to the VPN macvlan network
     virtualisation.oci-containers.containers = lib.mapAttrs (name: containerConfig: {
+      # FIX 3 (rootless): macvlan needs real CAP_NET_ADMIN on the host and the
+      # network above is owned by root, so these containers must run rootful.
+      podman.user = lib.mkForce null;
+
+      # FIX 5 (ports): `-p` mappings are meaningless on macvlan. The service is
+      # reached directly at <container address>:<container port>.
+      ports = lib.mkForce [ ];
+
       extraOptions = [
-        "--network=${cfg_bridge.name}-vpn"
+        "--network=${ociVpnNetwork}"
+        # Unique per container now (see container-options.nix), NOT the host IP
         "--ip=${containerConfig.address}"
         "--ip6=${containerConfig.address6}"
         "--dns=10.2.0.1"
+        # Rootful containers run as root by default. If the image supports it,
+        # drop privileges so files in dataDir keep the container user's ownership:
+        # "--user=${toString cfg_user.uid}"
       ];
     }) ociBehindVpn;
   })
