@@ -123,6 +123,7 @@ lib.mapAttrs mkServiceData {
   };
 
   trawl = {
+    icon = "https://docs.trawl.germondai.com/logo-dark.svg";
     description = "Self-hosted scraping engine";
     extraUrlPath = "/dashboard";
   };
