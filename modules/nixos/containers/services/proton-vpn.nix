@@ -41,6 +41,27 @@ let
   ociBehindVpn = mkBehindVpn "oci";
 
   anyBehindVpn = (nspawnBehindVpn != { }) || (ociBehindVpn != { });
+
+  # Host ports that must be forwarded to VPN'd OCI containers. Macvlan
+  # containers cannot use `podman -p`, so a socket proxy on the host takes over:
+  # <host>:hostPort -> <container ip>:containerPort (via the vpn-shim).
+  ociProxies = lib.concatLists (
+    lib.mapAttrsToList (
+      name: containerConfig:
+      lib.concatMap (
+        service:
+        let
+          hostPort = containerConfig.hostPorts.${service};
+          containerPort = containerConfig.containerPorts.${service};
+        in
+        lib.optional (hostPort != null && containerPort != null) {
+          inherit name hostPort containerPort;
+          inherit (containerConfig) address;
+          unit = "vpn-proxy-${name}-${service}";
+        }
+      ) (lib.attrNames (lib.intersectAttrs containerConfig.containerPorts containerConfig.hostPorts))
+    ) ociBehindVpn
+  );
 in
 lib.mkMerge [
   {
@@ -205,6 +226,25 @@ lib.mkMerge [
           '';
         };
       })
+      # Host-side TCP proxies replacing the unavailable `-p` port publishing
+      (lib.listToAttrs (
+        lib.map (
+          proxy:
+          lib.nameValuePair proxy.unit {
+            description = "Forward :${toString proxy.hostPort} to ${proxy.name} behind the VPN";
+            requires = [ "podman-${proxy.name}.service" ];
+            after = [
+              "podman-${proxy.name}.service"
+              "${proxy.unit}.socket"
+            ];
+            serviceConfig = {
+              ExecStart = "${config.systemd.package}/lib/systemd/systemd-socket-proxyd --exit-idle-time=5min ${proxy.address}:${toString proxy.containerPort}";
+              PrivateTmp = true;
+              DynamicUser = true;
+            };
+          }
+        ) ociProxies
+      ))
       (
         let
           vpnContainer = "container@proton-vpn.service";
@@ -236,6 +276,16 @@ lib.mkMerge [
         )
       )
     ];
+
+    systemd.sockets = lib.listToAttrs (
+      lib.map (
+        proxy:
+        lib.nameValuePair proxy.unit {
+          wantedBy = [ "sockets.target" ];
+          listenStreams = [ "0.0.0.0:${toString proxy.hostPort}" ];
+        }
+      ) ociProxies
+    );
 
     # FIX 4: host-side macvlan shim so the host can reach OCI containers on the
     # macvlan network (macvlan parent <-> child traffic is otherwise blocked).
