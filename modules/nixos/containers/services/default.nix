@@ -7,6 +7,7 @@
     ./proton-vpn.nix
     ./qbittorrent.nix
     ./servarr.nix
+    ./trawl.nix
     ./trilium.nix
     ./unmanic.nix
   ];
