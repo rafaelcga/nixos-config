@@ -12,15 +12,14 @@ lib.mkMerge [
       image = "docker.io/triliumnext/trilium:latest";
       containerPort = 8080;
       dataDir = "/home/node/trilium-data";
+      environment = {
+        TRILIUM_NETWORK_TRUSTEDREVERSEPROXY = "1";
+        USER_UID = "${toString user.uid}";
+        USER_GID = "${toString config.users.groups.${user.group}.gid}";
+      };
     };
   }
   (lib.mkIf cfg.enable {
-    virtualisation.oci-containers.containers.trilium.environment = {
-      TRILIUM_NETWORK_TRUSTEDREVERSEPROXY = "1";
-      USER_UID = "${toString user.uid}";
-      USER_GID = "${toString config.users.groups.${user.group}.gid}";
-    };
-
     modules.nixos.caddy = lib.mkIf configModules.caddy.enable {
       virtualHosts.trilium = {
         originHost = cfg.address;

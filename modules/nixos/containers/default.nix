@@ -429,7 +429,7 @@ in
     virtualisation.oci-containers.containers =
       let
         mkOciConfig = name: containerConfig: {
-          inherit (containerConfig) image;
+          inherit (containerConfig) image environment;
 
           podman.user = cfg.user.name;
           pull = "newer";

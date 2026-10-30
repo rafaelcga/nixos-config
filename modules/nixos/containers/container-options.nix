@@ -152,6 +152,16 @@ in
       example = [ "downloads/**" ];
       description = "List of paths or patterns relative to the container's dataDir to exclude";
     };
+
+    environment = lib.mkOption {
+      type = lib.types.attrsOf lib.types.str;
+      default = { };
+      example = {
+        DATABASE_HOST = "db.example.com";
+        DATABASE_PORT = "3306";
+      };
+      description = "Environment variables to set for this OCI container";
+    };
   };
 
   config = lib.mkMerge [
