@@ -84,6 +84,10 @@
         enable = true;
         hostPort = 8011;
       };
+      trawl = {
+        enable = true;
+        hostPort = 8012;
+      };
     };
   };
 }

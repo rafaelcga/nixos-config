@@ -14,6 +14,7 @@ lib.mkMerge [
   }
   (lib.mkIf cfg.enable {
     virtualisation.oci-containers.containers.trawl.environment = {
+      SESSION_CACHE_DRIVER = "memory";
       MCP_ENABLED = true;
       METRICS_DASHBOARD_ENABLED = true;
     };
