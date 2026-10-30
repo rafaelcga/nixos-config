@@ -172,8 +172,7 @@ lib.mkMerge [
             ${pkgs.podman}/bin/podman network create \
               --ignore \
               --disable-dns \
-              -d bridge \
-              -o mode=unmanaged \
+              -d macvlan \
               -o parent=${cfg_bridge.name} \
               --subnet ${cfg_bridge.ipv4.address}/${toString cfg_bridge.ipv4.mask} \
               --gateway ${cfg_bridge.ipv4.host} \
