@@ -14,16 +14,35 @@ let
 
   wireguardInterface = "wg-proton";
 
-  # Podman network (macvlan on top of the container bridge) used by OCI containers
-  ociVpnNetwork = "${cfg_bridge.name}-vpn";
+  # The Proton WireGuard config only carries an IPv4 address (10.2.0.2/32) and
+  # the kill switch rejects IPv6 anyway, so the OCI path is IPv4-only.
+  #
+  # Podman network used by VPN'd OCI containers: a macvlan on top of the
+  # container bridge, with the VPN container as its only gateway. The name
+  # embeds a hash of its definition, so changing any setting creates a fresh
+  # network instead of `--ignore` silently keeping a stale one.
+  ociNetworkArgs = [
+    "-d"
+    "macvlan"
+    "--disable-dns"
+    "-o"
+    "parent=${cfg_bridge.name}"
+    "--subnet"
+    "${cfg_bridge.ipv4.address}/${toString cfg_bridge.ipv4.mask}"
+    "--gateway"
+    cfg.address
+  ];
+  ociNetworkPrefix = "${cfg_bridge.name}-vpn";
+  ociNetwork = "${ociNetworkPrefix}-${
+    builtins.substring 0 8 (builtins.hashString "sha256" (builtins.toJSON ociNetworkArgs))
+  }";
 
   # Host-side macvlan "shim". A macvlan child cannot be reached from its own
-  # parent interface, so without this the host (reverse proxy, etc.) can't talk
+  # parent interface, so without this the host (browser proxy, etc.) can't talk
   # to the OCI containers. Pick an offset that no container `uid` uses.
   shimName = "vpn-shim";
   shimOffset = 250;
-  shimV4 = utils.addToAddress cfg_bridge.ipv4.host shimOffset;
-  shimV6 = utils.addToAddress cfg_bridge.ipv6.host shimOffset;
+  shimAddress = utils.addToAddress cfg_bridge.ipv4.host shimOffset;
 
   mkBehindVpn =
     engine:
@@ -182,8 +201,8 @@ lib.mkMerge [
 
     # 1. Lifecycle for both nspawn and OCI containers
     systemd.services = lib.mkMerge [
-      # FIX 1 (ordering) + FIX 2 (gateway): create the macvlan network as ROOT,
-      # after the bridge exists, with the VPN container as the *only* gateway.
+      # Create the macvlan network as ROOT, after the bridge exists, and drop
+      # networks left over from older definitions.
       (lib.mkIf (ociBehindVpn != { }) {
         "podman-network-vpn" = {
           description = "Create Podman network for VPN routed containers";
@@ -197,6 +216,7 @@ lib.mkMerge [
             pkgs.podman
             pkgs.iproute2
             pkgs.coreutils
+            pkgs.gnugrep
           ];
           serviceConfig = {
             Type = "oneshot";
@@ -210,19 +230,15 @@ lib.mkMerge [
             done
             ip link show ${cfg_bridge.name} >/dev/null
 
-            # NOTE: --ignore keeps an existing network untouched. If you change
-            # subnet/gateway later, run `podman network rm ${ociVpnNetwork}` as
-            # root (after stopping the containers) and restart this unit.
-            podman network create \
-              --ignore \
-              --disable-dns \
-              -d macvlan \
-              -o parent=${cfg_bridge.name} \
-              --subnet ${cfg_bridge.ipv4.address}/${toString cfg_bridge.ipv4.mask} \
-              --gateway ${cfg.address} \
-              --subnet ${cfg_bridge.ipv6.address}/${toString cfg_bridge.ipv6.mask} \
-              --gateway ${cfg.address6} \
-              ${ociVpnNetwork}
+            podman network create --ignore ${lib.escapeShellArgs ociNetworkArgs} ${ociNetwork}
+
+            # Remove networks from previous definitions (including the old
+            # unhashed one). Ones still in use are left alone.
+            for net in $(podman network ls --format '{{.Name}}' \
+              | grep -E '^${ociNetworkPrefix}(-[0-9a-f]{8})?$' \
+              | grep -vx '${ociNetwork}' || true); do
+              podman network rm "$net" || true
+            done
           '';
         };
       })
@@ -287,7 +303,7 @@ lib.mkMerge [
       ) ociProxies
     );
 
-    # FIX 4: host-side macvlan shim so the host can reach OCI containers on the
+    # Host-side macvlan shim so the host can reach OCI containers on the
     # macvlan network (macvlan parent <-> child traffic is otherwise blocked).
     systemd.network = lib.mkIf (ociBehindVpn != { }) {
       netdevs."25-${shimName}" = {
@@ -303,28 +319,14 @@ lib.mkMerge [
 
       networks."31-${shimName}" = {
         matchConfig.Name = shimName;
-        networkConfig = {
-          ConfigureWithoutCarrier = true;
-        };
-        addresses = [
-          { Address = "${shimV4}/32"; }
-          {
-            Address = "${shimV6}/128";
-            DuplicateAddressDetection = "none";
-          }
-        ];
-        # More specific /32 and /128 routes beat the connected bridge route
-        routes = lib.concatMap (containerConfig: [
-          {
-            Destination = "${containerConfig.address}/32";
-            PreferredSource = shimV4;
-            Scope = "link";
-          }
-          {
-            Destination = "${containerConfig.address6}/128";
-            PreferredSource = shimV6;
-          }
-        ]) (lib.attrValues ociBehindVpn);
+        networkConfig.ConfigureWithoutCarrier = true;
+        addresses = [ { Address = "${shimAddress}/32"; } ];
+        # More specific /32 routes beat the connected bridge route
+        routes = lib.map (containerConfig: {
+          Destination = "${containerConfig.address}/32";
+          PreferredSource = shimAddress;
+          Scope = "link";
+        }) (lib.attrValues ociBehindVpn);
         linkConfig.RequiredForOnline = "no";
       };
     };
@@ -365,9 +367,8 @@ lib.mkMerge [
       podman.user = lib.mkForce "root";
       ports = lib.mkForce [ ];
       extraOptions = [
-        "--network=${ociVpnNetwork}"
+        "--network=${ociNetwork}"
         "--ip=${containerConfig.address}"
-        "--ip6=${containerConfig.address6}"
         "--dns=10.2.0.1"
       ];
     }) ociBehindVpn;

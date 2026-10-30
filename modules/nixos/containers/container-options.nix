@@ -74,7 +74,7 @@ in
     address6 = lib.mkOption {
       type = lib.types.str;
       default =
-        if config.engine == "oci" && !config.behindVpn then
+        if config.engine == "oci" then
           cfg.bridge.ipv6.host
         else
           utils.addToAddress cfg.bridge.ipv6.host config.uid;
