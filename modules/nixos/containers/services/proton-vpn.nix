@@ -312,23 +312,13 @@ lib.mkMerge [
 
     # 3. OCI: attach to the VPN macvlan network
     virtualisation.oci-containers.containers = lib.mapAttrs (name: containerConfig: {
-      # FIX 3 (rootless): macvlan needs real CAP_NET_ADMIN on the host and the
-      # network above is owned by root, so these containers must run rootful.
-      podman.user = lib.mkForce null;
-
-      # FIX 5 (ports): `-p` mappings are meaningless on macvlan. The service is
-      # reached directly at <container address>:<container port>.
+      podman.user = lib.mkForce "root";
       ports = lib.mkForce [ ];
-
       extraOptions = [
         "--network=${ociVpnNetwork}"
-        # Unique per container now (see container-options.nix), NOT the host IP
         "--ip=${containerConfig.address}"
         "--ip6=${containerConfig.address6}"
         "--dns=10.2.0.1"
-        # Rootful containers run as root by default. If the image supports it,
-        # drop privileges so files in dataDir keep the container user's ownership:
-        # "--user=${toString cfg_user.uid}"
       ];
     }) ociBehindVpn;
   })
