@@ -17,6 +17,7 @@ lib.mkMerge [
       SESSION_CACHE_DRIVER = "memory";
       MCP_ENABLED = "true";
       METRICS_DASHBOARD_ENABLED = "true";
+      TIER1_TRANSPORT = "wreq";
     };
   })
 ]
