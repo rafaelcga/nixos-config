@@ -5,6 +5,7 @@
     image = "ghcr.io/germondai/trawl:latest";
     containerPort = 8191;
     dataDir = "/data/metrics";
+    behindVpn = true;
     enableBackup = false;
     environment = {
       SESSION_CACHE_DRIVER = "memory";
