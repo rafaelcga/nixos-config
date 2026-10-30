@@ -10,6 +10,7 @@
       MCP_ENABLED = "true";
       METRICS_DASHBOARD_ENABLED = "true";
       SCRAPE_MIN_TIER = "2";
+      BROWSER_MAX_CONTENT_PROCESSES = "4";
     };
   };
 }
