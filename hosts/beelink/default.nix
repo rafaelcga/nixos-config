@@ -62,6 +62,7 @@
           sonarr = 8006;
           prowlarr = 8007;
           bazarr = 8010;
+          jackett = 8012;
         };
         userMounts."/media" = {
           hostPath = "/mnt/media";
