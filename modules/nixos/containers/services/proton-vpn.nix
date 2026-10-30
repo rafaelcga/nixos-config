@@ -7,7 +7,7 @@
 let
   cfg_containers = config.modules.nixos.containers.services;
   cfg = cfg_containers.proton-vpn;
-  bridgeName = config.modules.nixos.containers.bridge.name;
+  cfg_bridge = config.modules.nixos.containers.bridge;
 
   wireguardInterface = "wg-proton";
 
@@ -56,7 +56,6 @@ lib.mkMerge [
 
       templates."${wireguardInterface}.conf".content =
         let
-          # Not added 10.0.0.0/8, as it contains the VPN IPs themselves
           localIpv4 = [
             config.modules.nixos.home-vpn.network.subnet
             "172.16.0.0/12"
@@ -157,23 +156,68 @@ lib.mkMerge [
         '';
     };
 
-    systemd.services =
-      let
-        vpnContainer = "container@proton-vpn.service";
-
-        mkDependency =
-          prefix: name: _:
-          lib.nameValuePair "${prefix}${name}" {
-            after = [ vpnContainer ];
-            requires = [ vpnContainer ];
-            bindsTo = [ vpnContainer ];
+    # 1. Manage Lifecycle for both nspawn and OCI containers
+    systemd.services = lib.mkMerge [
+      # Dynamically create the Podman network if any OCI containers need the VPN
+      (lib.mkIf (ociBehindVpn != { }) {
+        "podman-network-vpn" = {
+          description = "Create Podman network for VPN routed containers";
+          after = [ "network.target" ];
+          wantedBy = [ "multi-user.target" ];
+          serviceConfig = {
+            Type = "oneshot";
+            RemainAfterExit = true;
           };
-      in
-      lib.listToAttrs (
-        (lib.mapAttrsToList (mkDependency "container@") nspawnBehindVpn)
-        ++ (lib.mapAttrsToList (mkDependency "podman-") ociBehindVpn)
-      );
+          script = ''
+            ${pkgs.podman}/bin/podman network create \
+              --ignore \
+              --disable-dns \
+              -d bridge \
+              -o mode=unmanaged \
+              -o parent=${cfg_bridge.name} \
+              --subnet ${cfg_bridge.ipv4.address}/${toString cfg_bridge.ipv4.mask} \
+              --gateway ${cfg_bridge.ipv4.host} \
+              --route 0.0.0.0/0,${cfg.address} \
+              --subnet ${cfg_bridge.ipv6.address}/${toString cfg_bridge.ipv6.mask} \
+              --gateway ${cfg_bridge.ipv6.host} \
+              --route ::/0,${cfg.address6} \
+              ${cfg_bridge.name}-vpn
+          '';
+        };
+      })
+      (
+        let
+          vpnContainer = "container@proton-vpn.service";
 
+          mkNspawnDep =
+            name: _:
+            lib.nameValuePair "container@${name}" {
+              after = [ vpnContainer ];
+              requires = [ vpnContainer ];
+              bindsTo = [ vpnContainer ];
+            };
+
+          mkOciDep =
+            name: _:
+            lib.nameValuePair "podman-${name}" {
+              after = [
+                vpnContainer
+                "podman-network-vpn.service"
+              ];
+              requires = [
+                vpnContainer
+                "podman-network-vpn.service"
+              ];
+              bindsTo = [ vpnContainer ];
+            };
+        in
+        lib.listToAttrs (
+          (lib.mapAttrsToList mkNspawnDep nspawnBehindVpn) ++ (lib.mapAttrsToList mkOciDep ociBehindVpn)
+        )
+      )
+    ];
+
+    # 2. Modify nspawn specific network config
     containers =
       let
         vpnContainerConfig = {
@@ -204,11 +248,12 @@ lib.mkMerge [
         modifiedConfigs
       ];
 
+    # 3. Modify OCI specific network config (Point to the new Network)
     virtualisation.oci-containers.containers = lib.mapAttrs (name: containerConfig: {
       extraOptions = [
-        "--network=bridge:name=${bridgeName}"
+        "--network=${cfg_bridge.name}-vpn"
         "--ip=${containerConfig.address}"
-        "--route=0.0.0.0/0,via=${cfg.address}"
+        "--ip6=${containerConfig.address6}"
         "--dns=10.2.0.1"
       ];
     }) ociBehindVpn;
