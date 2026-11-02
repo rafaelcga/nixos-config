@@ -99,6 +99,7 @@ in
                 rclone sync "${cfg.dataDir}" "${cfg.backup.remotePath}" \
                   --config "${mutableConfig}" \
                   --exclude-from "${excludesFile}" \
+                  --delete-excluded \
                   --protondrive-replace-existing-draft=true \
                   --transfers 4 \
                   --checkers 8 \
