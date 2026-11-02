@@ -16,6 +16,7 @@ lib.mkMerge [
       containerPort = 8888;
       dataDir = "/var/lib/unmanic";
       gpuPassthrough = lib.mkDefault true;
+      excludeFromBackup = [ "cache/**" ];
     };
   }
   (lib.mkIf cfg.enable {

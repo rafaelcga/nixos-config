@@ -30,7 +30,12 @@ let
 
   excludesFile =
     let
-      allExcludes = cfg.backup.extraExcludes ++ perContainerExcludes ++ withoutBackupExcludes;
+      allExcludes = [
+        ".container-home/**" # .local and .cache of OCI containers
+      ]
+      ++ cfg.backup.extraExcludes
+      ++ perContainerExcludes
+      ++ withoutBackupExcludes;
     in
     pkgs.writeText "rclone-container-excludes" (lib.concatStringsSep "\n" allExcludes + "\n");
 in
