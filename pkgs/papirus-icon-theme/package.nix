@@ -9,7 +9,7 @@ papirus-icon-theme.overrideAttrs (oldAttrs: {
   src = fetchFromGitHub {
     owner = "PapirusDevelopmentTeam";
     repo = "papirus-icon-theme";
-    rev = "3ddeeed1ef2f08ecd47a1ca61b067489321d2efa";
-    hash = "sha256-4jXI7snprHhPCz/Kzwfu3ii9zbSjZFdCqETxVNDMCXY=";
+    rev = "072a55a432f075acd4932bb4aab6a154746b784d";
+    hash = "sha256-THZqhybT4nu77JH5qxd2/5iHL2xgc5/nHAl17tJiuoo=";
   };
 })
