@@ -4,12 +4,12 @@
 }:
 
 papirus-icon-theme.overrideAttrs (oldAttrs: {
-  version = "20260801-unstable-2026-11-01";
+  version = "20260801-unstable-2026-11-04";
 
   src = fetchFromGitHub {
     owner = "PapirusDevelopmentTeam";
     repo = "papirus-icon-theme";
-    rev = "072a55a432f075acd4932bb4aab6a154746b784d";
-    hash = "sha256-THZqhybT4nu77JH5qxd2/5iHL2xgc5/nHAl17tJiuoo=";
+    rev = "f66c41b7859ecca2a79a2f26a28da481dc01a369";
+    hash = "sha256-+0jV1RMocC4RRcayxU8Ny54m4OGOKC5l2oQZ75VTb3Q=";
   };
 })
