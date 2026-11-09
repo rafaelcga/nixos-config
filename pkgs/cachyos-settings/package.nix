@@ -8,13 +8,13 @@
 
 stdenv.mkDerivation rec {
   pname = "cachyos-settings";
-  version = "1.4.1";
+  version = "1.4.3";
 
   src = fetchFromGitHub {
     owner = "CachyOS";
     repo = "CachyOS-Settings";
     tag = version;
-    sha256 = "sha256-9ffWReUeZquH3Ljcv8wtnlr6sQpgxHBN6irVllGtGxU=";
+    sha256 = "sha256-ku4hRAJgqbmB1iijkLebMPbndj7wSaBHgCQlogXkBHs=";
   };
 
   dontBuild = true;
