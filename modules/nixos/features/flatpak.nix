@@ -24,6 +24,8 @@ in
   config = lib.mkIf cfg.enable {
     services.flatpak = {
       enable = true;
+      update.onActivation = true;
+
       packages = [
         "io.github.kolunmi.Bazaar"
         "com.github.tchx84.Flatseal"
