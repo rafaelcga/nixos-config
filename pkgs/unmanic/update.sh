@@ -1,6 +1,6 @@
 #!/usr/bin/env nix-shell
 # shellcheck shell=bash
-#!nix-shell --quiet -i bash -p coreutils nix-update
+#!nix-shell --quiet -i bash -p coreutils "nix-update.override { nix = lix; }"
 
 set -euo pipefail
 
