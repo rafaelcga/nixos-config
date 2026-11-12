@@ -14,6 +14,11 @@ on:
 permissions:
   contents: read
 
+# A newer push to the same branch/PR supersedes a running build
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   discover-hosts:
     name: Discover NixOS hosts
@@ -26,17 +31,11 @@ jobs:
         uses: actions/checkout@v6
         with:
           token: ${{ secrets.GH_TOKEN }}
-          fetch-depth: 0
 
       - name: Get NixOS hosts from directories
         id: get-hosts
         run: |
-          JSON_LIST=$(
-            find ./hosts -mindepth 1 -maxdepth 1 -type d \
-              | xargs -n 1 basename \
-              | jq -R . \
-              | jq -sc .
-          )
+          JSON_LIST=$(find ./hosts -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | jq -R . | jq -sc .)
           echo "hosts=$JSON_LIST" >>"$GITHUB_OUTPUT"
 
   build-hosts:
@@ -57,7 +56,6 @@ jobs:
         uses: actions/checkout@v6
         with:
           token: ${{ secrets.GH_TOKEN }}
-          fetch-depth: 0
 
       - name: Enable unprivileged user namespaces (Fixes Bubblewrap/Nix sandboxing)
         run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
@@ -66,6 +64,10 @@ jobs:
         uses: samueldr/lix-gha-installer-action@v2026-06-15
         with:
           github_access_token: ${{ secrets.GH_TOKEN }}
+          # Closures are thousands of small paths: download more of them in parallel
+          extra_nix_config: |
+            max-substitution-jobs = 64
+            http-connections = 64
 
       - uses: cachix/cachix-action@v17
         with:
@@ -73,7 +75,21 @@ jobs:
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
       - name: Build and test flake
-        run: nix build -L .#nixosConfigurations.${{ matrix.host }}.config.system.build.toplevel
+        run: |
+          # shellcheck disable=SC2016 # `${...}` below is Nix interpolation, not shell
+          read -r drv out < <(nix eval --raw \
+            ".#nixosConfigurations.${{ matrix.host }}.config.system.build.toplevel" \
+            --apply 'system: "${system.drvPath} ${system.outPath}"')
+
+          # The store path hashes the whole configuration: if it is already in the
+          # cache, an earlier run built this exact system, so there is nothing new
+          # to verify (and no need to download its ~2000-path closure).
+          if nix path-info --store https://rafaelcga.cachix.org "$out" &>/dev/null; then
+            echo "::notice title=${{ matrix.host }} unchanged::$out is already cached; skipping build"
+            exit 0
+          fi
+
+          nix build -L "$drv^*"
 
   check-builds:
     name: Check builds

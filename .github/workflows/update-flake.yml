@@ -25,6 +25,9 @@ jobs:
         uses: samueldr/lix-gha-installer-action@v2026-06-15
         with:
           github_access_token: ${{ secrets.GH_TOKEN }}
+          extra_nix_config: |
+            max-substitution-jobs = 64
+            http-connections = 64
 
       - uses: cachix/cachix-action@v17
         with:
