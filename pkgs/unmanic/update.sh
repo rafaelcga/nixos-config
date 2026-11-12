@@ -10,7 +10,7 @@ PKG_FILE="$ROOT_DIR/package.nix"
 PKG_NAME="$(basename "$ROOT_DIR")"
 
 echo "Checking for base package updates..."
-nix-update "$PKG_NAME" --flake --version=branch "path:$REPO_DIR"
+(cd "$REPO_DIR" && nix-update "$PKG_NAME" --flake)
 
 echo "Updating npm dependencies hash..."
 fake_hash="sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="

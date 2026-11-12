@@ -9,4 +9,4 @@ REPO_DIR="$(dirname "$(dirname "$ROOT_DIR")")"
 PKG_NAME="$(basename "$ROOT_DIR")"
 
 echo "Checking for base package updates..."
-nix-update "$PKG_NAME" --flake --version=branch "path:$REPO_DIR"
+(cd "$REPO_DIR" && nix-update "$PKG_NAME" --flake --version=branch)
