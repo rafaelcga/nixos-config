@@ -51,7 +51,7 @@ jobs:
         uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.GH_TOKEN }}
-          commit-message: "chore: updated flake"
+          commit-message: "chore: updated flake and packages"
           title: "Updated Flake"
           body: Automated update of the `flake.lock` and local Nix packages.
           branch: "nix-flake-update"

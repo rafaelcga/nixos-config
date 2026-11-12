@@ -1,11 +1,21 @@
 #!/usr/bin/env nix-shell
 # shellcheck shell=bash
-#!nix-shell --quiet -i bash -p coreutils gnugrep nix-update
+#!nix-shell --quiet -i bash -p coreutils gnugrep nix-update git
 
 set -euo pipefail
 
 REPO_DIR="$(dirname "$(dirname "$(realpath "${BASH_SOURCE[0]}")")")"
 PKGS_DIR="$REPO_DIR/pkgs"
+
+# Configure Git for the automated commits
+git config --global user.name "github-actions[bot]"
+git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+echo "Committing pending changes (flake.lock, kernel) to bypass Nix lazy evaluation bug on dirty trees..."
+git add "$REPO_DIR"
+if ! git diff-index --quiet HEAD; then
+  git commit -m "chore: pre-update changes"
+fi
 
 function has_custom_update() {
   local abs_path="$1"
@@ -54,9 +64,6 @@ function run_nix_update() {
   )
 }
 
-echo "Archiving flake to bypass Nix lazy evaluation issues..."
-nix flake archive "$REPO_DIR"
-
 echo "Upgrading local packages..."
 
 failed=0
@@ -71,6 +78,13 @@ while IFS= read -r abs_path; do
   else
     run_nix_update "$pkg_name" || failed=1
   fi
+
+  # Commit immediately to ensure a clean git tree for the next package's evaluation
+  git add "$REPO_DIR"
+  if ! git diff-index --quiet HEAD; then
+    git commit -m "chore: update $pkg_name"
+  fi
+
 done < <(find "$PKGS_DIR" -type f -path "$PKGS_DIR/*/package.nix")
 
 if [[ $failed -ne 0 ]]; then
