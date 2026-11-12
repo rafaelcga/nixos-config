@@ -21,6 +21,10 @@ let
       antigravity-acp = {
         type = "registry";
       };
+      # Claude Agent (Claude Code over ACP), installed from the ACP registry
+      claude-acp = {
+        type = "registry";
+      };
     };
     show_edit_predictions = false;
     # Languages
