@@ -1,4 +1,5 @@
 #!/usr/bin/env nix-shell
+# shellcheck shell=bash
 #!nix-shell --quiet -i bash -p coreutils gnugrep nix-update
 
 set -euo pipefail
