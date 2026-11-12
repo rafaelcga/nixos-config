@@ -2,6 +2,7 @@
   inputs,
   config,
   lib,
+  pkgs,
   userName,
   ...
 }:
@@ -112,6 +113,10 @@ lib.mkMerge [
       config = {
         services.homepage-dashboard = {
           enable = true;
+          # The host's pkgs, which carry overlays/homepage-dashboard.nix (adds the logo).
+          # The container evaluates its own pkgs without host overlays, so the
+          # default package here would be missing the logo.
+          package = pkgs.homepage-dashboard;
 
           listenPort = cfg.containerPort;
           openFirewall = true;

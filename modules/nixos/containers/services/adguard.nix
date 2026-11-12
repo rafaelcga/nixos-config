@@ -74,10 +74,20 @@ lib.mkMerge [
             User = user.name;
             Group = user.group;
           };
-          # Runs after the module has written AdGuardHome.yaml from `settings`
+          # Runs after the module has written AdGuardHome.yaml from `settings`.
+          # Never fatal: DNS must keep working even if the web UI login can't be set.
+          # No `sed -i`: it fchown()s its temp file, which the unit's seccomp filter
+          # (~@privileged) kills. Write a temp file and rename it, like the module does.
           preStart = lib.mkAfter ''
-            hash="$(< "${passwordSecret}")"
-            sed -i "s|${passwordPlaceholder}|$hash|" "$STATE_DIRECTORY/AdGuardHome.yaml"
+            config_file="$STATE_DIRECTORY/AdGuardHome.yaml"
+            if hash="$(< "${passwordSecret}")" && [ -n "$hash" ] \
+              && sed "s|${passwordPlaceholder}|$hash|" "$config_file" > "$config_file.tmp" \
+              && mv "$config_file.tmp" "$config_file"; then
+              :
+            else
+              rm -f "$config_file.tmp"
+              echo "WARNING: could not set the web UI password from ${passwordSecret}" >&2
+            fi
           '';
         };
 
