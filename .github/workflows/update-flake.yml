@@ -38,19 +38,19 @@ jobs:
       - name: Check Linux kernel update
         run: ./scripts/update_kernel.sh
 
-      # Temporary diagnostics to identify why nix-update fails with
-      # 'opening file "/nix/store/...-source": No such file or directory'.
+      # Temporary: verify the Nix 2.35 lazy source copying theory.
+      # The first call is expected to fail with 'opening file
+      # "/nix/store/...-source": No such file or directory'; the second,
+      # run after `nix flake archive`, should succeed if the theory holds.
       # Remove once the issue is resolved.
-      - name: Nix diagnostics
+      - name: Test nix-update workaround
         continue-on-error: true
         run: |
-          echo "--- Installed Nix ---"
           nix --version
-          nix config show | grep -E 'lazy-trees|experimental-features' || true
-          echo "--- Working tree state (dirty tree gets copied to the store) ---"
           git status --short
-          echo "--- Nix used by nix-update ---"
-          nix-shell -p nix-update --run 'nix-update --version; command -v nix; nix --version'
+          nix-shell -p nix-update --run 'nix-update cachyos-settings --flake --version=skip' || echo "FIRST CALL FAILED"
+          nix flake archive .
+          nix-shell -p nix-update --run 'nix-update cachyos-settings --flake --version=skip'
 
       - name: Run local packages update script
         run: |
