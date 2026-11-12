@@ -38,6 +38,20 @@ jobs:
       - name: Check Linux kernel update
         run: ./scripts/update_kernel.sh
 
+      # Temporary diagnostics to identify why nix-update fails with
+      # 'opening file "/nix/store/...-source": No such file or directory'.
+      # Remove once the issue is resolved.
+      - name: Nix diagnostics
+        continue-on-error: true
+        run: |
+          echo "--- Installed Nix ---"
+          nix --version
+          nix config show | grep -E 'lazy-trees|experimental-features' || true
+          echo "--- Working tree state (dirty tree gets copied to the store) ---"
+          git status --short
+          echo "--- Nix used by nix-update ---"
+          nix-shell -p nix-update --run 'nix-update --version; command -v nix; nix --version'
+
       - name: Run local packages update script
         run: |
           # Restrict Nix concurrency to prevent OOM on standard runners
