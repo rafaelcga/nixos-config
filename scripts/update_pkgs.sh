@@ -41,9 +41,9 @@ function run_nix_update() {
 
     if [[ $status -eq 0 ]]; then
       if [[ -n "$update_line" ]]; then
-        echo "[✔️️] updated: $update_line"
+        echo "[✔] updated: $update_line"
       else
-        echo "[✔️️] up-to-date"
+        echo "[✔] up-to-date"
       fi
       return 0
     else
@@ -53,6 +53,9 @@ function run_nix_update() {
     fi
   )
 }
+
+echo "Archiving flake to bypass Nix lazy evaluation issues..."
+nix flake archive "$REPO_DIR"
 
 echo "Upgrading local packages..."
 
