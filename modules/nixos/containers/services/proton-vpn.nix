@@ -39,7 +39,7 @@ let
 
   # Host-side macvlan "shim". A macvlan child cannot be reached from its own
   # parent interface, so without this the host (browser proxy, etc.) can't talk
-  # to the OCI containers. Pick an offset that no container `uid` uses.
+  # to the OCI containers. All container `uid`s must stay below this offset (asserted).
   shimName = "vpn-shim";
   shimOffset = 250;
   shimAddress = utils.addToAddress cfg_bridge.ipv4.host shimOffset;
@@ -67,18 +67,12 @@ let
   ociProxies = lib.concatLists (
     lib.mapAttrsToList (
       name: containerConfig:
-      lib.concatMap (
-        service:
-        let
-          hostPort = containerConfig.hostPorts.${service};
-          containerPort = containerConfig.containerPorts.${service};
-        in
-        lib.optional (hostPort != null && containerPort != null) {
-          inherit name hostPort containerPort;
-          inherit (containerConfig) address;
-          unit = "vpn-proxy-${name}-${service}";
-        }
-      ) (lib.attrNames (lib.intersectAttrs containerConfig.containerPorts containerConfig.hostPorts))
+      map (mapping: {
+        inherit name;
+        inherit (mapping) hostPort containerPort;
+        inherit (containerConfig) address;
+        unit = "vpn-proxy-${name}-${mapping.service}";
+      }) containerConfig.portMappings
     ) ociBehindVpn
   );
 in
@@ -90,6 +84,15 @@ lib.mkMerge [
     };
   }
   (lib.mkIf cfg.enable {
+    assertions = [
+      {
+        assertion = lib.all (containerConfig: containerConfig.uid < shimOffset) (
+          lib.attrValues cfg_containers
+        );
+        message = "modules.nixos.containers: container uids must be below ${toString shimOffset}, which is reserved for ${shimName}";
+      }
+    ];
+
     sops = {
       secrets = {
         "wireguard/proton/public_key" = { };
@@ -99,11 +102,7 @@ lib.mkMerge [
 
       templates."${wireguardInterface}.conf".content =
         let
-          localIpv4 = [
-            config.modules.nixos.home-vpn.network.subnet
-            "172.16.0.0/12"
-            "192.168.0.0/16"
-          ];
+          localIpv4 = config.modules.nixos.containers.lanSubnets;
           localIpv6 = [
             "fc00::/7"
             "fe80::/10"

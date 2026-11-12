@@ -7,6 +7,10 @@
 let
   cfg = config.modules.nixos.containers.services.qbittorrent;
   inherit (config.modules.nixos.containers) user;
+
+  # Replaced at service start with the PBKDF2 hash from sops
+  passwordSecret = config.sops.secrets."qbittorrent/password_hash".path;
+  passwordPlaceholder = "@QBITTORRENT_PASSWORD_HASH@";
 in
 lib.mkMerge [
   {
@@ -19,13 +23,27 @@ lib.mkMerge [
     };
   }
   (lib.mkIf cfg.enable {
+    sops.secrets."qbittorrent/password_hash".owner = user.name;
+
     containers.qbittorrent = {
+      bindMounts.${passwordSecret}.isReadOnly = true;
+
       config =
+        { config, pkgs, ... }:
         let
           savePath = "${cfg.dataDir}/downloads";
           tempPath = "${savePath}/incomplete";
+          configFile = "${config.services.qbittorrent.profileDir}/qBittorrent/config/qBittorrent.conf";
         in
         {
+          # Runs after the module has installed qBittorrent.conf from `serverConfig`
+          systemd.services.qbittorrent.serviceConfig.ExecStartPre = lib.mkAfter [
+            (pkgs.writeShellScript "qbittorrent-set-password" ''
+              hash="$(< "${passwordSecret}")"
+              ${lib.getExe pkgs.gnused} -i "s|${passwordPlaceholder}|$hash|" "${configFile}"
+            '')
+          ];
+
           services.qbittorrent = {
             enable = true;
             user = user.name;
@@ -60,7 +78,7 @@ lib.mkMerge [
                 };
                 WebUI = {
                   Username = userName;
-                  Password_PBKDF2 = "@ByteArray(4quLRWi4zO+tAPClYLWbaw==:P5PWcrBP/z/uZhVGn18vCK4ryKT/xvL4nAFxx/qlUPX2/9DWF7Q0L0jZR7Ii4863PH6YQj8s8d7U0Otjuuv2+Q==)";
+                  Password_PBKDF2 = passwordPlaceholder;
                   HostHeaderValidation = false;
                   CSRFProtection = false;
                 };

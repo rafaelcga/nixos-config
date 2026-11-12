@@ -2,7 +2,6 @@
   inputs,
   config,
   lib,
-  pkgs,
   userName,
   ...
 }:
@@ -48,7 +47,6 @@ let
     "HOMEPAGE_VAR_${lib.toUpper service}_${suffix.${apiAuth}}";
 
   homepageLogoPath = "/icons/nix-pastel.svg";
-  homepageOverride = pkgs.homepage-dashboard;
 in
 lib.mkMerge [
   {
@@ -114,7 +112,6 @@ lib.mkMerge [
       config = {
         services.homepage-dashboard = {
           enable = true;
-          package = homepageOverride;
 
           listenPort = cfg.containerPort;
           openFirewall = true;

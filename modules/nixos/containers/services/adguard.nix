@@ -17,6 +17,10 @@ let
 
   dnsPort = 53;
   dnsServers = [ cfg.address ] ++ bootstrapDns;
+
+  # Replaced at service start with the bcrypt hash from sops
+  passwordSecret = config.sops.secrets."adguard/password_hash".path;
+  passwordPlaceholder = "@ADGUARD_PASSWORD_HASH@";
 in
 lib.mkMerge [
   {
@@ -24,9 +28,13 @@ lib.mkMerge [
       uid = 2;
       containerPort = 3000;
       dataDir = "/var/lib/AdGuardHome";
+      # Stopping it would take down DNS for the whole network during backups
+      stopDuringBackup = false;
     };
   }
   (lib.mkIf cfg.enable {
+    sops.secrets."adguard/password_hash".owner = user.name;
+
     networking.nameservers = dnsServers;
 
     services.resolved.settings.Resolve = {
@@ -36,6 +44,8 @@ lib.mkMerge [
     };
 
     containers.adguard = {
+      bindMounts.${passwordSecret}.isReadOnly = true;
+
       forwardPorts =
         let
           mkDnsPort = protocol: {
@@ -64,6 +74,11 @@ lib.mkMerge [
             User = user.name;
             Group = user.group;
           };
+          # Runs after the module has written AdGuardHome.yaml from `settings`
+          preStart = lib.mkAfter ''
+            hash="$(< "${passwordSecret}")"
+            sed -i "s|${passwordPlaceholder}|$hash|" "$STATE_DIRECTORY/AdGuardHome.yaml"
+          '';
         };
 
         services.adguardhome = {
@@ -77,7 +92,7 @@ lib.mkMerge [
             users = [
               {
                 name = userName;
-                password = "$2b$12$kZpm0P3wFyidgKBwribsO.Y/ouoHppUvbJ3ifqaQRX8J8mWB1aDMC";
+                password = passwordPlaceholder;
               }
             ];
             querylog = {
@@ -89,11 +104,7 @@ lib.mkMerge [
               interval = "24h";
             };
             dns = {
-              allowed_clients = [
-                config.modules.nixos.home-vpn.network.subnet
-                "172.16.0.0/12"
-                "192.168.0.0/16"
-              ];
+              allowed_clients = config.modules.nixos.containers.lanSubnets;
               upstream_dns = [
                 "https://dns.quad9.net/dns-query"
                 "tls://dns.quad9.net"

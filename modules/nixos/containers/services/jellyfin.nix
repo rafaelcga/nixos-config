@@ -1,9 +1,4 @@
-{
-  config,
-  lib,
-  pkgs,
-  ...
-}:
+{ config, lib, ... }:
 let
   cfg = config.modules.nixos.containers.services.jellyfin;
   inherit (config.modules.nixos.containers) user;
@@ -34,12 +29,6 @@ lib.mkMerge [
             cacheDir = "${cfg.dataDir}/cache";
             logDir = "${cfg.dataDir}/log";
           };
-
-          environment.systemPackages = with pkgs; [
-            jellyfin
-            jellyfin-web
-            jellyfin-ffmpeg
-          ];
 
           systemd.services.jellyfin.environment.LIBVA_DRIVER_NAME =
             config.environment.sessionVariables.LIBVA_DRIVER_NAME or null;

@@ -11,21 +11,24 @@ let
 
   utils = import "${inputs.self}/lib/utils.nix" { inherit lib; };
 
-  mountOpts = {
-    options = {
-      hostPath = lib.mkOption {
-        type = lib.types.nullOr lib.types.str;
-        default = null;
-        description = "Location of the host path to be mounted.";
-      };
+  mountOpts =
+    { name, ... }:
+    {
+      options = {
+        hostPath = lib.mkOption {
+          type = lib.types.str;
+          default = name;
+          defaultText = lib.literalExpression "<mount point>";
+          description = "Location of the host path to be mounted. Defaults to the mount point.";
+        };
 
-      isReadOnly = lib.mkOption {
-        type = lib.types.bool;
-        default = true;
-        description = "Determine whether the mounted path will be accessed in read-only mode.";
+        isReadOnly = lib.mkOption {
+          type = lib.types.bool;
+          default = true;
+          description = "Determine whether the mounted path will be accessed in read-only mode.";
+        };
       };
     };
-  };
 in
 {
   options = {
@@ -109,6 +112,24 @@ in
       description = "Exposed container services mapped to their ports";
     };
 
+    portMappings = lib.mkOption {
+      type = lib.types.listOf lib.types.attrs;
+      default =
+        let
+          services = lib.attrNames (lib.intersectAttrs config.containerPorts config.hostPorts);
+          mkMapping = service: {
+            inherit service;
+            hostPort = config.hostPorts.${service};
+            containerPort = config.containerPorts.${service};
+          };
+          isComplete = mapping: mapping.hostPort != null && mapping.containerPort != null;
+        in
+        lib.filter isComplete (map mkMapping services);
+      readOnly = true;
+      internal = true;
+      description = "Services exposed on the host: `{ service, hostPort, containerPort }`";
+    };
+
     userMounts = lib.mkOption {
       type = lib.types.attrsOf (lib.types.submodule mountOpts);
       default = { };
@@ -144,6 +165,15 @@ in
       type = lib.types.bool;
       default = true;
       description = "Whether to backup this container's dataDir";
+    };
+
+    stopDuringBackup = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = ''
+        Whether to stop the container while its dataDir is backed up, so databases
+        are captured in a consistent state.
+      '';
     };
 
     excludeFromBackup = lib.mkOption {

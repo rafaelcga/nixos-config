@@ -12,16 +12,11 @@ let
 
   utils = import "${inputs.self}/lib/utils.nix" { inherit lib; };
 
-  # `hostPath` is declared with default = null, so `hostPath or mountPoint`
-  # would yield null instead of falling back to the mount point
-  hostPathOf =
-    mountPoint: mountConfig: if mountConfig.hostPath != null then mountConfig.hostPath else mountPoint;
-
-  enabledContainers =
-    let
-      isEnabled = _: containerConfig: containerConfig.enable;
-    in
-    lib.filterAttrs isEnabled cfg.services;
+  enabledContainers = lib.filterAttrs (_: containerConfig: containerConfig.enable) cfg.services;
+  withEngine =
+    engine: lib.filterAttrs (_: containerConfig: containerConfig.engine == engine) enabledContainers;
+  nspawnContainers = withEngine "nspawn";
+  ociContainers = withEngine "oci";
 
   subnetOpts =
     { config, ... }:
@@ -138,6 +133,16 @@ in
       description = "Enabled containers";
     };
 
+    lanSubnets = lib.mkOption {
+      type = lib.types.listOf lib.types.str;
+      default = [
+        config.modules.nixos.home-vpn.network.subnet
+        "172.16.0.0/12"
+        "192.168.0.0/16"
+      ];
+      description = "IPv4 subnets considered local: allowed to query DNS and bypassing the VPN";
+    };
+
     gpuDevices = lib.mkOption {
       type = lib.types.listOf lib.types.str;
       default = [
@@ -149,6 +154,19 @@ in
   };
 
   config = lib.mkIf (enabledContainers != { }) {
+    # Container IPs are derived from `uid`, so a duplicate would silently collide
+    assertions =
+      let
+        uids = lib.mapAttrsToList (_: containerConfig: containerConfig.uid) cfg.services;
+        duplicates = lib.unique (lib.filter (uid: lib.count (other: other == uid) uids > 1) uids);
+      in
+      [
+        {
+          assertion = duplicates == [ ];
+          message = "modules.nixos.containers: duplicate container uids: ${toString duplicates}";
+        }
+      ];
+
     boot.enableContainers = true;
     virtualisation = {
       containers.enable = true;
@@ -182,18 +200,10 @@ in
       # Open ports of OCI containers to the bridge
       firewall.interfaces =
         let
-          getOciHostPorts =
-            _: containerConfig:
-            if containerConfig.engine == "oci" then
-              let
-                ports = lib.attrValues containerConfig.hostPorts;
-              in
-              lib.filter (port: port != null) ports
-            else
-              [ ];
-
           uniqueOciPorts = lib.unique (
-            lib.concatLists (lib.mapAttrsToList getOciHostPorts enabledContainers)
+            lib.concatMap (containerConfig: map (mapping: mapping.hostPort) containerConfig.portMappings) (
+              lib.attrValues ociContainers
+            )
           );
         in
         {
@@ -218,15 +228,11 @@ in
           _: containerConfig: containerConfig.userMounts != { }
         ) enabledContainers;
 
-        userMountPaths =
-          let
-            getHostPaths = userMounts: lib.mapAttrsToList hostPathOf userMounts;
-
-            allUserMountPaths = lib.concatMap (containerConfig: getHostPaths containerConfig.userMounts) (
-              lib.attrValues withUserMounts
-            );
-          in
-          lib.unique allUserMountPaths;
+        userMountPaths = lib.unique (
+          lib.concatMap (
+            containerConfig: lib.mapAttrsToList (_: mount: mount.hostPath) containerConfig.userMounts
+          ) (lib.attrValues withUserMounts)
+        );
       in
       {
         network = {
@@ -253,31 +259,47 @@ in
           };
         };
 
-        services = lib.mkIf (withUserMounts != { }) {
-          "setfacl-user-mounts" = rec {
-            description = "Set the current and default ACL to rwX for user mounts";
-            before =
-              let
-                getServiceName =
-                  name: containerConfig:
-                  if containerConfig.engine == "oci" then "podman-${name}.service" else "container@${name}.service";
-              in
-              lib.mapAttrsToList getServiceName withUserMounts;
-            wantedBy = before;
-            serviceConfig = {
-              Type = "oneshot";
-              ExecStart = lib.getExe (
-                pkgs.writeShellApplication {
-                  name = "setfacl-user-mounts";
-                  runtimeInputs = with pkgs; [ acl ];
-                  text = lib.concatMapStringsSep "\n" (mountPath: ''
-                    setfacl -m g::rwX,d:g::rwX "${mountPath}"
-                  '') userMountPaths;
-                }
-              );
+        services = lib.mkMerge [
+          # `pull = "newer"` only pulls when a container starts, so restart them
+          # daily to pick up new images. (`podman auto-update` would need
+          # per-container labels and a rootless timer per user.)
+          (lib.mkIf (ociContainers != { }) {
+            "podman-update-images" = {
+              description = "Restart OCI containers to pull newer images";
+              serviceConfig = {
+                Type = "oneshot";
+                ExecStart = "${config.systemd.package}/bin/systemctl try-restart ${
+                  lib.concatMapStringsSep " " (name: "podman-${name}.service") (lib.attrNames ociContainers)
+                }";
+              };
             };
-          };
-        };
+          })
+          (lib.mkIf (withUserMounts != { }) {
+            "setfacl-user-mounts" = rec {
+              description = "Set the current and default ACL to rwX for user mounts";
+              before =
+                let
+                  getServiceName =
+                    name: containerConfig:
+                    if containerConfig.engine == "oci" then "podman-${name}.service" else "container@${name}.service";
+                in
+                lib.mapAttrsToList getServiceName withUserMounts;
+              wantedBy = before;
+              serviceConfig = {
+                Type = "oneshot";
+                ExecStart = lib.getExe (
+                  pkgs.writeShellApplication {
+                    name = "setfacl-user-mounts";
+                    runtimeInputs = with pkgs; [ acl ];
+                    text = lib.concatMapStringsSep "\n" (mountPath: ''
+                      setfacl -m g::rwX,d:g::rwX "${mountPath}"
+                    '') userMountPaths;
+                  }
+                );
+              };
+            };
+          })
+        ];
 
         tmpfiles.settings =
           let
@@ -298,38 +320,30 @@ in
             "10-make-container-dirs" = lib.mapAttrs' settingTemplate withDataDir;
           };
 
-        timers."podman-auto-update" = {
-          enable = true;
+        timers."podman-update-images" = lib.mkIf (ociContainers != { }) {
           wantedBy = [ "timers.target" ];
-          timerConfig.OnBootSec = "5m";
+          timerConfig = {
+            OnCalendar = "*-*-* 05:00:00";
+            RandomizedDelaySec = "30m";
+            Persistent = true;
+          };
         };
       };
 
     containers =
       let
-        mkBaseConfig = name: containerConfig: {
+        mkNspawnConfig = name: containerConfig: {
           autoStart = true;
           privateNetwork = true;
           privateUsers = "identity";
 
-          forwardPorts =
-            let
-              mkForwardPort =
-                serviceName:
-                let
-                  hostPort = containerConfig.hostPorts.${serviceName};
-                  containerPort = containerConfig.containerPorts.${serviceName};
-                in
-                lib.optionals (hostPort != null && containerPort != null) [
-                  { inherit hostPort containerPort; }
-                ];
+          hostBridge = cfg.bridge.name;
+          localAddress = "${containerConfig.address}/${toString cfg.bridge.ipv4.mask}";
+          localAddress6 = "${containerConfig.address6}/${toString cfg.bridge.ipv6.mask}";
 
-              # Get name of services from hostPorts present in containerPorts
-              serviceNames = lib.attrNames (
-                lib.intersectAttrs containerConfig.containerPorts containerConfig.hostPorts
-              );
-            in
-            lib.concatMap mkForwardPort serviceNames;
+          forwardPorts = map (mapping: {
+            inherit (mapping) hostPort containerPort;
+          }) containerConfig.portMappings;
 
           allowedDevices =
             let
@@ -379,6 +393,24 @@ in
               };
 
               system.stateVersion = config.system.stateVersion;
+
+              systemd.network = {
+                enable = true;
+                networks."10-bridge" = {
+                  matchConfig.Name = "eth0";
+                  networkConfig = {
+                    Address = config.containers.${name}.localAddress;
+                    Gateway = cfg.bridge.ipv4.host;
+                  };
+                  addresses = [
+                    {
+                      Address = config.containers.${name}.localAddress6;
+                      DuplicateAddressDetection = "none";
+                    }
+                  ];
+                  linkConfig.RequiredForOnline = "routable";
+                };
+              };
             }
             (lib.mkIf containerConfig.gpuPassthrough {
               imports = [ "${inputs.self}/modules/nixos/hardware/graphics.nix" ];
@@ -388,43 +420,8 @@ in
             })
           ];
         };
-
-        mkAddressConfig = name: containerConfig: {
-          hostBridge = cfg.bridge.name;
-          localAddress = "${containerConfig.address}/${toString cfg.bridge.ipv4.mask}";
-          localAddress6 = "${containerConfig.address6}/${toString cfg.bridge.ipv6.mask}";
-
-          config = {
-            systemd.network = {
-              enable = true;
-              networks."10-bridge" = {
-                matchConfig.Name = "eth0";
-                networkConfig = {
-                  Address = config.containers.${name}.localAddress;
-                  Gateway = cfg.bridge.ipv4.host;
-                };
-                addresses = [
-                  {
-                    Address = config.containers.${name}.localAddress6;
-                    DuplicateAddressDetection = "none";
-                  }
-                ];
-                linkConfig.RequiredForOnline = "routable";
-              };
-            };
-          };
-        };
-
-        nspawnContainers =
-          let
-            isNspawn = _: containerConfig: containerConfig.engine == "nspawn";
-          in
-          lib.filterAttrs isNspawn enabledContainers;
       in
-      lib.mkMerge [
-        (lib.mapAttrs mkBaseConfig nspawnContainers)
-        (lib.mapAttrs mkAddressConfig nspawnContainers)
-      ];
+      lib.mapAttrs mkNspawnConfig nspawnContainers;
 
     virtualisation.oci-containers.containers =
       let
@@ -434,20 +431,9 @@ in
           podman.user = cfg.user.name;
           pull = "newer";
 
-          ports =
-            let
-              serviceNames = lib.filter (
-                serviceName:
-                containerConfig.hostPorts.${serviceName} != null
-                && containerConfig.containerPorts.${serviceName} != null
-              ) (lib.attrNames (lib.intersectAttrs containerConfig.containerPorts containerConfig.hostPorts));
-              mkPort =
-                serviceName:
-                "0.0.0.0:${toString containerConfig.hostPorts.${serviceName}}:${
-                  toString containerConfig.containerPorts.${serviceName}
-                }";
-            in
-            lib.map mkPort serviceNames;
+          ports = map (
+            mapping: "0.0.0.0:${toString mapping.hostPort}:${toString mapping.containerPort}"
+          ) containerConfig.portMappings;
 
           volumes =
             (lib.optionals (containerConfig.dataDir != null) [
@@ -455,15 +441,9 @@ in
             ])
             ++ (lib.mapAttrsToList (
               mountPoint: mountConfig:
-              "${hostPathOf mountPoint mountConfig}:${mountPoint}${lib.optionalString mountConfig.isReadOnly ":ro"}"
+              "${mountConfig.hostPath}:${mountPoint}${lib.optionalString mountConfig.isReadOnly ":ro"}"
             ) containerConfig.userMounts);
         };
-
-        ociContainers =
-          let
-            isOci = _: containerConfig: containerConfig.engine == "oci";
-          in
-          lib.filterAttrs isOci enabledContainers;
       in
       lib.mapAttrs mkOciConfig ociContainers;
   };

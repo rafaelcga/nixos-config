@@ -7,37 +7,43 @@
 let
   cfg = config.modules.nixos.containers;
 
-  withBackup =
-    let
-      usesBackup = _: containerConfig: containerConfig.enable && containerConfig.enableBackup;
-    in
-    lib.filterAttrs usesBackup cfg.services;
-
-  withoutBackup =
-    let
-      isExcluded = _: containerConfig: !containerConfig.enable || !containerConfig.enableBackup;
-    in
-    lib.filterAttrs isExcluded cfg.services;
-
-  perContainerExcludes = lib.concatLists (
-    lib.mapAttrsToList (
-      name: containerConfig:
-      map (path: "/${name}/${lib.removePrefix "/" path}") containerConfig.excludeFromBackup
-    ) withBackup
+  split = lib.partition (name: cfg.services.${name}.enable && cfg.services.${name}.enableBackup) (
+    lib.attrNames cfg.services
   );
-
-  withoutBackupExcludes = lib.mapAttrsToList (name: _: "/${name}/**") withoutBackup;
+  backedUp = split.right;
+  notBackedUp = split.wrong;
 
   excludesFile =
     let
+      perContainerExcludes = lib.concatMap (
+        name: map (path: "/${name}/${lib.removePrefix "/" path}") cfg.services.${name}.excludeFromBackup
+      ) backedUp;
       allExcludes = [
         ".container-home/**" # .local and .cache of OCI containers
       ]
       ++ cfg.backup.extraExcludes
       ++ perContainerExcludes
-      ++ withoutBackupExcludes;
+      ++ map (name: "/${name}/**") notBackedUp;
     in
     pkgs.writeText "rclone-container-excludes" (lib.concatStringsSep "\n" allExcludes + "\n");
+
+  # Containers stopped during the sync so their databases are copied consistently.
+  # Only those with a dataDir: stopping e.g. proton-vpn would take down every
+  # container bound to it.
+  unitsToStop =
+    map
+      (
+        name:
+        if cfg.services.${name}.engine == "oci" then
+          "podman-${name}.service"
+        else
+          "container@${name}.service"
+      )
+      (
+        lib.filter (
+          name: cfg.services.${name}.dataDir != null && cfg.services.${name}.stopDuringBackup
+        ) backedUp
+      );
 in
 {
   options.modules.nixos.containers.backup = {
@@ -60,7 +66,7 @@ in
     };
   };
 
-  config = lib.mkIf (cfg.backup.enable && withBackup != { }) {
+  config = lib.mkIf (cfg.backup.enable && backedUp != [ ]) {
     sops.secrets."rclone_proton_config" = { };
 
     systemd.services.rclone-containers-backup = {
@@ -84,15 +90,29 @@ in
           ExecStart = lib.getExe (
             pkgs.writeShellApplication {
               name = "rclone-containers-backup";
-              runtimeInputs = with pkgs; [
-                coreutils
-                rclone
+              runtimeInputs = [
+                pkgs.coreutils
+                pkgs.rclone
+                config.systemd.package
               ];
               text = ''
                 # rclone requires a mutable configuration
                 if [ ! -f "${mutableConfig}" ]; then
                   echo "Seeding initial rclone.conf from sops-nix..."
                   install -m 600 "${config.sops.secrets."rclone_proton_config".path}" "${mutableConfig}"
+                fi
+
+                # Stop running containers for a consistent copy; restart them even if the sync fails
+                stopped=()
+                for unit in ${lib.escapeShellArgs unitsToStop}; do
+                  if systemctl is-active --quiet "$unit"; then
+                    stopped+=("$unit")
+                  fi
+                done
+                if ((''${#stopped[@]})); then
+                  trap 'echo "Restarting ''${stopped[*]}"; systemctl start "''${stopped[@]}"' EXIT
+                  echo "Stopping ''${stopped[*]} for the backup..."
+                  systemctl stop "''${stopped[@]}"
                 fi
 
                 echo "Starting rclone sync of ${cfg.dataDir} to ${cfg.backup.remotePath}..."
@@ -116,7 +136,8 @@ in
       description = "Periodic backup timer for NixOS containers";
       wantedBy = [ "timers.target" ];
       timerConfig = {
-        OnCalendar = "daily";
+        # Night-time, since containers are briefly offline while syncing
+        OnCalendar = "*-*-* 04:00:00";
         RandomizedDelaySec = "30m";
         Persistent = true;
       };
