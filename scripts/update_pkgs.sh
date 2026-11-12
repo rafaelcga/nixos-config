@@ -47,8 +47,7 @@ function run_nix_update() {
       return 0
     else
       echo "[❌] update failed:"
-      # Indent the output for readability
-      echo "${output//^/  }"
+      echo "  ${output//$'\n'/$'\n'  }"
       return 1
     fi
   )
@@ -58,18 +57,17 @@ echo "Upgrading local packages..."
 
 failed=0
 
-find "$PKGS_DIR" -type f -path "$PKGS_DIR/*/package.nix" \
-  | while IFS= read -r abs_path; do
-    pkg_name=$(basename "$(dirname "$abs_path")")
+while IFS= read -r abs_path; do
+  pkg_name=$(basename "$(dirname "$abs_path")")
 
-    printf "❖ %s " "$pkg_name"
+  printf "❖ %s " "$pkg_name"
 
-    if has_custom_update "$abs_path"; then
-      run_custom_update "$abs_path" || failed=1
-    else
-      run_nix_update "$pkg_name" || failed=1
-    fi
-  done
+  if has_custom_update "$abs_path"; then
+    run_custom_update "$abs_path" || failed=1
+  else
+    run_nix_update "$pkg_name" || failed=1
+  fi
+done < <(find "$PKGS_DIR" -type f -path "$PKGS_DIR/*/package.nix")
 
 if [[ $failed -ne 0 ]]; then
   echo "❌ One or more package updates failed. Failing CI build."
