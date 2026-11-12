@@ -1,4 +1,5 @@
 #!/usr/bin/env nix-shell
+# shellcheck shell=bash
 #!nix-shell --quiet -i bash -p coreutils nix-update
 
 set -euo pipefail
@@ -8,4 +9,4 @@ REPO_DIR="$(dirname "$(dirname "$ROOT_DIR")")"
 PKG_NAME="$(basename "$ROOT_DIR")"
 
 echo "Checking for base package updates..."
-(cd "$REPO_DIR" && nix-update "$PKG_NAME" --flake --version=branch)
+nix-update "$PKG_NAME" --flake --version=branch "path:$REPO_DIR"

@@ -1,4 +1,5 @@
 #!/usr/bin/env nix-shell
+# shellcheck shell=bash
 #!nix-shell --quiet -i bash -p coreutils nix-update
 
 set -euo pipefail
@@ -9,7 +10,7 @@ PKG_FILE="$ROOT_DIR/package.nix"
 PKG_NAME="$(basename "$ROOT_DIR")"
 
 echo "Checking for base package updates..."
-(cd "$REPO_DIR" && nix-update "$PKG_NAME" --flake)
+nix-update "$PKG_NAME" --flake --version=branch "path:$REPO_DIR"
 
 echo "Updating npm dependencies hash..."
 fake_hash="sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
