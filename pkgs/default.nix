@@ -5,47 +5,18 @@
 let
   inherit (prev) lib;
 
-  callPackage =
-    {
-      name,
-      isOverride ? false,
-    }:
-    pkgs.callPackage ./${name}/package.nix (lib.optionalAttrs isOverride { "${name}" = prev.${name}; });
-
-  mkPackages =
-    {
-      derivations ? [ ],
-      overrides ? [ ],
-    }:
-    (lib.genAttrs derivations (
-      name:
-      callPackage {
-        inherit name;
-        isOverride = false;
-      }
-    ))
-    // (lib.genAttrs overrides (
-      name:
-      callPackage {
-        inherit name;
-        isOverride = true;
-      }
-    ));
+  callPackage = name: args: pkgs.callPackage ./${name}/package.nix args;
 in
 {
-  local = mkPackages {
-    derivations = [
-      "cachyos-settings"
-      "caddy-with-plugins"
-      "unmanic"
-    ];
-  };
+  # New packages, exposed as `pkgs.local.<name>`
+  local = lib.genAttrs [
+    "cachyos-settings"
+    "caddy-with-plugins"
+    "unmanic"
+  ] (name: callPackage name { });
 }
-// mkPackages {
-  derivations = [ ];
-  overrides = [
-    "catppuccin-papirus-folders"
-    "papirus-folders"
-    "papirus-icon-theme"
-  ];
-}
+# Overrides of nixpkgs packages; each gets the original as its `<name>` argument
+// lib.genAttrs [
+  "catppuccin-papirus-folders"
+  "papirus-icon-theme"
+] (name: callPackage name { ${name} = prev.${name}; })

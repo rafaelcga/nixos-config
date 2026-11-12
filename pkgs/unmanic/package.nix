@@ -1,13 +1,13 @@
 {
   lib,
-  pkgs,
   stdenv,
   python3,
-
   fetchPypi,
   buildNpmPackage,
   fetchFromGitHub,
   autoPatchelfHook,
+  ffmpeg-full,
+  git,
 }:
 let
   version = "0.4.1";
@@ -27,252 +27,138 @@ let
     npmDepsHash = "sha256-is6vKdhsL8QJKZXF3tcj2g7RNIoGrHKgz8R2QXeOjHI=";
 
     nativeBuildInputs = [ autoPatchelfHook ];
-
     buildInputs = [ stdenv.cc.cc.lib ];
-
     autoPatchelfIgnoreMissingDeps = [ "libc.musl-x86_64.so.1" ];
 
     buildPhase = ''
+      runHook preBuild
       autoPatchelf node_modules
       npm run build:publish
+      runHook postBuild
     '';
 
     installPhase = ''
+      runHook preInstall
       mkdir -p $out
       cp -r dist/spa/* $out/
+      runHook postInstall
     '';
   };
 
-  json-log-formatter = python3.pkgs.buildPythonApplication (finalAttrs: {
-    pname = "json-log-formatter";
-    version = "0.5.2";
-    pyproject = true;
+  # Unmanic pins exact versions of these (see its requirements.txt), which
+  # differ from nixpkgs
+  mkPythonDep =
+    {
+      pname,
+      version,
+      hash,
+      pypiName ? pname,
+      ...
+    }@args:
+    python3.pkgs.buildPythonPackage (
+      removeAttrs args [
+        "hash"
+        "pypiName"
+      ]
+      // {
+        pyproject = true;
+        src = fetchPypi {
+          pname = pypiName;
+          inherit version hash;
+        };
+        pythonImportsCheck = [ (lib.replaceStrings [ "-" ] [ "_" ] pname) ];
+      }
+    );
 
-    src = fetchPypi {
-      pname = "JSON-log-formatter";
-      inherit (finalAttrs) version;
+  pythonDeps = with python3.pkgs; {
+    json-log-formatter = mkPythonDep {
+      pname = "json-log-formatter";
+      pypiName = "JSON-log-formatter";
+      version = "0.5.2";
       hash = "sha256-exka5AVkaLryt0RcXOZRvZ7mt2tBYqR5p9hdtq4Cny0=";
+      build-system = [ setuptools ];
     };
 
-    build-system = [
-      python3.pkgs.setuptools
-    ];
-
-    pythonImportsCheck = [
-      "json_log_formatter"
-    ];
-  });
-
-  tornado = python3.pkgs.buildPythonApplication (finalAttrs: {
-    pname = "tornado";
-    version = "6.3.3";
-    pyproject = true;
-
-    src = fetchPypi {
-      inherit (finalAttrs) pname version;
+    tornado = mkPythonDep {
+      pname = "tornado";
+      version = "6.3.3";
       hash = "sha256-59jbQcAYHIDXbJgqrMRCwHg6LFTWQA/gKJVCAaLgMv4=";
+      build-system = [
+        setuptools
+        wheel
+      ];
     };
 
-    build-system = [
-      python3.pkgs.setuptools
-      python3.pkgs.wheel
-    ];
-
-    pythonImportsCheck = [
-      "tornado"
-    ];
-  });
-
-  marshmallow = python3.pkgs.buildPythonApplication (finalAttrs: {
-    pname = "marshmallow";
-    version = "3.22.0";
-    pyproject = true;
-
-    src = fetchPypi {
-      inherit (finalAttrs) pname version;
+    marshmallow = mkPythonDep {
+      pname = "marshmallow";
+      version = "3.22.0";
       hash = "sha256-SXL1KRBKIgu4Y31ZWqTJdir75/enfYLcWMFhXXDFgj4=";
+      build-system = [ flit-core ];
+      dependencies = [ packaging ];
     };
 
-    build-system = [
-      python3.pkgs.flit-core
-    ];
-
-    dependencies = with python3.pkgs; [
-      packaging
-    ];
-
-    optional-dependencies = with python3.pkgs; {
-      dev = [
-        marshmallow
-        pre-commit
-        tox
-      ];
-      docs = [
-        alabaster
-        autodocsumm
-        sphinx
-        sphinx-issues
-        sphinx-version-warning
-      ];
-      tests = [
-        pytest
-        pytz
-        simplejson
-      ];
-    };
-
-    pythonImportsCheck = [
-      "marshmallow"
-    ];
-  });
-
-  peewee-migrate = python3.pkgs.buildPythonApplication (finalAttrs: {
-    pname = "peewee-migrate";
-    version = "1.13.0";
-    pyproject = true;
-
-    src = fetchPypi {
-      pname = "peewee_migrate";
-      inherit (finalAttrs) version;
+    peewee-migrate = mkPythonDep {
+      pname = "peewee-migrate";
+      pypiName = "peewee_migrate";
+      version = "1.13.0";
       hash = "sha256-GrZ/cqCTYAYVXhsxDBijL3nk3/ORfP6xARLKklGHIeU=";
+      build-system = [ poetry-core ];
+      # Pins an older peewee than nixpkgs ships
+      pythonRelaxDeps = [ "peewee" ];
+      dependencies = [
+        click
+        peewee
+      ];
     };
 
-    build-system = [
-      python3.pkgs.poetry-core
-    ];
-
-    # Add these two blocks to relax the dependency constraint
-    nativeBuildInputs = [
-      python3.pkgs.pythonRelaxDepsHook
-    ];
-
-    pythonRelaxDeps = [
-      "peewee"
-    ];
-
-    dependencies = with python3.pkgs; [
-      click
-      peewee
-    ];
-
-    pythonImportsCheck = [
-      "peewee_migrate"
-    ];
-  });
-
-  psutil = python3.pkgs.buildPythonApplication (finalAttrs: {
-    pname = "psutil";
-    version = "6.0.0";
-    pyproject = true;
-
-    src = fetchPypi {
-      inherit (finalAttrs) pname version;
+    psutil = mkPythonDep {
+      pname = "psutil";
+      version = "6.0.0";
       hash = "sha256-j6rk8xC22Wn6JsoFRTOLIfc8axXbfEqNk0pUgvqoGPI=";
-    };
-
-    build-system = [
-      python3.pkgs.setuptools
-      python3.pkgs.wheel
-    ];
-
-    optional-dependencies = with python3.pkgs; {
-      dev = [
-        abi3audit
-        black
-        check-manifest
-        colorama
-        coverage
-        packaging
-        psleak
-        pylint
-        pyperf
-        pypinfo
-        pyreadline3
-        pytest
-        pytest-cov
-        pytest-instafail
-        pytest-xdist
-        pywin32
-        requests
-        rstcheck
-        ruff
-        setuptools
-        sphinx
-        sphinx-rtd-theme
-        toml-sort
-        twine
-        validate-pyproject
-        virtualenv
-        vulture
-        wheel
-        wmi
-      ];
-      test = [
-        psleak
-        pytest
-        pytest-instafail
-        pytest-xdist
-        pywin32
+      build-system = [
         setuptools
         wheel
-        wmi
       ];
     };
-
-    pythonImportsCheck = [
-      "psutil"
-    ];
-  });
+  };
 in
-python3.pkgs.buildPythonApplication (finalAttrs: {
+python3.pkgs.buildPythonApplication {
   pname = "unmanic";
   inherit version src;
   pyproject = true;
 
-  build-system = [
-    python3.pkgs.setuptools
-  ];
+  build-system = [ python3.pkgs.setuptools ];
 
-  nativeBuildInputs = with pkgs; [
-    git
-  ];
+  nativeBuildInputs = [ git ];
 
-  dependencies = with python3.pkgs; [
-    inquirer
-    json-log-formatter
-    marshmallow
-    peewee
-    peewee-migrate
-    psutil
-    py-cpuinfo
-    requests
-    requests-toolbelt
-    schedule
-    swagger-ui-py
-    tornado
-    watchdog
-    xxhash
-    sentry-sdk
-  ];
+  dependencies =
+    (with python3.pkgs; [
+      inquirer
+      peewee
+      py-cpuinfo
+      requests
+      requests-toolbelt
+      schedule
+      sentry-sdk
+      swagger-ui-py
+      watchdog
+      xxhash
+    ])
+    ++ lib.attrValues pythonDeps;
 
-  pythonImportsCheck = [
-    "unmanic"
-  ];
+  pythonImportsCheck = [ "unmanic" ];
 
   postPatch = ''
-    # Patch setup.py to skip the Node.js build step completely
+    # Skip the Node.js build step; the frontend is built separately
     substituteInPlace setup.py \
-        --replace "self.run_command('build-frontend')" ""
-
-    # Hardcode version
-    substituteInPlace setup.py \
-        --replace-fail "versioninfo.version()" "'${version}'" \
-        --replace-fail "versioninfo.full_version()" "'${version}'"
+      --replace-fail "self.run_command('build-frontend')" "" \
+      --replace-fail "versioninfo.version()" "'${version}'" \
+      --replace-fail "versioninfo.full_version()" "'${version}'"
   '';
 
   postInstall =
     let
-      webServerPath = "$out/lib/${python3.libPrefix}/site-packages/unmanic/webserver";
+      webServerPath = "$out/${python3.sitePackages}/unmanic/webserver";
     in
     ''
       mkdir -p ${webServerPath}/public
@@ -284,8 +170,11 @@ python3.pkgs.buildPythonApplication (finalAttrs: {
     "--prefix"
     "PATH"
     ":"
-    "${lib.makeBinPath [ pkgs.ffmpeg-full ]}"
+    (lib.makeBinPath [ ffmpeg-full ])
   ];
+
+  # Lets nix-update refresh the frontend's npmDepsHash on version bumps
+  passthru.npmDeps = frontend.npmDeps;
 
   meta = {
     description = "Unmanic - Library Optimiser";
@@ -293,4 +182,4 @@ python3.pkgs.buildPythonApplication (finalAttrs: {
     license = lib.licenses.gpl3Only;
     mainProgram = "unmanic";
   };
-})
+}

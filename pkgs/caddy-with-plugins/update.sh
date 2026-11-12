@@ -1,6 +1,6 @@
 #!/usr/bin/env nix-shell
 # shellcheck shell=bash
-#!nix-shell --quiet -i bash -p coreutils gnugrep gnused curl jq go
+#!nix-shell --quiet -i bash -p coreutils gnugrep gnused go
 
 set -euo pipefail
 
@@ -10,39 +10,27 @@ PKG_FILE="$ROOT_DIR/package.nix"
 
 echo "Checking for Caddy plugin updates..."
 
-grep -oP "github.com/([a-zA-Z0-9_\-]+/?)+@[^\"]+" "$PKG_FILE" \
-  | while read -r plugin; do
-    printf " %s " "$plugin"
+grep -oP '"\Kgithub\.com/[^"@]+@[^"]+' "$PKG_FILE" | while read -r plugin; do
+  printf " %s " "$plugin"
 
-    plugin_path="${plugin%@*}"
-    old_version="${plugin#*@}"
-    # Keep only <author>/<repo_name>
-    plugin_repo="$(echo "$plugin_path" | cut -d'/' -f1-3)"
+  plugin_path="${plugin%@*}"
+  old_version="${plugin#*@}"
+  # The Go module is github.com/<owner>/<repo>; plugins may be subpackages of it
+  module="$(cut -d/ -f1-3 <<<"$plugin_path")"
 
-    # Grep the plugin version
-    {
-      rm -f go.mod go.sum
-      go mod init temp && go get "$plugin_path"
-    } >/dev/null 2>&1
+  if ! new_version="$(go list -m -f '{{.Version}}' "$module@latest" 2>/dev/null)" || [[ -z "$new_version" ]]; then
+    echo "[❌] error: could not find the latest version"
+    continue
+  fi
 
-    new_version="$(grep "$plugin_repo" go.mod | awk '{print $2}')"
-
-    if [[ -z "$new_version" || "$new_version" == "null" ]]; then
-      echo "[❌] error: Could not find latest version."
-      continue
-    fi
-
-    if [[ "$old_version" != "$new_version" ]]; then
-      updated_plugin=$(sed -E "s|$old_version|$new_version|" <<<"$plugin")
-      sed -i "s|$plugin|$updated_plugin|" "$PKG_FILE"
-      echo "[✔️] updated: $old_version -> $new_version"
-    else
-      echo "[✔️] up-to-date"
-    fi
-  done
+  if [[ "$old_version" != "$new_version" ]]; then
+    sed -i "s|\"$plugin\"|\"$plugin_path@$new_version\"|" "$PKG_FILE"
+    echo "[✔️] updated: $old_version -> $new_version"
+  else
+    echo "[✔️] up-to-date"
+  fi
+done
 
 echo "Updating derivation hash..."
-fake_hash="sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
-sed -i -E "s|hash = \"[^\"]*\"|hash = \"$fake_hash\"|" "$PKG_FILE"
-
-(cd "$REPO_DIR/scripts" && ./update_hash.sh -p "$PKG_FILE")
+sed -i -E 's|hash = "[^"]*"|hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="|' "$PKG_FILE"
+"$REPO_DIR/scripts/update_hash.sh" -p "$PKG_FILE"

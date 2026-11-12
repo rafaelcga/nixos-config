@@ -1,20 +1,16 @@
 {
-  fetchFromGitHub,
   catppuccin-papirus-folders,
   papirus-icon-theme,
   flavor ? "mocha",
   accent ? "blue",
 }:
 
-papirus-icon-theme.overrideAttrs (oldAttrs: {
-  version = "0-unstable-2024-06-08";
-
-  src = fetchFromGitHub {
-    owner = "catppuccin";
-    repo = "papirus-folders";
-    rev = "f83671d17ea67e335b34f8028a7e6d78bca735d7";
-    sha256 = "sha256-FiZdwzsaMhS+5EYTcVU1LVax2H1FidQw97xZklNH2R4=";
-  };
+# Built on top of (our) papirus-icon-theme rather than nixpkgs' own package, which
+# drops the icon caches and the breeze/hicolor links that Papirus inherits from.
+# The catppuccin source itself is tracked by nixpkgs.
+papirus-icon-theme.overrideAttrs {
+  pname = "catppuccin-papirus-folders";
+  inherit (catppuccin-papirus-folders) version src meta;
 
   installPhase = ''
     runHook preInstall
@@ -30,6 +26,4 @@ papirus-icon-theme.overrideAttrs (oldAttrs: {
 
     runHook postInstall
   '';
-
-  inherit (catppuccin-papirus-folders) meta;
-})
+}

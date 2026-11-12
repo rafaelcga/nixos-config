@@ -17,6 +17,12 @@ function update_pkg() {
     return
   fi
 
+  # Overrides that reuse nixpkgs' `src` have nothing of their own to update
+  if ! grep -q 'src = ' "pkgs/$pkg/package.nix"; then
+    echo "[↷] skipped: source tracked by nixpkgs"
+    return
+  fi
+
   local output change
   if ! output="$(nix-update "$pkg" --flake 2>&1)"; then
     echo "  ${output//$'\n'/$'\n'  }"
