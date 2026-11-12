@@ -1,6 +1,6 @@
 #!/usr/bin/env nix-shell
 # shellcheck shell=bash
-#!nix-shell --quiet -i bash -p nixos-install-tools coreutils
+#!nix-shell --quiet -i bash -p nixos-install-tools coreutils git
 
 set -euo pipefail
 
@@ -13,31 +13,25 @@ function usage() {
   exit 1
 }
 
-hostname="$(hostname)"
-
+hostname="$(uname -n)"
 while getopts ":n:" opt; do
   case $opt in
     n) hostname="$OPTARG" ;;
-    \?) usage ;;
+    *) usage ;;
   esac
 done
 
 config_path="$REPO_DIR/hosts/$hostname/hardware-configuration.nix"
-mkdir -p "$(dirname "$config_path")"
-
 echo "Generating hardware configuration for '$hostname'..."
 
-if ! config=$(nixos-generate-config --show-hardware-config --no-filesystems 2>&1); then
-  echo "[❌] Failed to generate hardware configuration:"
-  echo "$config" # This variable now holds stderr
-  exit 1
-fi
-
+# stderr goes to the terminal, so warnings never end up in the generated file.
+config="$(nixos-generate-config --show-hardware-config --no-filesystems)"
 if [[ -z "$config" ]]; then
-  echo "[❌] Generated configuration is empty. Aborting."
+  echo "[❌] Generated configuration is empty. Aborting." >&2
   exit 1
 fi
 
+mkdir -p "$(dirname "$config_path")"
 echo "$config" >"$config_path"
-(cd $REPO_DIR && git add "$config_path")
-echo "[✔️️] Successfully generated hardware configuration at $config_path"
+git -C "$REPO_DIR" add "$config_path"
+echo "[✔️] Successfully generated hardware configuration at $config_path"

@@ -21,25 +21,23 @@ function usage() {
 
 hostname=""
 key_path=""
-
 while getopts ":n:k:" opt; do
   case $opt in
     n) hostname="$OPTARG" ;;
-    k) key_path="$(realpath "$OPTARG")" ;;
-    \?) usage ;;
+    k) key_path="$OPTARG" ;;
+    *) usage ;;
   esac
 done
 
-if [[ -z "$hostname" || -z "$key_path" ]]; then
-  echo "Error: Missing required arguments." >&2
+if [[ -z "$hostname" || ! -f "$key_path" ]]; then
+  echo "Error: Missing hostname or SSH key file." >&2
   usage
 fi
 
 flake="$REPO_DIR#$hostname"
 
-# Generate hardware-configuration.nix
 echo "--------------------------------------------------"
-(cd $ROOT_DIR && ./generate_hardware.sh -n "$hostname")
+"$ROOT_DIR/generate_hardware.sh" -n "$hostname"
 
 echo "--------------------------------------------------"
 echo "Formatting disks..."
@@ -47,12 +45,7 @@ sudo disko --mode destroy,format,mount --root-mountpoint "$ROOT_MNT" --flake "$f
 
 echo "--------------------------------------------------"
 echo "Copying SSH key for SOPS secrets..."
-
-sops_ssh="$ROOT_MNT/etc/ssh/sops_ed25519_key"
-sudo mkdir -p "$(dirname "$sops_ssh")"
-sudo cp "$key_path" "$sops_ssh"
-sudo chown root:root "$sops_ssh"
-sudo chmod 600 "$sops_ssh"
+sudo install -D -m 600 -o root -g root "$key_path" "$ROOT_MNT/etc/ssh/sops_ed25519_key"
 
 echo "--------------------------------------------------"
 echo "Performing NixOS install..."
