@@ -41,10 +41,7 @@ in
           "~/.local/share/icons:ro"
           "/nix/store:ro"
         ]
-        ++ lib.optionals fonts.enable [
-          "~/.fonts:ro"
-          "~/.local/share/fonts:ro"
-        ];
+        ++ lib.optionals fonts.enable [ "~/.local/share/fonts:ro" ];
       };
     };
   };
