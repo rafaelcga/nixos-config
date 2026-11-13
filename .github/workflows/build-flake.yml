@@ -77,9 +77,12 @@ jobs:
       - name: Build and test flake
         run: |
           # shellcheck disable=SC2016 # `${...}` below is Nix interpolation, not shell
-          read -r drv out < <(nix eval --raw \
+          # Assigned first so an evaluation error fails the step; `--raw` prints
+          # no trailing newline, which `<<<` adds (otherwise `read` returns 1)
+          paths=$(nix eval --raw \
             ".#nixosConfigurations.${{ matrix.host }}.config.system.build.toplevel" \
             --apply 'system: "${system.drvPath} ${system.outPath}"')
+          read -r drv out <<<"$paths"
 
           # The store path hashes the whole configuration: if it is already in the
           # cache, an earlier run built this exact system, so there is nothing new
