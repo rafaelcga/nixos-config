@@ -77,37 +77,47 @@ in
         };
       };
     in
-    lib.mkIf cfg.enable (
-      lib.mkMerge [
-        themeConfig
-        (lib.mkIf config.modules.nixos.papirus.enable {
-          modules.nixos.papirus.package = pkgs.catppuccin-papirus-folders.override {
-            inherit (cfg) accent flavor;
-          };
-        })
-        {
-          home-manager.users.${userName} = {
-            imports = [ inputs.catppuccin.homeModules.catppuccin ];
+    lib.mkMerge [
+      # Set unconditionally: the upstream module is always imported, so hosts
+      # with the theme disabled must still set autoEnable explicitly.
+      {
+        catppuccin = {
+          enable = cfg.enable;
+          autoEnable = cfg.enable;
+        };
+      }
+      (lib.mkIf cfg.enable (
+        lib.mkMerge [
+          themeConfig
+          (lib.mkIf config.modules.nixos.papirus.enable {
+            modules.nixos.papirus.package = pkgs.catppuccin-papirus-folders.override {
+              inherit (cfg) accent flavor;
+            };
+          })
+          {
+            home-manager.users.${userName} = {
+              imports = [ inputs.catppuccin.homeModules.catppuccin ];
 
-            config = lib.mkMerge [
-              themeConfig
-              (lib.mkIf config.modules.nixos.plasma.enable {
-                qt = {
-                  enable = true;
-                  platformTheme = {
-                    name = "kde";
-                    package = with pkgs; [
-                      catppuccin-kde
-                      catppuccin-kvantum
-                      catppuccin-qt5ct
-                    ];
+              config = lib.mkMerge [
+                themeConfig
+                (lib.mkIf config.modules.nixos.plasma.enable {
+                  qt = {
+                    enable = true;
+                    platformTheme = {
+                      name = "kde";
+                      package = with pkgs; [
+                        catppuccin-kde
+                        catppuccin-kvantum
+                        catppuccin-qt5ct
+                      ];
+                    };
+                    style.name = "kvantum";
                   };
-                  style.name = "kvantum";
-                };
-              })
-            ];
-          };
-        }
-      ]
-    );
+                })
+              ];
+            };
+          }
+        ]
+      ))
+    ];
 }
