@@ -54,7 +54,7 @@ jobs:
         with:
           token: ${{ secrets.GH_TOKEN }}
           commit-message: "chore: updated flake and packages"
-          title: "Updated Flake"
+          title: "Update and build Flake"
           body: Automated update of the `flake.lock` and local Nix packages.
           branch: "nix-flake-update"
           delete-branch: true

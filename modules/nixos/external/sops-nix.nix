@@ -31,10 +31,10 @@ in
     sops = {
       defaultSopsFile = "${inputs.self}/secrets/secrets.yaml";
       age.sshKeyPaths = [
-        "/etc/ssh/ssh_host_ed25519_key"
         cfg.sshKeyFile
         # System-wide location for private SSH key provisioning
         "/etc/ssh/sops_ed25519_key"
+        "/etc/ssh/ssh_host_ed25519_key"
       ];
     };
 
