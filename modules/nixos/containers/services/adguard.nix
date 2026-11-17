@@ -120,7 +120,11 @@ lib.mkMerge [
                 "tls://dns.quad9.net"
               ];
               bootstrap_dns = bootstrapDns;
-              upstream_mode = "parallel";
+              upstream_mode = "load_balance";
+              cache_optimistic = true;
+              cache_size = 16 * 1024 * 1024;
+              # Ask router for client device names
+              local_ptr_upstreams = [ config.modules.nixos.networking.defaultGateway ];
               ratelimit = 0;
               edns_client_subnet.enabled = false;
               enable_dnssec = true;
