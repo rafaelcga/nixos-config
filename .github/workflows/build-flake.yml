@@ -28,7 +28,7 @@ jobs:
       hosts: ${{ steps.get-hosts.outputs.hosts }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           token: ${{ secrets.GH_TOKEN }}
 
@@ -48,12 +48,12 @@ jobs:
         host: ${{ fromJSON(needs.discover-hosts.outputs.hosts) }}
     steps:
       - name: Nothing but Nix
-        uses: wimpysworld/nothing-but-nix@main
+        uses: wimpysworld/nothing-but-nix@v12
         with:
           hatchet-protocol: "cleave"
 
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           token: ${{ secrets.GH_TOKEN }}
 
