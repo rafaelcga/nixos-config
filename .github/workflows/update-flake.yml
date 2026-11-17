@@ -26,8 +26,9 @@ jobs:
         with:
           github_access_token: ${{ secrets.GH_TOKEN }}
           extra_nix_config: |
-            max-substitution-jobs = 64
-            http-connections = 64
+            max-substitution-jobs = 32
+            http-connections = 40
+            fallback = true
 
       - uses: cachix/cachix-action@v17
         with:

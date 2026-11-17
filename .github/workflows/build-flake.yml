@@ -64,10 +64,12 @@ jobs:
         uses: samueldr/lix-gha-installer-action@v2026-06-15
         with:
           github_access_token: ${{ secrets.GH_TOKEN }}
-          # Closures are thousands of small paths: download more of them in parallel
+          # Moderate parallelism (between Nix defaults and 64) to avoid overloading Cachix;
+          # fallback builds from source if a substitute download fails
           extra_nix_config: |
-            max-substitution-jobs = 64
-            http-connections = 64
+            max-substitution-jobs = 32
+            http-connections = 40
+            fallback = true
 
       - uses: cachix/cachix-action@v17
         with:
