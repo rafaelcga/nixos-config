@@ -72,10 +72,12 @@ in
     systemd.services.rclone-containers-backup = {
       description = "Backup ${cfg.dataDir} to Proton Drive";
       wants = [ "network-online.target" ];
+      # sops-nix only uses a unit with `useSystemdActivation`; otherwise secrets
+      # are installed during activation, before any service starts
       after = [
         "network-online.target"
-        "sops-nix.service"
-      ];
+      ]
+      ++ lib.optional config.sops.useSystemdActivation "sops-install-secrets.service";
       restartIfChanged = false;
       stopIfChanged = false;
       serviceConfig =

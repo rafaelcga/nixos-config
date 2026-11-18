@@ -274,6 +274,7 @@ in
             after = [
               "network-online.target"
             ]
+            ++ lib.optional config.sops.useSystemdActivation "sops-install-secrets.service"
             ++ lib.optional crowdsec.enable "${crowdsecBouncer.serviceName}.service";
             wants = after;
             serviceConfig = {
