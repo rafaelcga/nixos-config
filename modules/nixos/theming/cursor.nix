@@ -34,7 +34,27 @@ in
   config = lib.mkIf cfg.enable {
     xdg.icons.fallbackCursorThemes = [ cfg.name ];
 
-    environment.systemPackages = [ cfg.package ];
+    environment = {
+      systemPackages = [ cfg.package ];
+
+      # Set through PAM for every login session, so apps launched from the
+      # desktop get the same cursor as those launched from a shell (Home
+      # Manager's `home.sessionVariables` only reach shells)
+      sessionVariables = {
+        XCURSOR_THEME = cfg.name;
+        XCURSOR_SIZE = toString cfg.size;
+      };
+
+      # KWin takes the cursor from kcminputrc rather than the environment.
+      # Lock it (`[$i]`) to this module's values, overriding System Settings.
+      etc."xdg/kcminputrc" = lib.mkIf config.modules.nixos.plasma.enable {
+        text = ''
+          [Mouse]
+          cursorTheme[$i]=${cfg.name}
+          cursorSize[$i]=${toString cfg.size}
+        '';
+      };
+    };
 
     home-manager.users.${userName} = {
       home.pointerCursor = {
@@ -43,8 +63,6 @@ in
         dotIcons.enable = true;
         x11.enable = true;
         gtk.enable = true;
-        hyprcursor.enable = true;
-        sway.enable = true;
       };
     };
   };
