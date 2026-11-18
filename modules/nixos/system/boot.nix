@@ -31,13 +31,21 @@ in
 
           # Overwrite new generation with `default @saved` but boot into it after
           # a nixos-rebuild
-          extraInstallCommands = ''
-            NIXOS_GENERATION=$(grep "^default " /boot/loader/loader.conf | awk '{print $2}')
-            sed -i 's|^default .*|default @saved|' /boot/loader/loader.conf
-            if [[ -n "$NIXOS_GENERATION" ]] && [[ "$NIXOS_GENERATION" != "@saved" ]]; then
-              ${pkgs.systemd}/bin/bootctl set-oneshot "$NIXOS_GENERATION" || true
-            fi
-          '';
+          # Runs inside a systemd-run transient unit (nh >= 4.5) with a minimal
+          # PATH, so every external tool must be referenced by store path.
+          extraInstallCommands =
+            let
+              sed = lib.getExe pkgs.gnused;
+              bootctl = "${config.systemd.package}/bin/bootctl";
+            in
+            ''
+              loader_conf=${lib.escapeShellArg "${config.boot.loader.efi.efiSysMountPoint}/loader/loader.conf"}
+              generation=$(${sed} -n 's/^default[[:space:]]\+//p' "$loader_conf")
+              if [[ -n $generation && $generation != @saved ]]; then
+                ${sed} -i 's/^default[[:space:]].*/default @saved/' "$loader_conf"
+                ${bootctl} set-oneshot "$generation" || true
+              fi
+            '';
         };
       };
 
