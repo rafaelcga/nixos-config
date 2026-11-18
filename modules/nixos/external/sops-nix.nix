@@ -29,7 +29,12 @@ in
 
   config = {
     sops = {
-      defaultSopsFile = ../../../secrets/secrets.yaml;
+      # `builtins.path` stores just this file: a bare "${inputs.self}/..." string
+      # would tie the system's hash to every file in the repo
+      defaultSopsFile = builtins.path {
+        path = "${inputs.self}/secrets/secrets.yaml";
+        name = "secrets.yaml";
+      };
       age.sshKeyPaths = [
         cfg.sshKeyFile
         # System-wide location for private SSH key provisioning
