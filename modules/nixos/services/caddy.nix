@@ -7,9 +7,12 @@
 let
   inherit (config.modules.nixos) crowdsec;
   cfg = config.modules.nixos.caddy;
+  cfgCaddy = config.services.caddy;
 
-  ipUpdateServiceName = "caddy-ip-updater";
-  envFile = "/var/lib/${ipUpdateServiceName}/caddy.env";
+  crowdsecBouncer = crowdsec.bouncers.caddy;
+
+  envServiceName = "caddy-env";
+  envFile = "/var/lib/${envServiceName}/caddy.env";
 
   globalConfig = lib.concatStringsSep "\n" (
     [
@@ -57,22 +60,17 @@ let
     abort @denied
   '';
 
-  mkLogFormat =
-    hostName:
-    let
-      fileName = "access${lib.optionalString (hostName != "") "-${hostName}"}.log";
-    in
-    ''
-      output file ${config.services.caddy.logDir}/${fileName} {
-          mode 644
-          roll_size 100MiB
-          roll_keep 5
-          roll_keep_for 14d
-      }
-      format console {
-          time_format rfc3339
-      }
-    '';
+  # Access logs are kept in Caddy's default JSON format, which is what
+  # CrowdSec's `crowdsecurity/caddy-logs` parser expects.
+  # Group-readable so that CrowdSec can read them (see `extraGroups` below).
+  mkLogFormat = hostName: ''
+    output file ${cfgCaddy.logDir}/access-${hostName}.log {
+        mode 0640
+        roll_size 100MiB
+        roll_keep 5
+        roll_keep_for 14d
+    }
+  '';
 
   mkRoute =
     {
@@ -112,6 +110,73 @@ let
         isLocal = true;
       };
     };
+  };
+
+  # Builds Caddy's environment file from the sops template, the current public
+  # IP and (optionally) the CrowdSec bouncer API key. Caddy is only restarted
+  # when the resulting file actually changes.
+  generateEnv = pkgs.writeShellApplication {
+    name = "generate-caddy-env";
+    runtimeInputs = with pkgs; [
+      coreutils
+      curl
+      diffutils
+      systemd
+    ];
+    text = ''
+      SERVICES=(
+        "https://checkip.amazonaws.com"
+        "https://icanhazip.com"
+        "https://api.ipify.org"
+        "https://ifconfig.me/ip"
+      )
+
+      CURR_IP=""
+
+      # Loop through services and stop at the first one that returns a valid IP
+      for url in "''${SERVICES[@]}"; do
+        res="$(curl -4 -s -f -m 3 "$url" 2>/dev/null | tr -d '[:space:]' || true)"
+
+        # Validate that the response is strictly an IPv4 address
+        if [[ "$res" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          CURR_IP="$res"
+          break
+        fi
+      done
+
+      if [[ -z "$CURR_IP" ]]; then
+        echo "Error: All IP lookup providers failed or returned invalid data." >&2
+        exit 1
+      fi
+
+      ${lib.optionalString crowdsec.enable ''
+        CROWDSEC_API_KEY="$(cat ${crowdsecBouncer.apiKeyFile})"
+      ''}
+
+      tmp="$(mktemp "${envFile}.XXXXXX")"
+      trap 'rm -f "$tmp"' EXIT
+
+      {
+        cat ${config.sops.templates."caddy-env".path}
+        echo "PUBLIC_IP=$CURR_IP"
+        ${lib.optionalString crowdsec.enable ''echo "CROWDSEC_API_KEY=$CROWDSEC_API_KEY"''}
+      } >"$tmp"
+
+      if cmp -s "$tmp" "${envFile}"; then
+        echo "Environment unchanged (public IP: $CURR_IP)"
+        exit 0
+      fi
+
+      mv "$tmp" "${envFile}"
+      echo "Environment updated (public IP: $CURR_IP)"
+
+      # --no-block: Caddy is ordered after this unit, so waiting for the restart
+      # job from inside this unit would deadlock
+      if systemctl is-active --quiet caddy.service || systemctl is-failed --quiet caddy.service; then
+        echo "Restarting Caddy to apply the new environment..."
+        systemctl restart --no-block caddy.service
+      fi
+    '';
   };
 
   virtualHostOpts = {
@@ -177,23 +242,15 @@ in
         services.caddy = {
           enable = true;
           enableReload = false; # Needs to be false for admin API to work
+          openFirewall = true;
           environmentFile = envFile;
           package = pkgs.local.caddy-with-plugins;
 
           inherit globalConfig;
-          logFormat = mkLogFormat "";
-          virtualHosts = lib.recursiveUpdate (lib.mapAttrs' mkVirtualHost cfg.virtualHosts) healthEndpoint;
+          # Runtime logs go to the journal; access logs are per virtual host
+          logFormat = "level INFO";
+          virtualHosts = lib.mapAttrs' mkVirtualHost cfg.virtualHosts // healthEndpoint;
         };
-
-        networking.firewall =
-          let
-            httpPorts = [ 80 ];
-            httpsPorts = [ 443 ];
-          in
-          {
-            allowedTCPPorts = httpPorts ++ httpsPorts;
-            allowedUDPPorts = httpsPorts;
-          };
 
         sops = {
           secrets = {
@@ -210,107 +267,31 @@ in
         };
 
         systemd = {
-          services =
-            let
-              inherit (config.services.caddy) user group;
-            in
-            {
-              "${ipUpdateServiceName}" = rec {
-                description = "Fetches the server's public IP and adds it as an environment variable PUBLIC_IP";
-                wantedBy = [
-                  "multi-user.target"
-                  "caddy.service"
-                ];
-                before = [ "caddy.service" ];
-                after = [
-                  "sops-nix.service"
-                  "network-online.target"
-                ];
-                wants = after;
-                serviceConfig =
-                  let
-                    prevState = "/var/lib/${ipUpdateServiceName}/prev-ip";
-                  in
-                  {
-                    Type = "oneshot";
-                    Restart = "on-failure";
-                    RestartSec = "10s";
-                    StateDirectory = ipUpdateServiceName;
-                    ExecStart = lib.getExe (
-                      pkgs.writeShellApplication {
-                        name = "update-caddy-ip";
-                        runtimeInputs = with pkgs; [
-                          coreutils
-                          curl
-                          systemd
-                        ];
-                        text = ''
-                          SERVICES=(
-                            "https://checkip.amazonaws.com"
-                            "https://icanhazip.com"
-                            "https://api.ipify.org"
-                            "https://ifconfig.me/ip"
-                          )
-
-                          CURR_IP=""
-
-                          # Loop through services and stop at the first one that returns a valid IP
-                          for url in "''${SERVICES[@]}"; do
-                            # Fetch with a short 3-second timeout and strip trailing whitespace/newlines
-                            res="$(curl -s -f -m 3 "$url" 2>/dev/null | tr -d '[:space:]' || true)"
-
-                            # Validate that the response is strictly an IPv4 address
-                            if [[ "$res" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-                              CURR_IP="$res"
-                              break
-                            fi
-                          done
-
-                          # If none of the services returned a valid IP, fail safely
-                          if [[ -z "$CURR_IP" ]]; then
-                            echo "Error: All IP lookup providers failed or returned invalid data."
-                            exit 1
-                          fi
-
-                          PREV_IP="$(cat "${prevState}" 2>/dev/null || echo "$CURR_IP")"
-
-                          if [[ "$CURR_IP" != "$PREV_IP" || ! -f "${envFile}" ]]; then
-                            cat "${config.sops.templates."caddy-env".path}" >"${envFile}"
-                            echo "PUBLIC_IP=$CURR_IP" >>"${envFile}"
-
-                            chown ${user}:${group} "${envFile}"
-                            chmod 0600 "${envFile}"
-
-                            if systemctl is-active --quiet caddy; then
-                              echo "Restarting Caddy to apply new IP ($CURR_IP)..."
-                              systemctl restart caddy
-                            else
-                              echo "Caddy is not currently active; skipping restart."
-                            fi
-                          fi
-
-                          echo "$CURR_IP" >"${prevState}"
-                        '';
-                      }
-                    );
-                  };
-              };
-            };
-
-          timers."${ipUpdateServiceName}" = {
-            description = "Run Caddy IP Updater periodically";
-            wantedBy = [ "timers.target" ];
-            timerConfig = {
-              OnUnitActiveSec = "5min";
+          services.${envServiceName} = rec {
+            description = "Generate Caddy's environment file (secrets and public IP)";
+            wantedBy = [ "caddy.service" ];
+            before = [ "caddy.service" ];
+            after = [
+              "network-online.target"
+            ]
+            ++ lib.optional crowdsec.enable "${crowdsecBouncer.serviceName}.service";
+            wants = after;
+            serviceConfig = {
+              Type = "oneshot";
+              Restart = "on-failure";
+              RestartSec = "10s";
+              StateDirectory = envServiceName;
+              UMask = "0077";
+              ExecStart = lib.getExe generateEnv;
             };
           };
 
-          tmpfiles.settings = {
-            "10-caddy-logs" = {
-              "${config.services.caddy.logDir}".d = {
-                inherit (config.services.caddy) user group;
-                mode = "0755";
-              };
+          timers.${envServiceName} = {
+            description = "Periodically refresh Caddy's environment file";
+            wantedBy = [ "timers.target" ];
+            timerConfig = {
+              OnBootSec = "5min";
+              OnUnitActiveSec = "5min";
             };
           };
         };
@@ -321,67 +302,19 @@ in
         services.crowdsec = {
           hub.collections = [ "crowdsecurity/caddy" ];
 
+          # Allow reading Caddy's (group-readable) access logs
+          extraGroups = [ cfgCaddy.group ];
+
           settings.acquisitions = [
             {
               source = "file";
-              filenames = [ "${config.services.caddy.logDir}/*.log" ];
-              labels = {
-                type = "caddy";
-              };
+              filenames = [ "${cfgCaddy.logDir}/access-*.log" ];
+              labels.type = "caddy";
             }
           ];
         };
 
-        systemd.services =
-          let
-            inherit (config.services.caddy) user group;
-            inherit (crowdsec.bouncers.caddy)
-              apiKeyFile
-              serviceName
-              ;
-
-            bouncerEnvServiceName = "caddy-bouncer-env-generator";
-            bouncerEnvFile = "/var/lib/${bouncerEnvServiceName}/caddy.env";
-          in
-          {
-            "${bouncerEnvServiceName}" = rec {
-              description = "Append CrowdSec's API key to Caddy's environment variables";
-              wantedBy = [ "multi-user.target" ];
-              after = [
-                "${serviceName}.service"
-                "${ipUpdateServiceName}.service"
-              ];
-              wants = after;
-              serviceConfig = {
-                Type = "oneshot";
-                StateDirectory = bouncerEnvServiceName;
-                ExecStart = lib.getExe (
-                  pkgs.writeShellApplication {
-                    name = "add-crowdsec-api-caddy";
-                    runtimeInputs = with pkgs; [ coreutils ];
-                    text = ''
-                      echo "CROWDSEC_API_KEY=$(cat ${apiKeyFile})" >"${bouncerEnvFile}"
-
-                      chown ${user}:${group} "${bouncerEnvFile}"
-                      chmod 0600 "${bouncerEnvFile}"
-                    '';
-                  }
-                );
-              };
-            };
-
-            caddy = rec {
-              after = [ "${bouncerEnvServiceName}.service" ];
-              wants = after;
-              serviceConfig = {
-                TimeoutStopSec = lib.mkForce "20s";
-                EnvironmentFile = lib.mkForce [
-                  envFile
-                  bouncerEnvFile
-                ];
-              };
-            };
-          };
+        systemd.services.caddy.serviceConfig.TimeoutStopSec = "20s";
       })
     ]
   );
