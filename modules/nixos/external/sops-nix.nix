@@ -29,7 +29,7 @@ in
 
   config = {
     sops = {
-      defaultSopsFile = "${inputs.self}/secrets/secrets.yaml";
+      defaultSopsFile = ../../../secrets/secrets.yaml;
       age.sshKeyPaths = [
         cfg.sshKeyFile
         # System-wide location for private SSH key provisioning

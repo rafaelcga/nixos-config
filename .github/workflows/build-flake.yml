@@ -1,12 +1,11 @@
 name: Build NixOS systems
 
 on:
+  # No `paths` filter: non-Nix files (secrets, package sources) also feed the
+  # systems, and a push whose systems are already cached finishes in seconds.
   push:
     branches:
       - main
-    paths:
-      - "**.nix"
-      - "flake.lock"
   pull_request:
     types: [opened, synchronize, reopened]
   workflow_dispatch:
@@ -176,11 +175,14 @@ jobs:
           mkdir -p "$base_src"
           git archive "$BASE_SHA" | tar -x -C "$base_src"
 
-          # Building a bare output path only substitutes (never builds), so this
-          # just fetches whichever closure is missing from the cache.
-          if old_out=$(nix eval --raw \
-            "path:$base_src#nixosConfigurations.$HOST.config.system.build.toplevel.outPath") &&
-            nix build --no-link "$old_out" "$NEW_OUT"; then
+          # Build the base system from its derivation rather than its bare output
+          # path: a bare path can only be substituted, so it fails whenever that
+          # exact revision was never built (e.g. a main push skipped by CI).
+          # Anything already cached is still substituted, not rebuilt.
+          if old_drv=$(nix eval --raw \
+            "path:$base_src#nixosConfigurations.$HOST.config.system.build.toplevel.drvPath") &&
+            old_out=$(nix build --no-link --print-out-paths "$old_drv^*") &&
+            nix build --no-link "$NEW_OUT"; then
             # Same diff `nh` prints; --exit-code: 0 = identical, 1 = differs, 2 = error
             rc=0
             nix run nixpkgs#dix -- --color=never diff --exit-code \
@@ -191,7 +193,7 @@ jobs:
               *) exit "$rc" ;;
             esac
           else
-            echo "::warning title=$HOST closure diff::Base system unavailable; skipping package diff"
+            echo "::warning title=$HOST closure diff::Base system could not be evaluated or built; skipping package diff"
             touch "$report_dir/$HOST.unavailable"
           fi
 
@@ -241,7 +243,7 @@ jobs:
             for f in "$DIFFS"/*; do
               host="$(basename "${f%.*}")"
               if [[ "$f" == *.unavailable ]]; then
-                printf '\n**%s**: _base system not in cache, no diff available._\n' "$host"
+                printf '\n**%s**: _base system could not be evaluated or built, no diff available._\n' "$host"
                 continue
               fi
               if [[ ! -s "$f" ]]; then
