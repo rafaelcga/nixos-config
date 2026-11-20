@@ -8,13 +8,13 @@
 
 stdenvNoCC.mkDerivation (finalAttrs: {
   pname = "cachyos-settings";
-  version = "1.4.4";
+  version = "1.4.5";
 
   src = fetchFromGitHub {
     owner = "CachyOS";
     repo = "CachyOS-Settings";
     tag = finalAttrs.version;
-    hash = "sha256-PAwMBQ5WBjwU/UW66hLmCpUfseZ8QbHIQZOeD471skw=";
+    hash = "sha256-TdDGHNHqvXlHvmVZtVrnKVuR0c7pPBrO2vr342EQ7Hk=";
   };
 
   dontConfigure = true;
