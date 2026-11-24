@@ -57,6 +57,8 @@ jobs:
 
       - name: Generate pull request body
         shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           inputs="$(awk '/^• /{p=1; print; next} p && /^ /{print; next} {p=0}' "$RUNNER_TEMP/flake.log")"
           pkgs="$(grep -F 'updated:' "$RUNNER_TEMP/pkgs.log" | sed 's/^/- /' || true)"
@@ -83,6 +85,17 @@ jobs:
               echo "$kernel"
             fi
           } > "$RUNNER_TEMP/pr-body.md"
+
+          # Carry over the closure diff that build-flake.yml appends to the body.
+          # create-pull-request rewrites the body on every run, but only pushes
+          # (and so triggers a rebuild that regenerates the diff) when the branch
+          # content changes; otherwise the section would be lost for good.
+          marker='<!-- closure-diff -->'
+          old_body="$(gh pr view nix-flake-update --json state,body \
+            --jq 'select(.state == "OPEN") | .body' 2>/dev/null || true)"
+          if [[ "$old_body" == *"$marker"* ]]; then
+            printf '\n%s%s\n' "$marker" "${old_body#*"$marker"}" >> "$RUNNER_TEMP/pr-body.md"
+          fi
 
       - name: Create pull request
         uses: peter-evans/create-pull-request@v8
