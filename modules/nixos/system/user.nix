@@ -26,11 +26,11 @@ in
     programs.${cfg.shell}.enable = true;
     environment.shells = [ pkgs.${cfg.shell} ];
 
+    # A `mkpasswd` hash. With mutable users (the default) NixOS only applies it
+    # when the account is created: on existing hosts, change it with `passwd`.
+    # Root-only: just the activation script needs it
     sops.secrets."passwords/user" = {
       sopsFile = config.modules.nixos.sops-nix.commonSopsFile;
-      owner = user.name;
-      inherit (user) group;
-      mode = "0400";
       neededForUsers = true;
     };
 

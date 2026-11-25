@@ -262,6 +262,9 @@ in
         };
 
         sops = {
+          # Rerun when a rotated secret changes: it rewrites the env file and
+          # restarts Caddy if needed
+          templates."caddy-env".restartUnits = [ "${envServiceName}.service" ];
           secrets = {
             "web_domain".sopsFile = config.modules.nixos.sops-nix.commonSopsFile;
             "porkbun/api_key" = { };

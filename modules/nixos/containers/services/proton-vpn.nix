@@ -372,4 +372,9 @@ lib.mkMerge [
       ];
     }) ociBehindVpn;
   })
+  # Restart the VPN container when a rotated key changes; the VPN'd containers
+  # are bound to it and restart too
+  (lib.mkIf cfg.enable {
+    sops.templates."${wireguardInterface}.conf".restartUnits = [ "container@proton-vpn.service" ];
+  })
 ]

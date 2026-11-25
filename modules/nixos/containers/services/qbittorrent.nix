@@ -23,7 +23,10 @@ lib.mkMerge [
     };
   }
   (lib.mkIf cfg.enable {
-    sops.secrets."qbittorrent/password_hash".owner = user.name;
+    sops.secrets."qbittorrent/password_hash" = {
+      owner = user.name;
+      restartUnits = [ "container@qbittorrent.service" ];
+    };
 
     containers.qbittorrent = {
       bindMounts.${passwordSecret}.isReadOnly = true;

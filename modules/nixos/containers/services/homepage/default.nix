@@ -59,6 +59,8 @@ lib.mkMerge [
   }
   (lib.mkIf cfg.enable {
     sops = {
+      # Restart the consumer when a rotated secret changes
+      templates."homepage-env".restartUnits = [ "container@homepage.service" ];
       secrets =
         let
           mkSecret =

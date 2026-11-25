@@ -14,6 +14,8 @@ lib.mkMerge [
   }
   (lib.mkIf cfg.enable {
     sops = {
+      # Restart the consumer when a rotated secret changes
+      templates."ddns-updater/config.json".restartUnits = [ "container@ddns-updater.service" ];
       secrets = {
         "web_domain".sopsFile = config.modules.nixos.sops-nix.commonSopsFile;
         "porkbun/api_key" = { };

@@ -33,7 +33,10 @@ lib.mkMerge [
     };
   }
   (lib.mkIf cfg.enable {
-    sops.secrets."adguard/password_hash".owner = user.name;
+    sops.secrets."adguard/password_hash" = {
+      owner = user.name;
+      restartUnits = [ "container@adguard.service" ];
+    };
 
     networking.nameservers = dnsServers;
 

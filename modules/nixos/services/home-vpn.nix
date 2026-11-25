@@ -168,6 +168,11 @@ in
         };
       }
       (lib.mkIf cfg.isVpnServer {
+        # Reload the interface when a rotated key changes
+        sops.templates."wireguard/${cfg.interfaceName}.conf".restartUnits = [
+          "wg-quick-${cfg.interfaceName}.service"
+        ];
+
         networking = {
           nat = {
             enable = true;
@@ -185,6 +190,11 @@ in
         };
       })
       (lib.mkIf (!cfg.isVpnServer) {
+        # Re-import the connection when a rotated key changes
+        sops.templates."wireguard/${cfg.interfaceName}.conf".restartUnits = [
+          "nmcli-import-wg-home.service"
+        ];
+
         networking.firewall.checkReversePath = "loose";
 
         systemd.services.nmcli-import-wg-home = rec {

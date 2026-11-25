@@ -35,6 +35,8 @@ lib.mkMerge [
   }
   (lib.mkIf cfg.enable {
     sops = {
+      # Restart the consumer when a rotated secret changes
+      templates."servarr-env".restartUnits = [ "container@servarr.service" ];
       secrets =
         let
           mkSecret = service: lib.nameValuePair "servarr/${service}" { };
