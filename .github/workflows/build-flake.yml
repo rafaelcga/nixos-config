@@ -32,10 +32,6 @@ jobs:
     outputs:
       hosts: ${{ steps.get-hosts.outputs.hosts }}
     steps:
-      - uses: wimpysworld/nothing-but-nix@v12
-        with:
-          hatchet-protocol: "cleave"
-
       - uses: actions/checkout@v7
 
       - name: Get NixOS hosts from directories
@@ -80,10 +76,6 @@ jobs:
       # Only the automated update PR gets a package diff comment
       UPDATE_PR: ${{ github.event_name == 'pull_request' && github.head_ref == 'nix-flake-update' }}
     steps:
-      - uses: wimpysworld/nothing-but-nix@v12
-        with:
-          hatchet-protocol: "cleave"
-
       - uses: actions/checkout@v7
 
       - uses: ./.github/actions/setup-nix
