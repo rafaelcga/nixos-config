@@ -22,7 +22,3 @@ creation_rules:
       - age:
           - *admin_rafael
           - *host_fractal
-  - path_regex: (^|/)secrets/secrets\.yaml$
-    key_groups:
-      - age:
-          - *admin_rafael
