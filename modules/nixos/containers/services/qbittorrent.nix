@@ -6,6 +6,7 @@
 }:
 let
   cfg = config.modules.nixos.containers.services.qbittorrent;
+  servarr = config.modules.nixos.containers.services.servarr;
   inherit (config.modules.nixos.containers) user;
 
   # Replaced at service start with the PBKDF2 hash from sops
@@ -84,6 +85,14 @@ lib.mkMerge [
                   Password_PBKDF2 = passwordPlaceholder;
                   HostHeaderValidation = false;
                   CSRFProtection = false;
+                }
+                # The *arr apps (servarr container) skip the login, so rotating
+                # the password doesn't break their download client settings.
+                # Leave their username/password fields empty: a wrong login
+                # attempt still counts towards qBittorrent's IP ban
+                // lib.optionalAttrs servarr.enable {
+                  AuthSubnetWhitelistEnabled = true;
+                  AuthSubnetWhitelist = "${servarr.address}/32";
                 };
               };
             };
