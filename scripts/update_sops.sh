@@ -1,75 +1,51 @@
 #!/usr/bin/env nix-shell
 # shellcheck shell=bash
-#!nix-shell --quiet -i bash -p coreutils gnugrep sops ssh-to-age
+#!nix-shell --quiet -i bash -p coreutils sops ssh-to-age
 
 # Regenerates `.sops.yaml` from the admin recipients (secrets/admins.txt) and
 # the enrolled host keys (hosts/<host>/ssh_host_ed25519_key.pub), then
-# re-encrypts every secrets file for its new recipients:
+# re-encrypts the secrets for them:
 #   secrets/common.yaml -> admins + every host
 #   secrets/<host>.yaml -> admins + that host
 
 set -euo pipefail
 
 REPO_DIR="$(dirname "$(dirname "$(realpath "${BASH_SOURCE[0]}")")")"
-ADMINS_FILE="$REPO_DIR/secrets/admins.txt"
-SOPS_CONFIG="$REPO_DIR/.sops.yaml"
+cd "$REPO_DIR"
 
-function usage() {
-  echo "Usage: $(basename "${BASH_SOURCE[0]}") [-c]"
-  echo ""
-  echo "Regenerates .sops.yaml from secrets/admins.txt and the enrolled host keys,"
-  echo "then runs 'sops updatekeys' on every secrets file."
-  echo ""
-  echo "Options:"
-  echo "  -c    Only regenerate .sops.yaml; do not re-encrypt the secrets files."
-  exit 1
-}
-
-config_only=false
-while getopts ":c" opt; do
-  case $opt in
-    c) config_only=true ;;
-    *) usage ;;
-  esac
-done
-
-# Admin recipients: "<name> <age recipient | ssh-ed25519 key>" per line; '#'
-# starts a comment. SSH keys are used as-is (quoted, they contain a space), so
-# sops can decrypt with ~/.ssh/id_ed25519 directly
+# "<name> <ssh-ed25519 key | age recipient>" per line. SSH keys are kept as-is
+# (quoted), so sops decrypts with ~/.ssh/id_ed25519 directly
 admin_names=()
 admin_keys=()
 while read -r name key_type key_data _; do
   [[ -z "$name" || "$name" == \#* ]] && continue
-  if [[ "$key_type" =~ ^age1[a-z0-9]+$ ]]; then
-    admin_keys+=("$key_type")
-  elif [[ "$key_type" == "ssh-ed25519" && "$key_data" =~ ^AAAAC3NzaC1lZDI1NTE5[A-Za-z0-9+/=]+$ ]]; then
-    admin_keys+=("\"$key_type $key_data\"")
-  else
-    echo "[❌] Invalid recipient for admin '$name' in $ADMINS_FILE" >&2
-    exit 1
-  fi
+  case "$key_type" in
+    age1*) admin_keys+=("$key_type") ;;
+    ssh-ed25519) admin_keys+=("\"$key_type $key_data\"") ;;
+    *)
+      echo "[❌] Invalid recipient for admin '$name' in secrets/admins.txt" >&2
+      exit 1
+      ;;
+  esac
   admin_names+=("$name")
-done <"$ADMINS_FILE"
+done <secrets/admins.txt
 if ((${#admin_names[@]} == 0)); then
-  echo "[❌] No admin recipients in $ADMINS_FILE" >&2
+  echo "[❌] No admins in secrets/admins.txt" >&2
   exit 1
 fi
 
-host_names=()
-host_keys=()
-for host_dir in "$REPO_DIR"/hosts/*/; do
-  host="$(basename "$host_dir")"
-  pub="$host_dir/ssh_host_ed25519_key.pub"
-  if [[ ! -f "$pub" ]]; then
-    echo "[⚠️] Host '$host' is not enrolled (no $pub); it gets no secrets" >&2
-    continue
-  fi
-  host_names+=("$host")
-  host_keys+=("$(ssh-to-age <"$pub")")
+hosts=()
+for pub in hosts/*/ssh_host_ed25519_key.pub; do
+  [[ -f "$pub" ]] && hosts+=("$(basename "$(dirname "$pub")")")
 done
 
-function recipients() {
-  local name
+# rule <file name> <host>...: readable by the admins and the given hosts
+function rule() {
+  local file="$1" name
+  shift
+  echo "  - path_regex: (^|/)secrets/${file}\\.yaml\$"
+  echo "    key_groups:"
+  echo "      - age:"
   for name in "${admin_names[@]}"; do echo "          - *admin_$name"; done
   for name in "$@"; do echo "          - *host_$name"; done
 }
@@ -79,37 +55,19 @@ function recipients() {
   echo "# hosts/<host>/ssh_host_ed25519_key.pub instead, then rerun it."
   echo "keys:"
   for i in "${!admin_names[@]}"; do echo "  - &admin_${admin_names[$i]} ${admin_keys[$i]}"; done
-  for i in "${!host_names[@]}"; do echo "  - &host_${host_names[$i]} ${host_keys[$i]}"; done
+  for host in "${hosts[@]}"; do
+    echo "  - &host_$host $(ssh-to-age <"hosts/$host/ssh_host_ed25519_key.pub")"
+  done
   echo "creation_rules:"
   echo "  # Shared by every host"
-  echo "  - path_regex: (^|/)secrets/common\\.yaml\$"
-  echo "    key_groups:"
-  echo "      - age:"
-  recipients "${host_names[@]}"
-  for host in "${host_names[@]}"; do
-    echo "  - path_regex: (^|/)secrets/${host}\\.yaml\$"
-    echo "    key_groups:"
-    echo "      - age:"
-    recipients "$host"
-  done
-  # Pre-split file, kept readable by admins only until it is deleted
-  if [[ -f "$REPO_DIR/secrets/secrets.yaml" ]]; then
-    echo "  - path_regex: (^|/)secrets/secrets\\.yaml\$"
-    echo "    key_groups:"
-    echo "      - age:"
-    recipients
+  rule common "${hosts[@]}"
+  for host in "${hosts[@]}"; do rule "$host" "$host"; done
+} >.sops.yaml
+echo "[✔️] Regenerated .sops.yaml (${#admin_names[@]} admin(s), ${#hosts[@]} host(s))"
+
+for name in common "${hosts[@]}"; do
+  if [[ -f "secrets/$name.yaml" ]]; then
+    sops updatekeys --yes "secrets/$name.yaml"
   fi
-} >"$SOPS_CONFIG"
-echo "[✔️] Regenerated $SOPS_CONFIG (${#admin_names[@]} admin(s), ${#host_names[@]} host(s))"
-
-$config_only && exit 0
-
-cd "$REPO_DIR"
-files=(secrets/common.yaml)
-for host in "${host_names[@]}"; do files+=("secrets/$host.yaml"); done
-for file in "${files[@]}"; do
-  [[ -f "$file" ]] || continue
-  echo "Updating recipients of $file..."
-  sops updatekeys --yes "$file"
 done
 echo "[✔️] Secrets re-encrypted for the current recipients"

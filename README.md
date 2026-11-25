@@ -32,6 +32,8 @@ admins in `secrets/admins.txt` can decrypt everything with `sops`, straight from
 ./scripts/enroll_host.sh -n <hostname> -s <ssh destination>  # enroll a running host
 ./scripts/enroll_host.sh -n <hostname> -g <dir>              # generate a key for a new install
 ./scripts/update_sops.sh  # after editing secrets/admins.txt
+./scripts/rotate_service_password.sh  # new qBittorrent/AdGuard password (all 3 secrets)
+./scripts/diff_secrets.sh  # which secrets changed in the last commit (no values shown)
 ```
 
 ### Local (from a NixOS ISO)
