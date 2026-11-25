@@ -27,6 +27,12 @@ in
       default = "192.168.1.1";
       description = "Default gateway for the default network interface";
     };
+
+    lanSubnet = lib.mkOption {
+      type = lib.types.str;
+      default = "192.168.1.0/24";
+      description = "IPv4 subnet of the LAN on the default interface (allowed to SSH in)";
+    };
   };
 
   config = lib.mkMerge [
@@ -51,7 +57,22 @@ in
           };
         };
 
-        firewall.enable = true;
+        firewall = {
+          enable = true;
+          # SSH only from the IPv4 LAN and the home VPN: never over global
+          # IPv6, nor from the container bridge (`openssh.openFirewall` is off)
+          extraInputRules =
+            let
+              inherit (config.modules.nixos) home-vpn;
+              ports = lib.concatMapStringsSep ", " toString config.services.openssh.ports;
+            in
+            ''
+              iifname "${cfg.defaultInterface}" ip saddr ${cfg.lanSubnet} tcp dport { ${ports} } accept
+            ''
+            + lib.optionalString home-vpn.enable ''
+              iifname "${home-vpn.interfaceName}" ip saddr ${home-vpn.network.subnet} tcp dport { ${ports} } accept
+            '';
+        };
         nftables.enable = true;
       };
 
@@ -73,6 +94,8 @@ in
 
         openssh = {
           enable = true;
+          # Opened only to the LAN and the home VPN (see `extraInputRules`)
+          openFirewall = false;
           settings.PermitRootLogin = "no";
         };
 
