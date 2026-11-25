@@ -1,6 +1,6 @@
 #!/usr/bin/env nix-shell
 # shellcheck shell=bash
-#!nix-shell --quiet -i bash -p nixos-install-tools coreutils git
+#!nix-shell --quiet -i bash -p nixos-install-tools coreutils git nixfmt
 
 set -euo pipefail
 
@@ -25,7 +25,8 @@ config_path="$REPO_DIR/hosts/$hostname/hardware-configuration.nix"
 echo "Generating hardware configuration for '$hostname'..."
 
 # stderr goes to the terminal, so warnings never end up in the generated file.
-config="$(nixos-generate-config --show-hardware-config --no-filesystems)"
+# Formatted like the rest of the repository (nixfmt reads stdin)
+config="$(nixos-generate-config --show-hardware-config --no-filesystems | nixfmt -)"
 if [[ -z "$config" ]]; then
   echo "[❌] Generated configuration is empty. Aborting." >&2
   exit 1
