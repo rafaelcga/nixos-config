@@ -69,7 +69,7 @@ lib.mkMerge [
         in
         lib.mkMerge [
           (lib.concatMapAttrs mkSecret serviceData)
-          { "web_domain" = { }; }
+          { "web_domain".sopsFile = config.modules.nixos.sops-nix.commonSopsFile; }
         ];
 
       templates."homepage-env".content =

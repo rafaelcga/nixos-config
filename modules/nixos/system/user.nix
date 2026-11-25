@@ -27,6 +27,7 @@ in
     environment.shells = [ pkgs.${cfg.shell} ];
 
     sops.secrets."passwords/user" = {
+      sopsFile = config.modules.nixos.sops-nix.commonSopsFile;
       owner = user.name;
       inherit (user) group;
       mode = "0400";

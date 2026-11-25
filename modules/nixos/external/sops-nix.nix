@@ -3,67 +3,78 @@
   config,
   lib,
   pkgs,
-  userName,
+  hostName,
   ...
 }:
 let
   cfg = config.modules.nixos.sops-nix;
-  user = config.users.users.${userName};
+
+  # Secrets are split per host: each host only holds the keys to decrypt
+  # `secrets/<host>.yaml` and `secrets/common.yaml` (see `.sops.yaml`, generated
+  # by `scripts/update_sops.sh`)
+  secretsDir = "${inputs.self}/secrets";
+  hostSecretsName = "${hostName}.yaml";
+  hostSecretsPath = "${secretsDir}/${hostSecretsName}";
+  hostKeyPubPath = "${inputs.self}/hosts/${hostName}/ssh_host_ed25519_key.pub";
+
+  # `builtins.path` stores just this file: a bare "${inputs.self}/..." string
+  # would tie the system's hash to every file in the repo
+  storeSecretsFile =
+    name:
+    builtins.path {
+      inherit name;
+      path = "${secretsDir}/${name}";
+    };
 in
 {
   imports = [ inputs.sops-nix.nixosModules.sops ];
 
   options.modules.nixos.sops-nix = {
-    sshKeyFile = lib.mkOption {
+    hostKeyFile = lib.mkOption {
       type = lib.types.str;
-      default = "${user.home}/.ssh/id_ed25519";
-      description = "Path to the private SSH key";
+      default = "/etc/ssh/ssh_host_ed25519_key";
+      readOnly = true;
+      description = ''
+        SSH host key used as this host's age identity. Its public half must be
+        enrolled in `hosts/<host>/ssh_host_ed25519_key.pub`
+      '';
     };
 
-    ageKeyFile = lib.mkOption {
-      type = lib.types.str;
-      default = "${user.home}/.config/sops/age/keys.txt";
-      description = "Path to age key file to be generated from private SSH key";
+    commonSopsFile = lib.mkOption {
+      type = lib.types.path;
+      default = storeSecretsFile "common.yaml";
+      readOnly = true;
+      description = ''
+        Secrets file readable by every host. Set it as `sopsFile` of secrets
+        shared by all hosts; the rest come from `secrets/<host>.yaml`
+      '';
     };
   };
 
   config = {
+    assertions = [
+      {
+        assertion = lib.pathExists hostKeyPubPath && lib.pathExists hostSecretsPath;
+        message = ''
+          Host '${hostName}' is not enrolled for sops: expected
+          hosts/${hostName}/ssh_host_ed25519_key.pub and secrets/${hostName}.yaml.
+          Run `scripts/enroll_host.sh -n ${hostName} ...`.
+        '';
+      }
+    ];
+
     sops = {
-      # `builtins.path` stores just this file: a bare "${inputs.self}/..." string
-      # would tie the system's hash to every file in the repo
-      defaultSopsFile = builtins.path {
-        path = "${inputs.self}/secrets/secrets.yaml";
-        name = "secrets.yaml";
-      };
-      age.sshKeyPaths = [
-        cfg.sshKeyFile
-        # System-wide location for private SSH key provisioning
-        "/etc/ssh/sops_ed25519_key"
-        "/etc/ssh/ssh_host_ed25519_key"
-      ];
+      defaultSopsFile = storeSecretsFile hostSecretsName;
+      # Only the host key: never a personal key on the machine
+      age.sshKeyPaths = [ cfg.hostKeyFile ];
+      gnupg.sshKeyPaths = [ ];
     };
 
+    # For editing secrets: sops reads ~/.ssh/id_ed25519 directly
     environment.systemPackages = with pkgs; [
       age
       sops
+      ssh-to-age
     ];
-
-    # Generate age key file from private SSH
-    systemd.services.generate-sops-age-key = {
-      description = "Generates age key from private SSH for sops CLI";
-      wantedBy = [ "multi-user.target" ];
-      serviceConfig =
-        let
-          mkdir = lib.getExe' pkgs.coreutils "mkdir";
-          ssh-to-age = lib.getExe pkgs.ssh-to-age;
-        in
-        {
-          Type = "oneshot";
-          User = user.name;
-          Group = user.group;
-          ExecStartPre = "${mkdir} -p \"${dirOf cfg.ageKeyFile}\"";
-          ExecStart = "${ssh-to-age} -private-key -i \"${cfg.sshKeyFile}\" -o \"${cfg.ageKeyFile}\"";
-        };
-    };
   };
 }

@@ -94,19 +94,25 @@ in
         sops = {
           secrets =
             let
+              inherit (config.modules.nixos.sops-nix) commonSopsFile;
+
+              # Public keys are shared by every host; each host only holds its
+              # own private key (in secrets/<host>.yaml)
               mkPeerSecrets =
-                hostName: _:
+                peer: _:
                 let
-                  basePath = "wireguard/home_vpn/${hostName}";
+                  basePath = "wireguard/home_vpn/${peer}";
                 in
                 {
-                  "${basePath}/public_key" = { };
+                  "${basePath}/public_key".sopsFile = commonSopsFile;
+                }
+                // lib.optionalAttrs (peer == config.networking.hostName) {
                   "${basePath}/private_key" = { };
                 };
             in
             lib.mkMerge [
               (lib.concatMapAttrs mkPeerSecrets flakeMeta.hosts)
-              { "web_domain" = { }; }
+              { "web_domain".sopsFile = commonSopsFile; }
             ];
 
           templates."wireguard/${cfg.interfaceName}.conf".content =

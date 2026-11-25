@@ -263,7 +263,7 @@ in
 
         sops = {
           secrets = {
-            "web_domain" = { };
+            "web_domain".sopsFile = config.modules.nixos.sops-nix.commonSopsFile;
             "porkbun/api_key" = { };
             "porkbun/api_secret_key" = { };
           };

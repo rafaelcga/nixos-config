@@ -19,23 +19,48 @@ My [NixOS](https://nixos.org/) configuration, using
 ## Install
 
 Each host lives in `hosts/<hostname>`. Both install scripts partition the disks with
-`disko` and copy an SSH private key to `/etc/ssh/sops_ed25519_key`, so `sops-nix`
-can decrypt secrets on first boot.
+`disko` and install the host's SSH host key, which is its only `sops-nix` identity.
+
+### Secrets
+
+Each host can only decrypt `secrets/common.yaml` and its own `secrets/<hostname>.yaml`,
+using its SSH host key (enrolled in `hosts/<hostname>/ssh_host_ed25519_key.pub`). The
+admins in `secrets/admins.txt` can decrypt everything with `sops`, straight from
+`~/.ssh/id_ed25519`. `.sops.yaml` is generated: don't edit it by hand.
+
+```sh
+./scripts/enroll_host.sh -n <hostname> -s <ssh destination>  # enroll a running host
+./scripts/enroll_host.sh -n <hostname> -g <dir>              # generate a key for a new install
+./scripts/update_sops.sh  # after editing secrets/admins.txt
+```
 
 ### Local (from a NixOS ISO)
 
+On a machine that can edit the secrets, generate and enroll the host key, then commit
+and push:
+
 ```sh
-./scripts/local_install.sh -n <hostname> -k <ssh_key_path>
+./scripts/enroll_host.sh -n <hostname> -g /path/to/usb
+```
+
+Then, on the target:
+
+```sh
+./scripts/local_install.sh -n <hostname> -k /path/to/usb/ssh_host_ed25519_key
 ```
 
 This also generates `hardware-configuration.nix` for the machine before installing.
+Delete the key from the USB drive afterwards.
 
 ### Remote (over SSH, with [`nixos-anywhere`](https://github.com/nix-community/nixos-anywhere))
 
 ```sh
-./scripts/remote_install.sh -n <hostname> -k <ssh_key_path> <user@host>
+./scripts/remote_install.sh -n <hostname> <user@host>  # generates and enrolls a host key
+./scripts/remote_install.sh -n <hostname> -k <host_key> <user@host>  # reuses one
 ./scripts/remote_install.sh -n <hostname> -t  # dry run in a VM
 ```
+
+Commit and push the enrollment afterwards.
 
 ### After the first boot
 

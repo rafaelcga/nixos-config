@@ -20,10 +20,6 @@
             user = "rafael";
             system = "x86_64-linux";
           };
-          thinker = {
-            user = "rafael";
-            system = "x86_64-linux";
-          };
         };
 
         linuxVersion = "7.3";
