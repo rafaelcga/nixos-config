@@ -84,9 +84,10 @@ in
             enable = true;
             maxtime = "168h";
           };
+          # Containers (172.16.0.0/12) are deliberately not ignored: a
+          # compromised one must not get unlimited password attempts
           ignoreIP = [
             config.modules.nixos.home-vpn.network.subnet
-            "172.16.0.0/12"
             "192.168.0.0/16"
           ];
         };
