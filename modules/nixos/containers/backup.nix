@@ -84,6 +84,9 @@ in
         let
           stateDir = "rclone-proton";
           mutableConfig = "/var/lib/${stateDir}/rclone.conf";
+          # Hash of the secret the mutable config was seeded from
+          seedHash = "/var/lib/${stateDir}/seed.sha256";
+          secretPath = config.sops.secrets."rclone_proton_config".path;
         in
         {
           Type = "oneshot";
@@ -98,10 +101,14 @@ in
                 config.systemd.package
               ];
               text = ''
-                # rclone requires a mutable configuration
-                if [ ! -f "${mutableConfig}" ]; then
-                  echo "Seeding initial rclone.conf from sops-nix..."
-                  install -m 600 "${config.sops.secrets."rclone_proton_config".path}" "${mutableConfig}"
+                # rclone needs a mutable configuration (it saves refreshed
+                # session tokens), so it can't be compared with the secret
+                # directly: re-seed it whenever the secret itself changes
+                secret_hash="$(sha256sum <"${secretPath}" | cut -d' ' -f1)"
+                if [[ ! -f "${mutableConfig}" || "$(cat "${seedHash}" 2>/dev/null)" != "$secret_hash" ]]; then
+                  echo "Seeding rclone.conf from the sops-nix secret..."
+                  install -m 600 "${secretPath}" "${mutableConfig}"
+                  echo "$secret_hash" >"${seedHash}"
                 fi
 
                 # Stop running containers for a consistent copy; restart them even if the sync fails
