@@ -1,7 +1,9 @@
 { config, lib, ... }:
 let
   cfg = config.modules.nixos.containers.services.ddns-updater;
-  inherit (config.modules.nixos.containers) user;
+
+  configPath = config.sops.templates."ddns-updater/config.json".path;
+  credentialName = "config.json";
 in
 lib.mkMerge [
   {
@@ -18,8 +20,10 @@ lib.mkMerge [
         "porkbun/api_secret_key" = { };
       };
       # https://github.com/qdm12/ddns-updater/blob/master/docs/porkbun.md
+      # Holds the Porkbun keys: kept root-only (sops-nix default 0400) and
+      # handed to the service as a systemd credential, so the shared container
+      # UID can't read it
       templates."ddns-updater/config.json" = {
-        owner = user.name;
         content = ''
           {
             "settings": [
@@ -37,16 +41,15 @@ lib.mkMerge [
 
     containers.ddns-updater = {
       bindMounts = {
-        "${config.sops.templates."ddns-updater/config.json".path}" = {
-          isReadOnly = true;
-        };
+        "${configPath}".isReadOnly = true;
       };
 
       config = {
         services.ddns-updater = {
           enable = true;
           environment = {
-            CONFIG_FILEPATH = config.sops.templates."ddns-updater/config.json".path;
+            # %d: the unit's credentials directory
+            CONFIG_FILEPATH = "%d/${credentialName}";
             PERIOD = "5m";
             UPDATE_COOLDOWN_PERIOD = "5m";
             PUBLICIP_FETCHERS = "all";
@@ -62,13 +65,12 @@ lib.mkMerge [
           };
         };
 
-        systemd.services.ddns-updater = {
-          serviceConfig = {
-            DynamicUser = lib.mkForce false;
-            User = user.name;
-            Group = user.group;
-          };
-        };
+        # Runs with the upstream module's DynamicUser instead of the shared
+        # container UID. Container root, which owns the bind-mounted secret
+        # (identity mapping), loads it into the service's private credentials
+        systemd.services.ddns-updater.serviceConfig.LoadCredential = [
+          "${credentialName}:${configPath}"
+        ];
 
         networking.firewall.allowedTCPPorts = [ cfg.containerPort ];
       };
