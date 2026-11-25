@@ -8,7 +8,6 @@
 }:
 let
   cfg = config.modules.nixos.user;
-  user = config.users.users.${userName};
 in
 {
   options.modules.nixos.user = {
