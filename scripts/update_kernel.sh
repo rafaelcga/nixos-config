@@ -46,8 +46,12 @@ for version in "${candidates[@]}"; do
   if pkg_version="$(nix eval --raw --inputs-from "$REPO_DIR" \
     "nixpkgs#legacyPackages.x86_64-linux.$attr.kernel.version" 2>/dev/null)"; then
     echo "   └─ nixpkgs provides $attr ($pkg_version)"
-    sed -i "s|linuxVersion = \"[^\"]*\";|linuxVersion = \"$version\";|" "$FLAKE"
-    echo "[✔️] Kernel pinned to $version (was $current)"
+    if [[ "$version" == "$current" ]]; then
+      echo "[✔️] Kernel already on $version"
+    else
+      sed -i "s|linuxVersion = \"[^\"]*\";|linuxVersion = \"$version\";|" "$FLAKE"
+      echo "[✔️] Kernel pinned to $version (was $current)"
+    fi
     exit 0
   fi
   echo "   └─ nixpkgs does not provide $attr, skipping"

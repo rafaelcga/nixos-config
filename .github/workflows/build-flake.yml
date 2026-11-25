@@ -7,11 +7,15 @@ on:
     branches:
       - main
   pull_request:
-    types: [opened, synchronize, reopened]
   workflow_dispatch:
 
 permissions:
   contents: read
+
+# Every `run` gets bash with pipefail
+defaults:
+  run:
+    shell: bash
 
 # A newer push to the same branch/PR supersedes a running build
 concurrency:
@@ -28,73 +32,40 @@ jobs:
     outputs:
       hosts: ${{ steps.get-hosts.outputs.hosts }}
     steps:
-      - name: Nothing but Nix
-        uses: wimpysworld/nothing-but-nix@v12
+      - uses: wimpysworld/nothing-but-nix@v12
         with:
           hatchet-protocol: "cleave"
 
-      - name: Checkout repository
-        uses: actions/checkout@v7
-        with:
-          token: ${{ secrets.GH_TOKEN }}
+      - uses: actions/checkout@v7
 
       - name: Get NixOS hosts from directories
         id: get-hosts
-        run: |
-          JSON_LIST=$(find ./hosts -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | jq -R . | jq -sc .)
-          echo "hosts=$JSON_LIST" >>"$GITHUB_OUTPUT"
+        run: echo "hosts=$(find hosts -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | jq -Rnc '[inputs]')" >>"$GITHUB_OUTPUT"
 
-      - name: Enable unprivileged user namespaces (Fixes Bubblewrap/Nix sandboxing)
-        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
-
-      - name: Install Lix
-        uses: samueldr/lix-gha-installer-action@v2026-06-15
+      - uses: ./.github/actions/setup-nix
         with:
-          github_access_token: ${{ secrets.GH_TOKEN }}
-          extra_nix_config: |
-            max-substitution-jobs = 32
-            http-connections = 40
-            fallback = true
-
-      - uses: cachix/cachix-action@v17
-        with:
-          name: rafaelcga
-          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+          github-token: ${{ secrets.GH_TOKEN }}
+          cachix-auth-token: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
       - name: Build derivations shared between hosts
-        shell: bash
         env:
           HOSTS: ${{ steps.get-hosts.outputs.hosts }}
         run: |
-          plan="$RUNNER_TEMP/plan"
-          mkdir -p "$plan"
-
+          # `--dry-run` queries the caches and lists only the .drv files that must
+          # be built (none for a cached system); keep those listed by 2+ hosts
           for host in $(jq -r '.[]' <<<"$HOSTS"); do
-            attr=".#nixosConfigurations.$host.config.system.build.toplevel"
-            out=$(nix eval --raw "$attr.outPath")
-            # Same check as build-hosts: a cached system will not be built there
-            if nix path-info --store https://rafaelcga.cachix.org "$out" &>/dev/null; then
-              continue
-            fi
-            # `--dry-run` queries the caches and lists only what must be built
-            nix build --dry-run "$attr" 2>&1 |
-              { grep -E '^\s+/nix/store/\S+\.drv$' || true; } |
-              tr -d ' ' | sort -u >"$plan/$host"
-          done
+            nix build --dry-run ".#nixosConfigurations.$host.config.system.build.toplevel" 2>&1 |
+              sed -n 's|^ *\(/nix/store/.*\.drv\)$|\1|p' | sort -u
+          done | sort | uniq -d >"$RUNNER_TEMP/shared"
 
-          # Derivations listed by two or more hosts
-          mapfile -t shared < <(cat "$plan"/* 2>/dev/null | sort | uniq -d)
-          if ((${#shared[@]} == 0)); then
+          if [[ ! -s "$RUNNER_TEMP/shared" ]]; then
             echo "::notice title=Shared derivations::Nothing shared needs building"
             exit 0
           fi
-
-          printf '%s\n' "${shared[@]}" | sed 's/^/  /' | {
-            echo "Building ${#shared[@]} shared derivations:"
-            cat
-          }
+          echo "Building $(wc -l <"$RUNNER_TEMP/shared") shared derivations:"
+          sed 's/^/  /' "$RUNNER_TEMP/shared"
           # cachix-action pushes each output as it is built
-          nix build -L --no-link "${shared[@]/%/^*}"
+          sed 's/$/^*/' "$RUNNER_TEMP/shared" | xargs nix build -L --no-link
 
   build-hosts:
     name: Build ${{ matrix.host }}
@@ -104,35 +75,21 @@ jobs:
       fail-fast: false
       matrix:
         host: ${{ fromJSON(needs.prepare.outputs.hosts) }}
+    env:
+      HOST: ${{ matrix.host }}
+      # Only the automated update PR gets a package diff comment
+      UPDATE_PR: ${{ github.event_name == 'pull_request' && github.head_ref == 'nix-flake-update' }}
     steps:
-      - name: Nothing but Nix
-        uses: wimpysworld/nothing-but-nix@v12
+      - uses: wimpysworld/nothing-but-nix@v12
         with:
           hatchet-protocol: "cleave"
 
-      - name: Checkout repository
-        uses: actions/checkout@v7
-        with:
-          token: ${{ secrets.GH_TOKEN }}
+      - uses: actions/checkout@v7
 
-      - name: Enable unprivileged user namespaces (Fixes Bubblewrap/Nix sandboxing)
-        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
-
-      - name: Install Lix
-        uses: samueldr/lix-gha-installer-action@v2026-06-15
+      - uses: ./.github/actions/setup-nix
         with:
-          github_access_token: ${{ secrets.GH_TOKEN }}
-          # Moderate parallelism (between Nix defaults and 64) to avoid overloading Cachix;
-          # fallback builds from source if a substitute download fails
-          extra_nix_config: |
-            max-substitution-jobs = 32
-            http-connections = 40
-            fallback = true
-
-      - uses: cachix/cachix-action@v17
-        with:
-          name: rafaelcga
-          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+          github-token: ${{ secrets.GH_TOKEN }}
+          cachix-auth-token: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
       - name: Build and test flake
         id: build
@@ -141,7 +98,7 @@ jobs:
           # Assigned first so an evaluation error fails the step; `--raw` prints
           # no trailing newline, which `<<<` adds (otherwise `read` returns 1)
           paths=$(nix eval --raw \
-            ".#nixosConfigurations.${{ matrix.host }}.config.system.build.toplevel" \
+            ".#nixosConfigurations.$HOST.config.system.build.toplevel" \
             --apply 'system: "${system.drvPath} ${system.outPath}"')
           read -r drv out <<<"$paths"
           echo "out=$out" >>"$GITHUB_OUTPUT"
@@ -150,126 +107,90 @@ jobs:
           # cache, an earlier run built this exact system, so there is nothing new
           # to verify (and no need to download its ~2000-path closure).
           if nix path-info --store https://rafaelcga.cachix.org "$out" &>/dev/null; then
-            echo "::notice title=${{ matrix.host }} unchanged::$out is already cached; skipping build"
+            echo "::notice title=$HOST unchanged::$out is already cached; skipping build"
             exit 0
           fi
 
           nix build -L "$drv^*"
 
-      # Only for the automated update PR: diffs this host's closure against the
-      # base branch so `report-changes` can list version bumps in the PR body.
+      # Writes this host's section of the package diff comment (see report-changes)
       - name: Diff closure against base branch
-        if: github.event_name == 'pull_request' && github.head_ref == 'nix-flake-update'
-        shell: bash
+        if: env.UPDATE_PR == 'true'
         env:
-          HOST: ${{ matrix.host }}
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          BASE: github:${{ github.repository }}/${{ github.event.pull_request.base.sha }}
           NEW_OUT: ${{ steps.build.outputs.out }}
         run: |
-          report_dir="$RUNNER_TEMP/closure-diff"
-          mkdir -p "$report_dir"
-
-          # Evaluate the base revision from a plain export (avoids shallow-git issues)
-          git fetch --depth=1 origin "$BASE_SHA"
-          base_src="$RUNNER_TEMP/base-src"
-          mkdir -p "$base_src"
-          git archive "$BASE_SHA" | tar -x -C "$base_src"
+          md="$RUNNER_TEMP/$HOST.md"
 
           # Build the base system from its derivation rather than its bare output
           # path: a bare path can only be substituted, so it fails whenever that
           # exact revision was never built (e.g. a main push skipped by CI).
           # Anything already cached is still substituted, not rebuilt.
-          if old_drv=$(nix eval --raw \
-            "path:$base_src#nixosConfigurations.$HOST.config.system.build.toplevel.drvPath") &&
-            old_out=$(nix build --no-link --print-out-paths "$old_drv^*") &&
-            nix build --no-link "$NEW_OUT"; then
-            # Same diff `nh` prints; --exit-code: 0 = identical, 1 = differs, 2 = error
-            rc=0
-            nix run nixpkgs#dix -- --color=never diff --exit-code \
-              "$old_out" "$NEW_OUT" >"$report_dir/$HOST.diff" || rc=$?
-            case $rc in
-              0) : >"$report_dir/$HOST.diff" ;; # empty file = no changes
-              1) ;;
-              *) exit "$rc" ;;
-            esac
-          else
+          if ! old_drv=$(nix eval --raw "$BASE#nixosConfigurations.$HOST.config.system.build.toplevel.drvPath") ||
+            ! old_out=$(nix build --no-link --print-out-paths "$old_drv^*") ||
+            ! nix build --no-link "$NEW_OUT"; then
             echo "::warning title=$HOST closure diff::Base system could not be evaluated or built; skipping package diff"
-            touch "$report_dir/$HOST.unavailable"
+            printf '\n**%s**: _base system could not be evaluated or built, no diff available._\n' "$HOST" >"$md"
+            exit 0
           fi
 
+          # Same diff `nh` prints; --exit-code: 0 = identical, 1 = differs, 2 = error
+          rc=0
+          nix run nixpkgs#dix -- --color=never diff --exit-code \
+            "$old_out" "$NEW_OUT" >"$RUNNER_TEMP/diff" || rc=$?
+          case $rc in
+            0) printf '\n**%s**: _No changes._\n' "$HOST" >"$md" ;;
+            1)
+              {
+                printf '\n<details><summary><b>%s</b></summary>\n\n```\n' "$HOST"
+                # Comments are capped at 65536 chars; `sed '$a\'` ends with one newline
+                # shellcheck disable=SC1003
+                head -c 15000 "$RUNNER_TEMP/diff" | sed '$a\'
+                if (($(wc -c <"$RUNNER_TEMP/diff") > 15000)); then echo '… (truncated)'; fi
+                printf '```\n\n</details>\n'
+              } >"$md"
+              ;;
+            *) exit "$rc" ;;
+          esac
+
       - name: Upload closure diff
-        if: github.event_name == 'pull_request' && github.head_ref == 'nix-flake-update'
+        if: env.UPDATE_PR == 'true'
         uses: actions/upload-artifact@v7
         with:
           name: closure-diff-${{ matrix.host }}
-          path: ${{ runner.temp }}/closure-diff/
+          path: ${{ runner.temp }}/${{ matrix.host }}.md
           retention-days: 1
 
   report-changes:
-    name: Add package changes to PR body
+    name: Comment package changes on PR
     runs-on: ubuntu-latest
     needs: build-hosts
-    if: github.event_name == 'pull_request' && github.head_ref == 'nix-flake-update' && needs.build-hosts.result == 'success'
+    if: github.event_name == 'pull_request' && github.head_ref == 'nix-flake-update'
     permissions:
       pull-requests: write
     steps:
-      - name: Download closure diffs
-        uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@v8
         with:
           pattern: closure-diff-*
           merge-multiple: true
           path: ${{ runner.temp }}/diffs
 
-      - name: Update pull request body
-        shell: bash
+      # A single comment, edited in place on every rebuild of the PR
+      - name: Post package changes
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           PR: ${{ github.event.pull_request.number }}
-          DIFFS: ${{ runner.temp }}/diffs
         run: |
-          marker='<!-- closure-diff -->'
-          # GitHub caps bodies at 65536 chars; keep each host well below that
-          max_chars=15000
+          { echo "### Package changes"; cat "$RUNNER_TEMP"/diffs/*.md; } >"$RUNNER_TEMP/comment.md"
+          gh pr comment "$PR" --edit-last --create-if-none --body-file "$RUNNER_TEMP/comment.md"
 
-          # Drop any section from a previous run, then trailing whitespace
-          body="$(gh pr view "$PR" --json body --jq .body)"
-          body="${body%%"$marker"*}"
-          body="${body%"${body##*[![:space:]]}"}"
-
-          {
-            printf '%s\n\n%s\n' "$body" "$marker"
-            echo "### Package changes"
-            for f in "$DIFFS"/*; do
-              host="$(basename "${f%.*}")"
-              if [[ "$f" == *.unavailable ]]; then
-                printf '\n**%s**: _base system could not be evaluated or built, no diff available._\n' "$host"
-                continue
-              fi
-              if [[ ! -s "$f" ]]; then
-                printf '\n**%s**: _No changes._\n' "$host"
-                continue
-              fi
-              printf '\n<details><summary><b>%s</b></summary>\n\n```\n' "$host"
-              # `sed '$a\'` guarantees exactly one trailing newline
-              # shellcheck disable=SC1003
-              head -c "$max_chars" "$f" | sed '$a\'
-              if (($(wc -c <"$f") > max_chars)); then
-                echo '… (truncated)'
-              fi
-              printf '```\n\n</details>\n'
-            done
-          } >"$RUNNER_TEMP/pr-body.md"
-
-          gh pr edit "$PR" --body-file "$RUNNER_TEMP/pr-body.md"
-
+  # Single required status check: a failed `prepare` skips build-hosts, so check both
   check-builds:
     name: Check builds
     runs-on: ubuntu-latest
     needs: [prepare, build-hosts]
-    if: ${{ always() }}
+    if: always()
     steps:
-      # A failed `prepare` skips build-hosts, so check both
-      - name: Check status of built hosts
-        if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
+      - if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
         run: exit 1

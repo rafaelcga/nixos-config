@@ -5,67 +5,50 @@ on:
     - cron: "0 10 * * *"
   workflow_dispatch:
 
+# All writes (push, PR, labels) go through the GH_TOKEN PAT, so that the PR
+# triggers build-flake.yml; the default token only needs to read.
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
 jobs:
   update-and-pr:
     name: Update and create PR
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      id-token: write
-      issues: write
-      pull-requests: write
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v7
+      - uses: actions/checkout@v7
         with:
           token: ${{ secrets.GH_TOKEN }}
-          fetch-depth: 0
 
-      - name: Install Lix
-        uses: samueldr/lix-gha-installer-action@v2026-06-15
+      - uses: ./.github/actions/setup-nix
         with:
-          github_access_token: ${{ secrets.GH_TOKEN }}
-          extra_nix_config: |
-            max-substitution-jobs = 32
-            http-connections = 40
-            fallback = true
+          github-token: ${{ secrets.GH_TOKEN }}
+          cachix-auth-token: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
-      - uses: cachix/cachix-action@v17
-        with:
-          name: rafaelcga
-          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
-
-      # Logs are tee'd so the PR body can list what actually changed.
-      # `shell: bash` enables pipefail, so failures aren't masked by tee.
+      # Logs are tee'd so the PR body can list what actually changed
+      # (pipefail keeps failures from being masked by tee).
       - name: Update flake.lock
-        shell: bash
         run: nix flake update 2>&1 | tee "$RUNNER_TEMP/flake.log"
 
       - name: Check Linux kernel update
-        shell: bash
         run: ./scripts/update_kernel.sh | tee "$RUNNER_TEMP/kernel.log"
 
       - name: Run local packages update script
-        shell: bash
-        run: |
+        env:
           # Restrict Nix concurrency to prevent OOM on standard runners
-          mkdir -p ~/.config/nix
-          echo "max-jobs = 1" >> ~/.config/nix/nix.conf
-          echo "cores = 2" >> ~/.config/nix/nix.conf
-
-          ./scripts/update_pkgs.sh | tee "$RUNNER_TEMP/pkgs.log"
+          NIX_CONFIG: |
+            max-jobs = 1
+            cores = 2
+        run: ./scripts/update_pkgs.sh | tee "$RUNNER_TEMP/pkgs.log"
 
       - name: Generate pull request body
-        shell: bash
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           inputs="$(awk '/^• /{p=1; print; next} p && /^ /{print; next} {p=0}' "$RUNNER_TEMP/flake.log")"
-          pkgs="$(grep -F 'updated:' "$RUNNER_TEMP/pkgs.log" | sed 's/^/- /' || true)"
-          kernel=""
-          if ! git diff --quiet -- flake.nix; then
-            kernel="$(grep -F 'Kernel pinned' "$RUNNER_TEMP/kernel.log" || true)"
-          fi
+          pkgs="$(sed -n '/updated:/s/^/- /p' "$RUNNER_TEMP/pkgs.log")"
+          kernel="$(grep -F 'Kernel pinned' "$RUNNER_TEMP/kernel.log" || true)"
 
           {
             echo "Automated update of \`flake.lock\` and local Nix packages."
@@ -80,30 +63,16 @@ jobs:
             echo "### Local packages"
             echo "${pkgs:-_No changes._}"
             if [[ -n "$kernel" ]]; then
-              echo
-              echo "### Linux kernel"
-              echo "$kernel"
+              printf '\n### Linux kernel\n%s\n' "$kernel"
             fi
-          } > "$RUNNER_TEMP/pr-body.md"
+          } >"$RUNNER_TEMP/pr-body.md"
 
-          # Carry over the closure diff that build-flake.yml appends to the body.
-          # create-pull-request rewrites the body on every run, but only pushes
-          # (and so triggers a rebuild that regenerates the diff) when the branch
-          # content changes; otherwise the section would be lost for good.
-          marker='<!-- closure-diff -->'
-          old_body="$(gh pr view nix-flake-update --json state,body \
-            --jq 'select(.state == "OPEN") | .body' 2>/dev/null || true)"
-          if [[ "$old_body" == *"$marker"* ]]; then
-            printf '\n%s%s\n' "$marker" "${old_body#*"$marker"}" >> "$RUNNER_TEMP/pr-body.md"
-          fi
-
-      - name: Create pull request
-        uses: peter-evans/create-pull-request@v8
+      - uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.GH_TOKEN }}
           commit-message: "chore(flake): update inputs and local packages"
           title: "chore(flake): update inputs and local packages"
           body-path: ${{ runner.temp }}/pr-body.md
-          branch: "nix-flake-update"
+          branch: nix-flake-update
           labels: dependencies
           delete-branch: true

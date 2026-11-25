@@ -1,0 +1,33 @@
+name: Set up Nix
+description: Install Lix with tuned substitution settings and configure the Cachix cache
+
+inputs:
+  github-token:
+    description: Token used by Nix to fetch GitHub flake inputs without rate limits
+    required: true
+  cachix-auth-token:
+    description: Cachix auth token (outputs built afterwards are pushed to the cache)
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Enable unprivileged user namespaces (Fixes Bubblewrap/Nix sandboxing)
+      shell: bash
+      run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
+
+    - name: Install Lix
+      uses: samueldr/lix-gha-installer-action@v2026-06-15
+      with:
+        github_access_token: ${{ inputs.github-token }}
+        # Moderate parallelism (between Nix defaults and 64) to avoid overloading Cachix;
+        # fallback builds from source if a substitute download fails
+        extra_nix_config: |
+          max-substitution-jobs = 32
+          http-connections = 40
+          fallback = true
+
+    - uses: cachix/cachix-action@v17
+      with:
+        name: rafaelcga
+        authToken: ${{ inputs.cachix-auth-token }}
