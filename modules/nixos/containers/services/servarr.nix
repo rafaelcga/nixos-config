@@ -71,16 +71,7 @@ lib.mkMerge [
                 {
                   enable = true;
                   dataDir = "${cfg.dataDir}/${name}";
-                  settings = {
-                    server.port = cfg.containerPorts.${name};
-                    # Always require the login page, even from the LAN, so a
-                    # reset config.xml can't leave the app open. The username
-                    # and password themselves are set in the web UI
-                    auth = {
-                      method = "Forms";
-                      required = "Enabled";
-                    };
-                  };
+                  settings.server.port = cfg.containerPorts.${name};
                   environmentFiles = [ config.sops.templates."servarr-env".path ];
                   openFirewall = true;
                 }
