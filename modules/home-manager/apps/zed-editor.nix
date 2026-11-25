@@ -162,6 +162,19 @@ in
       sessionVariables = {
         SOPS_EDITOR = "zeditor --wait";
       };
+
+      # User-level instructions for the Claude Agent (`claude-acp` above). Zed
+      # has no setting for them, but Claude Code loads this file in every session.
+      file.".claude/CLAUDE.md".text = ''
+        # Environment
+
+        - There is no system `python`/`python3`. Use `uv` instead:
+          - scripts: `uv run script.py` (add deps with `uv run --with <pkg> ...`)
+          - inline snippets: `uv run python -c '...'`
+          - Python CLI tools: `uvx <tool>`
+        - This is NixOS: run other missing tools with
+          `nix shell nixpkgs#<pkg> -c <cmd>` or `nix run nixpkgs#<pkg>`.
+      '';
     };
   };
 }
