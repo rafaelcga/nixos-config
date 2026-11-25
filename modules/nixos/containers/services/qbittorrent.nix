@@ -86,10 +86,7 @@ lib.mkMerge [
                   HostHeaderValidation = false;
                   CSRFProtection = false;
                 }
-                # The *arr apps (servarr container) skip the login, so rotating
-                # the password doesn't break their download client settings.
-                # Leave their username/password fields empty: a wrong login
-                # attempt still counts towards qBittorrent's IP ban
+                # The *arr apps (servarr container) skip the login
                 // lib.optionalAttrs servarr.enable {
                   AuthSubnetWhitelistEnabled = true;
                   AuthSubnetWhitelist = "${servarr.address}/32";
