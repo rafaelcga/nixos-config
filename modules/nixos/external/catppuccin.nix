@@ -73,7 +73,6 @@ in
           enable = cfg.enable;
           autoEnable = cfg.enable;
           inherit (cfg) flavor accent;
-          cache.enable = true;
         };
       };
     in
@@ -89,6 +88,9 @@ in
       (lib.mkIf cfg.enable (
         lib.mkMerge [
           themeConfig
+          # Binary cache at the system level only: the Nix daemon ignores caches
+          # from the user's nix.conf, since only root is a trusted user
+          { catppuccin.cache.enable = true; }
           (lib.mkIf config.modules.nixos.papirus.enable {
             modules.nixos.papirus.package = pkgs.catppuccin-papirus-folders.override {
               inherit (cfg) accent flavor;

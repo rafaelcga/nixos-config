@@ -13,9 +13,17 @@ let
   utils = import "${inputs.self}/lib/utils.nix" { inherit lib; };
 
   wireguardInterface = "wg-proton";
+  # Port of the Proton WireGuard endpoint
+  endpointPort = 51820;
+
+  # Subnets reached directly instead of through the tunnel (LAN, home VPN,
+  # containers). The tunnel is IPv4-only
+  lanSubnets = lib.filter (
+    subnet: !lib.hasInfix ":" subnet
+  ) config.modules.nixos.containers.lanSubnets;
 
   # The Proton WireGuard config only carries an IPv4 address (10.2.0.2/32) and
-  # the kill switch rejects IPv6 anyway, so the OCI path is IPv4-only.
+  # no IPv6 route leaves the containers, so the OCI path is IPv4-only.
   #
   # Podman network used by VPN'd OCI containers: a macvlan on top of the
   # container bridge, with the VPN container as its only gateway. The name
@@ -102,83 +110,19 @@ lib.mkMerge [
 
       templates."${wireguardInterface}.conf".content =
         let
-          localIpv4 = config.modules.nixos.containers.lanSubnets;
-          localIpv6 = [
-            "fc00::/7"
-            "fe80::/10"
-          ];
-
-          isIpv6 = address: lib.hasInfix ":" address;
-
-          mkAllowLan =
-            action:
-            let
-              ruleTemplate =
-                block:
-                let
-                  binName = if (isIpv6 block) then "ip6tables" else "iptables";
-                  iptablesBin = lib.getExe' pkgs.iptables binName;
-                in
-                ''
-                  ${iptablesBin} ${action} INPUT -s ${block} -j ACCEPT
-                  ${iptablesBin} ${action} OUTPUT -d ${block} -j ACCEPT
-                  # Allow containers to talk to the LAN and each other through the gateway
-                  ${iptablesBin} ${action} FORWARD -i eth0 -s ${block} -j ACCEPT
-                  ${iptablesBin} ${action} FORWARD -o eth0 -d ${block} -j ACCEPT
-                '';
-            in
-            lib.concatMapStringsSep "\n" ruleTemplate (localIpv4 ++ localIpv6);
-
+          # wg-quick sends everything into the tunnel except what the main table
+          # routes more specifically than the default route, i.e. the container
+          # bridge. The LAN and the home VPN only have the default route, so
+          # look them up in the main table explicitly. (There is no kill switch
+          # in here: the host-side `vpn-killswitch` table enforces it.)
           mkLookupRules =
             action:
-            let
-              ruleTemplate =
-                block:
-                let
-                  ip = lib.getExe' pkgs.iproute2 "ip";
-                  command = "${ip}" + lib.optionalString (isIpv6 block) " -6";
-                in
-                "${command} rule ${action} to ${block} lookup main prio 2500";
-            in
-            lib.concatMapStringsSep "\n" ruleTemplate (localIpv4 ++ localIpv6);
+            lib.concatMapStringsSep "\n" (
+              block: "${lib.getExe' pkgs.iproute2 "ip"} rule ${action} to ${block} lookup main prio 2500"
+            ) lanSubnets;
 
-          mkKillSwitch =
-            action:
-            let
-              ruleTemplate =
-                binName:
-                let
-                  iptablesBin = lib.getExe' pkgs.iptables binName;
-                in
-                ''
-                  # Block traffic originating from the VPN container itself from leaking
-                  ${iptablesBin} ${action} OUTPUT \
-                    ! -o ${wireguardInterface} \
-                    -m mark ! --mark 51820 \
-                    -m addrtype ! --dst-type LOCAL \
-                    -j REJECT
-                  # Block traffic forwarded from other containers from leaking
-                  ${iptablesBin} ${action} FORWARD \
-                    -i eth0 ! -o ${wireguardInterface} \
-                    -j REJECT
-                '';
-            in
-            lib.concatMapStringsSep "\n" ruleTemplate [
-              "iptables"
-              "ip6tables"
-            ];
-
-          postUpFile = pkgs.writeShellScript "wg_containers_postup.sh" ''
-            ${mkLookupRules "add"}
-            ${mkAllowLan "-I"} # Insert on top
-            ${mkKillSwitch "-A"}
-          '';
-
-          postDownFile = pkgs.writeShellScript "wg_containers_postdown.sh" ''
-            ${mkLookupRules "del"}
-            ${mkAllowLan "-D"}
-            ${mkKillSwitch "-D"}
-          '';
+          postUpFile = pkgs.writeShellScript "wg_containers_postup.sh" (mkLookupRules "add");
+          postDownFile = pkgs.writeShellScript "wg_containers_postdown.sh" (mkLookupRules "del");
         in
         ''
           [Interface]
@@ -193,7 +137,7 @@ lib.mkMerge [
           [Peer]
           PublicKey = ${config.sops.placeholder."wireguard/proton/public_key"}
           AllowedIPs = 0.0.0.0/0, ::/0
-          Endpoint = ${config.sops.placeholder."wireguard/proton/endpoint"}:51820
+          Endpoint = ${config.sops.placeholder."wireguard/proton/endpoint"}:${toString endpointPort}
           PersistentKeepalive = 15
         '';
     };
@@ -342,7 +286,6 @@ lib.mkMerge [
             config.networking = {
               nat = {
                 enable = true;
-                enableIPv6 = true;
                 externalInterface = wireguardInterface;
                 internalInterfaces = [ "eth0" ];
               };
@@ -376,5 +319,36 @@ lib.mkMerge [
   # are bound to it and restart too
   (lib.mkIf cfg.enable {
     sops.templates."${wireguardInterface}.conf".restartUnits = [ "container@proton-vpn.service" ];
+  })
+  # The kill switch, enforced on the host. Without the tunnel (wg-quick failed
+  # or stopped), the VPN container routes through the host, whose NAT would
+  # send the traffic out with the home IP. Being outside the VPN container,
+  # neither a failed tunnel nor a compromised VPN container can bypass it.
+  (lib.mkIf cfg.enable {
+    networking.nftables.tables.vpn-killswitch =
+      let
+        inherit (config.modules.nixos.networking) defaultInterface;
+        behindVpnAddresses = lib.mapAttrsToList (_: containerConfig: containerConfig.address) (
+          nspawnBehindVpn // ociBehindVpn
+        );
+        toSet = lib.concatStringsSep ", ";
+        fromBridgeToInternet = ''iifname "${cfg_bridge.name}" oifname "${defaultInterface}"'';
+      in
+      {
+        family = "inet";
+        content = ''
+          chain forward {
+            type filter hook forward priority filter - 5; policy accept;
+
+            # Containers behind the VPN: only the LAN/VPN subnets, never the
+            # internet directly (their traffic must leave through the tunnel)
+            ${fromBridgeToInternet} ip saddr { ${toSet behindVpnAddresses} } ip daddr != { ${toSet lanSubnets} } counter drop
+
+            # The VPN container itself: only its WireGuard traffic to the endpoint
+            ${fromBridgeToInternet} ip saddr ${cfg.address} meta l4proto != udp counter drop
+            ${fromBridgeToInternet} ip saddr ${cfg.address} udp dport != ${toString endpointPort} counter drop
+          }
+        '';
+      };
   })
 ]
