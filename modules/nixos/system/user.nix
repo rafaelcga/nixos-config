@@ -44,6 +44,9 @@ in
       flakeMeta.users.${userName}
     ];
 
+    # Only wheel can even run sudo (smaller attack surface for sudo bugs)
+    security.sudo.execWheelOnly = true;
+
     # XDG Base Directory
     environment.sessionVariables = {
       XDG_CONFIG_HOME = "$HOME/.config";
