@@ -100,8 +100,33 @@ lib.mkMerge [
     };
 
     networking.firewall.interfaces."${bridge.name}" = {
-      allowedTCPPorts = lib.optionals caddy.enable [ caddy.adminPort ];
+      allowedTCPPorts = lib.optionals caddy.enable [ caddy.adminProxyPort ];
     };
+
+    # The admin API only listens on loopback. Expose to the container bridge
+    # just the read-only endpoint the Caddy widget needs
+    services.caddy.virtualHosts."http://${bridge.ipv4.host}:${toString caddy.adminProxyPort}" =
+      lib.mkIf caddy.enable
+        {
+          logFormat = "output discard";
+          extraConfig = ''
+            @denied not remote_ip ${bridge.ipv4.address}/${toString bridge.ipv4.mask}
+            abort @denied
+
+            @upstreams {
+              method GET
+              path /reverse_proxy/upstreams
+            }
+            handle @upstreams {
+              reverse_proxy 127.0.0.1:${toString caddy.adminPort} {
+                # The admin API rejects requests whose Host is not loopback
+                header_up Host 127.0.0.1:${toString caddy.adminPort}
+              }
+            }
+
+            respond 403
+          '';
+        };
 
     containers.homepage = {
       bindMounts = {
@@ -243,7 +268,7 @@ lib.mkMerge [
                       siteMonitor = "https://health.{{HOMEPAGE_VAR_DOMAIN}}";
                       widget = {
                         type = "caddy";
-                        url = "http://${bridge.ipv4.host}:${toString caddy.adminPort}";
+                        url = "http://${bridge.ipv4.host}:${toString caddy.adminProxyPort}";
                       };
                     };
                   })

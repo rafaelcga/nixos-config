@@ -17,7 +17,7 @@ let
   globalConfig = lib.concatStringsSep "\n" (
     [
       ''
-        admin :${toString cfg.adminPort}
+        admin 127.0.0.1:${toString cfg.adminPort}
 
         acme_dns porkbun {
             api_key {$PORKBUN_API_KEY}
@@ -226,7 +226,16 @@ in
     adminPort = lib.mkOption {
       type = lib.types.port;
       default = 2019;
-      description = "Listening port of the admin API";
+      description = "Listening port of the admin API (bound to 127.0.0.1)";
+    };
+
+    adminProxyPort = lib.mkOption {
+      type = lib.types.port;
+      default = 2020;
+      description = ''
+        Port of the read-only proxy exposing only the upstream status
+        endpoint of the admin API (used by Homepage's Caddy widget)
+      '';
     };
 
     virtualHosts = lib.mkOption {
