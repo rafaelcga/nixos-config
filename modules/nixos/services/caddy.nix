@@ -211,6 +211,16 @@ let
         '';
       };
 
+      loginPaths = lib.mkOption {
+        type = lib.types.listOf lib.types.str;
+        default = [ ];
+        example = [ "/login" ];
+        description = ''
+          Login endpoints (POST) of the origin. CrowdSec bans IPs that keep
+          failing on them (`local/http-login-bf`), based on Caddy's access logs
+        '';
+      };
+
       isLocal = lib.mkOption {
         type = lib.types.bool;
         default = false;
@@ -314,6 +324,49 @@ in
 
         services.crowdsec = {
           hub.collections = [ "crowdsecurity/caddy" ];
+
+          # Login brute force, from the access logs: failed POSTs to the login
+          # endpoints the virtual hosts declare. 401 = wrong credentials,
+          # 403 = right password but not allowed (e.g. no remote access),
+          # 429 = the app's own login rate limiter kicked in
+          settings.scenarios =
+            let
+              loginPaths = lib.unique (
+                lib.concatMap (host: map lib.toLower host.loginPaths) (lib.attrValues cfg.virtualHosts)
+              );
+              quoted = lib.concatMapStringsSep ", " (path: "'${path}'");
+            in
+            lib.optional (loginPaths != [ ]) {
+              type = "leaky";
+              name = "local/http-login-bf";
+              description = "Repeated failed logins on the services behind Caddy";
+              # Paths are compared lower-cased and without the query string
+              # (Jellyfin's routes are case-insensitive)
+              filter = lib.concatStringsSep " && " [
+                "evt.Meta.log_type == 'http_access-log'"
+                "evt.Meta.http_verb == 'POST'"
+                "evt.Meta.http_status in ['401', '403', '429']"
+                "Split(lower(evt.Meta.http_path), '?')[0] in [${quoted loginPaths}]"
+              ];
+              groupby = "evt.Meta.source_ip";
+              # Leaky bucket draining one failure per minute: 6 quick failures
+              # ban, as do ~8 at one every 20 s. Only a sustained pace of one
+              # per minute or slower is tolerated (≤1440 guesses a day). The
+              # hub's generic 401/403 scenarios drain every 10 s, so they only
+              # catch fast attacks, and split them per exact path
+              capacity = 5;
+              leakspeed = "1m";
+              blackhole = "5m";
+              labels = {
+                remediation = true;
+                service = "http";
+                behavior = "http:bruteforce";
+                label = "HTTP login brute force";
+                classification = [ "attack.T1110" ];
+                confidence = 3;
+                spoofable = 0;
+              };
+            };
 
           # Allow reading Caddy's (group-readable) access logs
           extraGroups = [ cfgCaddy.group ];

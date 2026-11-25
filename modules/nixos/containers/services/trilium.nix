@@ -24,6 +24,14 @@ lib.mkMerge [
       virtualHosts.trilium = {
         originHost = cfg.address;
         originPort = cfg.hostPort;
+        # Web form, desktop sync, token/web clipper and ETAPI logins
+        loginPaths = [
+          "/login"
+          "/api/login/sync"
+          "/api/login/token"
+          "/api/sender/login"
+          "/etapi/auth/login"
+        ];
         extraConfig = ''
           header Content-Security-Policy "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' ws: wss: http: https:; worker-src 'self' blob:; frame-src 'self' blob:; frame-ancestors 'self';"
           header -X-Frame-Options
