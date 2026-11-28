@@ -9,6 +9,6 @@ let
 in
 caddy.withPlugins {
   inherit plugins;
-  hash = "sha256-qcbcPblG5SXH2P0M6phWG0WHozLT0KTsL12FQR2uh8M=";
+  hash = "sha256-JxiiX3sVkHfUnb7CXsRuCM5f0dT1t5qpddtNK/b+VSk=";
   doInstallCheck = false;
 }
